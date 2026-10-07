@@ -1,3 +1,5 @@
+import authEn from "@/features/auth/messages/en.json";
+import authMn from "@/features/auth/messages/mn.json";
 import designEn from "@/features/design/messages/en.json";
 import designMn from "@/features/design/messages/mn.json";
 import type { Locale } from "./config";
@@ -9,8 +11,8 @@ import commonMn from "./messages/mn.json";
  * and reads them with useTranslations("<feature>"). Register new feature files here.
  */
 const catalogs = {
-  mn: { common: commonMn, design: designMn },
-  en: { common: commonEn, design: designEn },
+  mn: { common: commonMn, design: designMn, auth: authMn },
+  en: { common: commonEn, design: designEn, auth: authEn },
 } satisfies Record<Locale, unknown>;
 
 export type Messages = (typeof catalogs)["mn"];
