@@ -1,19 +1,339 @@
 @import "tailwindcss";
 
-/* Placeholder colors. The real design tokens and fonts come in a separate PR. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Components use token classes only (bg-card, text-muted-foreground,
+ * bg-primary, text-destructive-text …), never raw hex.
+ * Two axes: mode (.dark on <html>, light by default) × palette (data-palette on <html>).
+ * Palettes change only the surfaces and the calm accent. Warning amber and danger red never change.
+ */
 :root {
+  --background: #f3f7f7;
+  --foreground: #0b1a1d;
+  --card: #ffffff;
+  --card-foreground: #0b1a1d;
+  --muted: #e6eef0;
+  --muted-foreground: #475d61;
+  --border: #c7d5d8;
+  --hairline: rgb(11 26 29 / 0.1);
+  --input: #b9cacd;
+  --ring: #0b1a1d;
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --primary-text: #0f766e;
+  --warning: #d97706;
+  --warning-foreground: #1c1203;
+  --warning-text: #a14c06;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --destructive-text: #b91c1c;
+  --glass: rgb(255 255 255 / 0.72);
+  --glass-strong: rgb(255 255 255 / 0.9);
+  --glass-border: rgb(11 26 29 / 0.08);
+  --glass-highlight: rgb(255 255 255 / 0.9);
+  --scrim: rgb(11 26 29 / 0.4);
+  --orb-highlight: #f0fdfa;
+  --aurora-calm:
+    radial-gradient(60% 38% at 16% 10%, rgb(45 212 191 / 0.22), transparent 70%),
+    radial-gradient(55% 42% at 94% 46%, rgb(14 165 233 / 0.14), transparent 70%), var(--background);
+}
+
+.dark {
   color-scheme: dark;
   --background: #08181c;
   --foreground: #f8fafc;
+  --card: #11272c;
+  --card-foreground: #f8fafc;
+  --muted: #1b363c;
+  --muted-foreground: #9bb4b8;
+  --border: #3f5c62;
+  --hairline: rgb(255 255 255 / 0.12);
+  --input: #3f5c62;
+  --ring: #ffffff;
+  --primary: #2dd4bf;
+  --primary-foreground: #032420;
+  --primary-text: #5eead4;
+  --warning: #f59e0b;
+  --warning-foreground: #1c1203;
+  --warning-text: #fbbf24;
+  --destructive: #ef4444;
+  --destructive-foreground: #000000;
+  --destructive-text: #f87171;
+  --glass: rgb(17 39 44 / 0.58);
+  --glass-strong: rgb(17 39 44 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.14);
+  --glass-highlight: rgb(255 255 255 / 0.1);
+  --scrim: rgb(3 13 16 / 0.66);
+  --aurora-calm:
+    radial-gradient(60% 38% at 16% 10%, rgb(45 212 191 / 0.3), transparent 70%),
+    radial-gradient(55% 42% at 94% 46%, rgb(14 165 233 / 0.2), transparent 70%),
+    radial-gradient(70% 38% at 40% 104%, rgb(16 185 129 / 0.18), transparent 70%), var(--background);
+}
+
+/* ---- palettes (lake is the default above) ---- */
+[data-palette="night"] {
+  --primary: #1d4ed8;
+  --primary-text: #1d4ed8;
+  --orb-highlight: #eff6ff;
+}
+.dark[data-palette="night"] {
+  --background: #0a1226;
+  --card: #141e38;
+  --muted: #1f2a49;
+  --muted-foreground: #a3b0cc;
+  --border: #47567c;
+  --input: #47567c;
+  --primary: #60a5fa;
+  --primary-foreground: #061430;
+  --primary-text: #93c5fd;
+  --glass: rgb(20 30 56 / 0.58);
+  --glass-strong: rgb(20 30 56 / 0.88);
+  --scrim: rgb(5 9 20 / 0.66);
+  --aurora-calm:
+    radial-gradient(60% 38% at 16% 10%, rgb(96 165 250 / 0.32), transparent 70%),
+    radial-gradient(55% 42% at 94% 46%, rgb(99 102 241 / 0.2), transparent 70%),
+    radial-gradient(70% 38% at 40% 104%, rgb(34 211 238 / 0.16), transparent 70%), var(--background);
+}
+[data-palette="hearth"] {
+  --primary: #15803d;
+  --primary-text: #15803d;
+  --orb-highlight: #f2fbf4;
+}
+.dark[data-palette="hearth"] {
+  --background: #16130f;
+  --card: #231f1a;
+  --muted: #302a23;
+  --muted-foreground: #b8ad9f;
+  --border: #5c5247;
+  --input: #5c5247;
+  --primary: #86d7a0;
+  --primary-foreground: #0f2416;
+  --primary-text: #aee8bf;
+  --glass: rgb(35 31 26 / 0.6);
+  --glass-strong: rgb(35 31 26 / 0.9);
+  --scrim: rgb(11 9 7 / 0.68);
+  --aurora-calm:
+    radial-gradient(60% 38% at 16% 10%, rgb(251 191 36 / 0.16), transparent 70%),
+    radial-gradient(55% 42% at 94% 46%, rgb(134 215 160 / 0.2), transparent 70%),
+    radial-gradient(70% 38% at 40% 104%, rgb(244 114 182 / 0.1), transparent 70%), var(--background);
+}
+[data-palette="slate"] {
+  --primary: #15803d;
+  --primary-text: #15803d;
+  --orb-highlight: #ecfdf5;
+}
+.dark[data-palette="slate"] {
+  --background: #0f172a;
+  --card: #1b2336;
+  --muted: #272f42;
+  --muted-foreground: #94a3b8;
+  --border: #475569;
+  --input: #475569;
+  --primary: #22c55e;
+  --primary-foreground: #0f172a;
+  --primary-text: #4ade80;
+  --glass: rgb(27 35 54 / 0.58);
+  --glass-strong: rgb(27 35 54 / 0.86);
+  --scrim: rgb(2 6 23 / 0.66);
+  --aurora-calm:
+    radial-gradient(60% 38% at 16% 10%, rgb(34 197 94 / 0.3), transparent 70%),
+    radial-gradient(55% 42% at 94% 46%, rgb(20 184 166 / 0.22), transparent 70%),
+    radial-gradient(70% 38% at 40% 104%, rgb(59 130 246 / 0.22), transparent 70%), var(--background);
+}
+
+:root {
+  --aurora-alert:
+    radial-gradient(70% 42% at 20% 6%, rgb(239 68 68 / 0.58), transparent 70%),
+    radial-gradient(60% 48% at 96% 44%, rgb(244 63 94 / 0.36), transparent 70%),
+    radial-gradient(80% 44% at 40% 106%, rgb(153 27 27 / 0.6), transparent 70%), #14070b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-hairline: var(--hairline);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-text: var(--warning-text);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-text: var(--destructive-text);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-border: var(--glass-border);
+  --color-scrim: var(--scrim);
+
+  --font-sans: var(--font-onest), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-onest), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+/* One scale for everything. Type 12/13/14/16/18/22/28/40 · space 4/8/12/16/20/24/32/40 · controls 28/40/44/52/64/72 · icons 16/20/24 */
+@theme {
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 18px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-md: 16px;
+  --text-md--line-height: 22px;
+  --text-lg: 18px;
+  --text-lg--line-height: 24px;
+  --text-xl: 22px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 34px;
+  --text-3xl: 40px;
+  --text-3xl--line-height: 44px;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ease-snappy: cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-breathe: breathe 6s ease-in-out infinite;
+  --animate-heartbeat: heartbeat 1.2s ease-in-out infinite;
+  --animate-sonar: sonar 8s ease-out infinite;
+  --animate-sonar-fast: sonar 1.2s ease-out infinite;
+  --animate-blink: blink 1.8s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes breathe {
+    0%,
+    100% {
+      transform: scale(0.95);
+    }
+    50% {
+      transform: scale(1.03);
+    }
+  }
+  @keyframes heartbeat {
+    0%,
+    70%,
+    100% {
+      transform: scale(1);
+    }
+    14% {
+      transform: scale(1.08);
+    }
+    28% {
+      transform: scale(0.99);
+    }
+    42% {
+      transform: scale(1.05);
+    }
+  }
+  @keyframes sonar {
+    0% {
+      transform: scale(0.62);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.08);
+      opacity: 0;
+    }
+  }
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -240px 0;
+    }
+    100% {
+      background-position: 240px 0;
+    }
+  }
 }
+
+/* Frosted glass card: the base surface of the app. */
+@utility glass {
+  background-color: var(--glass);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 20px 40px -24px rgb(2 6 23 / 0.5);
+}
+@utility glass-strong {
+  background-color: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+@utility bg-aurora-calm {
+  background: var(--aurora-calm);
+}
+@utility bg-aurora-alert {
+  background: var(--aurora-alert);
+}
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+  }
+  button,
+  [role="button"] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: the user's reduced-motion setting must beat every component animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: reduced motion block ends */
