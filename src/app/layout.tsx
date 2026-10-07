@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Halo",
-  description: "Гэртээ ганцаараа байгаа хүмүүсийн аюулыг камераар илрүүлж, асран хамгаалагчид шууд мэдэгдэнэ.",
+  description:
+    "Гэртээ ганцаараа байгаа хүмүүсийн аюулыг камераар илрүүлж, асран хамгаалагчид шууд мэдэгдэнэ.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
