@@ -16,5 +16,6 @@ export const config = {
     "/signup",
     "/invite/:path*",
     "/auth/:path*",
+    "/dev/:path*",
   ],
 };
