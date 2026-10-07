@@ -1,3 +1,9 @@
 {
-  "title": "Family"
+  "title": "Family",
+  "devices": "Cameras",
+  "devicesHint": "Phones, laptops, IP cameras",
+  "household": "Caregivers",
+  "householdHint": "Members and invites",
+  "people": "People we look after",
+  "peopleHint": "Age and special needs"
 }

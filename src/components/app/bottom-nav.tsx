@@ -1,39 +1,40 @@
 "use client";
 
-import { BellIcon, CameraIcon, GearSixIcon, HouseIcon, type Icon } from "@phosphor-icons/react";
+import { BellIcon, HouseIcon, type Icon, UsersThreeIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
+import { routes } from "@/lib/routes";
 
 const tabs: {
-  href: "/home" | "/events" | "/devices" | "/settings";
-  key: "home" | "events" | "devices" | "settings";
+  href: "/home" | "/events" | "/settings";
+  key: "home" | "events" | "family";
   icon: Icon;
 }[] = [
-  { href: "/home", key: "home", icon: HouseIcon },
-  { href: "/events", key: "events", icon: BellIcon },
-  { href: "/devices", key: "devices", icon: CameraIcon },
-  { href: "/settings", key: "settings", icon: GearSixIcon },
+  { href: routes.home, key: "home", icon: HouseIcon },
+  { href: routes.events, key: "events", icon: BellIcon },
+  { href: routes.settings, key: "family", icon: UsersThreeIcon },
 ];
 
-/** Floating glass tab bar. Hidden on the full-screen alert. */
+/** Devices belong to Family; adding a camera and alerts have no tab bar. */
 export function BottomNav({ newEvents = 0 }: { newEvents?: number }) {
   const t = useTranslations("common.nav");
   const pathname = usePathname();
-  if (pathname.endsWith("/alert")) return null;
+  if (pathname.endsWith("/alert") || pathname === routes.newDevice) return null;
+  const section = pathname.startsWith(routes.devices) ? routes.settings : pathname;
   const active = Math.max(
     0,
-    tabs.findIndex((tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)),
+    tabs.findIndex((tab) => section === tab.href || section.startsWith(`${tab.href}/`)),
   );
   return (
     <nav
       aria-label={t("label")}
-      className="glass-strong fixed inset-x-3.5 bottom-[max(16px,env(safe-area-inset-bottom))] z-40 mx-auto grid h-[70px] max-w-md grid-cols-4 rounded-[35px] p-2"
+      className="glass-strong fixed inset-x-3.5 bottom-[max(16px,env(safe-area-inset-bottom))] z-40 mx-auto grid h-[70px] max-w-md grid-cols-3 rounded-[35px] p-2"
     >
       <span
         aria-hidden="true"
-        className="absolute inset-y-1.5 left-1.5 w-[calc((100%-12px)/4)] rounded-[29px] border border-white/14 bg-white/10 transition-transform duration-[380ms] ease-[var(--ease-snappy)]"
+        className="absolute inset-y-1.5 left-1.5 w-[calc((100%-12px)/3)] rounded-[29px] border border-white/14 bg-white/10 transition-transform duration-[380ms] ease-[var(--ease-snappy)]"
         style={{ transform: `translateX(${active * 100}%)` }}
       />
       {tabs.map((tab, i) => {
