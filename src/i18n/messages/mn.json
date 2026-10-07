@@ -16,5 +16,67 @@
     "generic": "Алдаа гарлаа. Дахин оролдоно уу.",
     "offline": "Интернэт холболт алга",
     "notFound": "Хуудас олдсонгүй"
+  },
+  "nav": {
+    "label": "Аппын цэс",
+    "home": "Нүүр",
+    "events": "Үйл явдал",
+    "devices": "Төхөөрөмж",
+    "settings": "Тохиргоо",
+    "newEvents": "{count} шинэ дохио"
+  },
+  "eventKind": {
+    "fall": "Унасан байж магадгүй",
+    "scream": "Орилох дуу",
+    "cry": "Удаан уйлсан",
+    "glass": "Шил хагарах дуу",
+    "alarm": "Галын дохионы дуу",
+    "offline": "Камер салсан",
+    "test": "Тест мэдэгдэл"
+  },
+  "severity": {
+    "critical": "Аюултай",
+    "warning": "Анхааруулга",
+    "info": "Мэдээлэл"
+  },
+  "eventStatus": {
+    "new": "Шинэ",
+    "acknowledged": "Харсан",
+    "false_alarm": "Хуурамч",
+    "resolved": "Шийдсэн"
+  },
+  "deviceStatus": {
+    "online": "Онлайн",
+    "offline": "Салсан",
+    "pairing": "Холбогдож байна"
+  },
+  "deviceKind": {
+    "phone": "Утас",
+    "laptop": "Laptop",
+    "ip_camera": "IP камер"
+  },
+  "slideToConfirm": {
+    "hint": "Гулсуулах эсвэл 2 удаа дарах",
+    "again": "Дахин дарж баталгаажуулна уу"
+  },
+  "statusRing": {
+    "rooms": "өрөө",
+    "online": "онлайн"
+  },
+  "theme": {
+    "mode": "Горим",
+    "system": "Систем",
+    "dark": "Харанхуй",
+    "light": "Цайвар",
+    "palette": "Өнгө",
+    "lake": "Нуур",
+    "night": "Шөнө",
+    "hearth": "Дулаан",
+    "slate": "Анхны"
+  },
+  "language": {
+    "label": "Хэл",
+    "mn": "Монгол",
+    "en": "English"
   }
 }
