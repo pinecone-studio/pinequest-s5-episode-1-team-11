@@ -2,8 +2,9 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { z } from "zod";
-import { Member, Profile } from "@/contracts";
-import { requireUser } from "@/lib/auth/session";
+import { Invite, Member, Profile, PushSubscriptionJSON } from "@/contracts";
+import { getUser, requireUser } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import { getDemoFixtures } from "./demo";
 import { mapDevice, mapEvent, mapHousehold, mapWatchedPerson } from "./mappers";
@@ -184,6 +185,42 @@ export async function getUnreadCount() {
     .eq("status", "new");
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function getInvite(code: string) {
+  if (!/^[a-f0-9]{32}$/.test(code)) return null;
+  const client = await createClient();
+  if (!client) return null;
+  if (!(await getUser())) redirect(`/login?next=${encodeURIComponent(routes.invite(code))}`);
+  const { data, error } = await client.rpc("get_invite", { p_code: code });
+  if (error) throw error;
+  const row = data?.[0];
+  return row
+    ? Invite.parse({
+        code: row.code,
+        householdName: row.household_name,
+        invitedBy: row.invited_by,
+        expiresAt: row.expires_at,
+      })
+    : null;
+}
+
+/** User-facing settings can only read the current user's subscriptions. */
+export async function listOwnPushSubscriptions() {
+  const context = await getContext();
+  if (!context) return [];
+  const { data, error } = await context.client
+    .from("push_subscriptions")
+    .select("*")
+    .eq("user_id", context.user.id);
+  if (error) throw error;
+  return data.map((row) =>
+    PushSubscriptionJSON.parse({
+      endpoint: row.endpoint,
+      expirationTime: row.expiration_time,
+      keys: { p256dh: row.p256dh, auth: row.auth },
+    }),
+  );
 }
 
 export async function getHomeSummary() {

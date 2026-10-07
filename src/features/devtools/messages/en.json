@@ -1,0 +1,10 @@
+{
+  "title": "Development tools",
+  "connected": "Connected database · Your household's data only",
+  "scenario": { "calm": "Calm", "alert": "Alert", "offline": "Camera offline", "empty": "Empty" },
+  "createEvent": "Create test event",
+  "offlineDevice": "{name} → offline",
+  "routes": "Routes",
+  "summary": "{devices} devices · {events} events · {unread} new",
+  "data": "Query data"
+}

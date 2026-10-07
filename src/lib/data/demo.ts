@@ -23,6 +23,10 @@ export async function getDemoFixtures() {
     );
   }
   if (state !== "offline")
-    fixtures.devices = fixtures.devices.map((device) => ({ ...device, status: "online" }));
+    fixtures.devices = fixtures.devices.map((device) => ({
+      ...device,
+      status: "online",
+      lastSeenAt: new Date().toISOString(),
+    }));
   return fixtures;
 }
