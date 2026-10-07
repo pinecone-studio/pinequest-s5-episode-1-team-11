@@ -3,23 +3,31 @@
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useTransition } from "react";
+import { useSyncExternalStore, useTransition } from "react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { setLocale } from "@/i18n/actions";
 import { cn } from "@/lib/cn";
 import { setPalette } from "./actions";
 import { type Palette, paletteSwatches, palettes } from "./palettes";
 
+const subscribeToMount = () => () => {};
+
 /** Систем / Харанхуй / Цайвар. */
 export function ModeSelect() {
   const t = useTranslations("common.theme");
   const { theme = "dark", setTheme } = useTheme();
+  // localStorage is only available in the browser. Hydrate with the same server value first.
+  const mounted = useSyncExternalStore(
+    subscribeToMount,
+    () => true,
+    () => false,
+  );
   const options = (["system", "dark", "light"] as const).map((v) => ({ value: v, label: t(v) }));
   return (
     <SegmentedControl
       label={t("mode")}
       options={options}
-      value={theme as "system" | "dark" | "light"}
+      value={mounted ? (theme as "system" | "dark" | "light") : "dark"}
       onValueChange={setTheme}
     />
   );

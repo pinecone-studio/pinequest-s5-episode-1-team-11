@@ -27,7 +27,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Sheet, SheetClose } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { makeFixtures } from "@/contracts/fixtures";
+import type { Fixtures } from "@/contracts/fixtures";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -38,14 +38,20 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export function DesignShowcase({ palette }: { palette: Palette }) {
+export function DesignShowcase({
+  palette,
+  fixtures: initialFixtures,
+}: {
+  palette: Palette;
+  fixtures: Fixtures;
+}) {
   const t = useTranslations("design");
   const c = useTranslations("common");
   const [ring, setRing] = useState<RingState>("calm");
   const [enabled, setEnabled] = useState(true);
   const [dialog, setDialog] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [fixtures] = useState(() => makeFixtures());
+  const [fixtures] = useState(initialFixtures);
   return (
     <AppFrame>
       <PageHeader title={t("title")} subtitle={t("subtitle")} />

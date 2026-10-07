@@ -81,5 +81,23 @@
     "en": "English"
   },
   "featurePending": "This section is being prepared",
-  "demo": "Example data · Live camera monitoring has not started"
+  "demo": "Example data · Live camera monitoring has not started",
+  "relativeTime": {
+    "now": "Just now",
+    "soon": "Soon",
+    "past": {
+      "minute": "{count, plural, one {# minute ago} other {# minutes ago}}",
+      "hour": "{count, plural, one {# hour ago} other {# hours ago}}",
+      "day": "{count, plural, one {# day ago} other {# days ago}}",
+      "month": "{count, plural, one {# month ago} other {# months ago}}",
+      "year": "{count, plural, one {# year ago} other {# years ago}}"
+    },
+    "future": {
+      "minute": "{count, plural, one {in # minute} other {in # minutes}}",
+      "hour": "{count, plural, one {in # hour} other {in # hours}}",
+      "day": "{count, plural, one {in # day} other {in # days}}",
+      "month": "{count, plural, one {in # month} other {in # months}}",
+      "year": "{count, plural, one {in # year} other {in # years}}"
+    }
+  }
 }
