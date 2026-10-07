@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { onest, unbounded } from "@/components/theme/fonts";
 import { defaultPalette, isPalette, PALETTE_COOKIE } from "@/components/theme/palettes";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import "./globals.css";
 
@@ -40,6 +41,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
