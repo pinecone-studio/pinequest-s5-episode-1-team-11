@@ -59,6 +59,7 @@ select set_config('halo.seed_user_id', 'YOUR_AUTH_USER_UUID', false);
 
 - `POST /api/v1/devices/pair` — `{ code, kind }` → `{ deviceId, deviceToken, name, roomName }`. Код нэг удаа, 10 минут хүчинтэй. Нэг хаягаас 10 минутад 10-аас олон буруу оролдлого хийвэл 429.
 - `POST /api/v1/devices/heartbeat` — 30 секунд тутам. Төхөөрөмжийг online болгож `{ deviceId, name, roomName, settings }` буцаана, тиймээс асран хамгаалагчийн өөрчилсөн тохиргоо камерт шууд хүрнэ. 401 бол камер салгагдсан.
+- `POST /api/v1/events` — `EventIngest` (`idempotencyKey`, `kind`, `confidence`, `occurredAt`, сонголтоор `snapshot` JPEG base64). Ижил key-ээр дахин илгээвэл эхний event-ийг `duplicate: true`-тай буцаана, тиймээс сүлжээ тасарсан үед дахин оролдох нь аюулгүй. Асран хамгаалагч тухайн төрлийг унтраасан бол 202 `ignored`. Нэг камер 10 минутад 30-аас олон event илгээвэл 429. Хариу өгсний дараа `notifyEvent`-ээр гэр бүлийн бүх гишүүнд push илгээж, хүчингүй болсон subscription-ыг устгана.
 - `DELETE /api/v1/devices/me` — камер өөрийгөө салгана. Event-үүд үлдэнэ. `src/lib/routes.ts` нь route-уудын shared contract.
 
 Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scoped өгөгдлийг ашиглана. User query нь publishable client + RLS ашиглаж, private snapshot URL-ийг 60 секундээр гаргана. Supabase тохируулсан үед auth-гүй query нэвтрэх хуудас руу шилжинэ.

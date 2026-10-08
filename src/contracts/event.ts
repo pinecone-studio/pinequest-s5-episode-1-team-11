@@ -46,6 +46,15 @@ export const EventIngest = z.object({
 });
 export type EventIngest = z.infer<typeof EventIngest>;
 
+/** POST /api/v1/events answer. A retried key returns the first event with duplicate: true. */
+export const EventIngestResponse = z.object({
+  eventId: z.uuid().nullable(),
+  duplicate: z.boolean().optional(),
+  /** The guardian turned this kind of detection off for the camera. */
+  ignored: z.boolean().optional(),
+});
+export type EventIngestResponse = z.infer<typeof EventIngestResponse>;
+
 /** Default severity for each kind; the server may raise it. */
 export const severityOf: Record<EventKind, Severity> = {
   fall: "critical",
