@@ -114,6 +114,18 @@ export type Database = {
       };
       accept_invite: { Args: { p_code: string }; Returns: string };
       delete_my_account: { Args: Record<string, never>; Returns: undefined };
+      claim_pairing: {
+        Args: { p_code: string; p_kind: string; p_token_hash: string; p_client: string };
+        Returns: {
+          status: "paired" | "invalid" | "limited";
+          device_id: string | null;
+          household_id: string | null;
+          name: string | null;
+          room_name: string | null;
+        }[];
+      };
+      authenticate_device: { Args: { p_token_hash: string }; Returns: DeviceRow[] };
+      mark_offline_devices: { Args: { p_after?: string }; Returns: EventRow[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -43,3 +43,14 @@ export type Device = z.infer<typeof Device>;
 
 /** A device counts as offline when no heartbeat arrived for this long. */
 export const OFFLINE_AFTER_MS = 90_000;
+/** Cameras call POST /api/v1/devices/heartbeat this often; three misses mean offline. */
+export const HEARTBEAT_INTERVAL_MS = 30_000;
+
+/** Heartbeat answer. Guardians can rename a camera or change detection while it runs. */
+export const DeviceConfig = z.object({
+  deviceId: z.uuid(),
+  name: z.string(),
+  roomName: z.string(),
+  settings: DetectionSettings,
+});
+export type DeviceConfig = z.infer<typeof DeviceConfig>;

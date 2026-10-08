@@ -7,6 +7,7 @@ import { DEMO_COOKIE, demoStates } from "@/lib/data/demo";
 import { getDevice, getHousehold } from "@/lib/data/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 function requireDevelopment() {
   if (process.env.NODE_ENV !== "development") notFound();
@@ -56,4 +57,17 @@ export async function setDeviceOffline(form: FormData) {
     .eq("household_id", device.householdId);
   if (error) throw error;
   redirect("/dev?result=offline");
+}
+
+/** Same RPC the guardian's "Add camera" screen uses; lets /monitor be tested before that screen exists. */
+export async function createPairingCode() {
+  requireDevelopment();
+  const client = await createClient();
+  if (!client) redirect("/dev");
+  const { data, error } = await client.rpc("create_pairing", {
+    p_name: "Dev camera",
+    p_room_name: "Development",
+  });
+  if (error) throw error;
+  redirect(`/dev?pairing=${data[0].code}`);
 }
