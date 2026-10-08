@@ -1,3 +1,9 @@
 {
-  "title": "Гэр бүл"
+  "title": "Гэр бүл",
+  "devices": "Камерууд",
+  "devicesHint": "Утас, laptop, IP камер",
+  "household": "Асран хамгаалагчид",
+  "householdHint": "Гишүүд, урилга",
+  "people": "Хамгаалж буй хүмүүс",
+  "peopleHint": "Нас, онцгой анхаарах зүйл"
 }
