@@ -1,5 +1,9 @@
 {
   "title": "Caregivers",
   "peopleTitle": "People you protect",
-  "inviteTitle": "Household invite"
+  "inviteTitle": "Household invite",
+  "members": "Household members",
+  "owner": "Owner",
+  "caregiver": "Caregiver",
+  "you": "(You)"
 }
