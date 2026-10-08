@@ -59,6 +59,12 @@ Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scop
 
 `src/features/notifications/server/notify-event.ts` дахь `notifyEvent(event, subscriptions)` одоогоор `{ sent: 0, expired: [] }` буцаадаг stub. `NotificationSettings` нь settings route-д залгах хоосон slot. Эдгээрийн бодит ажиллагааг notification feature хэрэгжүүлнэ.
 
+## Дэлгэцийн хэмжээ
+
+Апп утсанд эхэлж зохиогдсон ч таблет, компьютер дээр ч гоё харагдах ёстой. `AppFrame` нь утсанд нэг багана, таблетад өргөн (`md:`), компьютерт хажуу цэстэй өргөн (`lg:`, 1024px+) хэлбэртэй. Доод цэс нь компьютерт хажуу цэс (`SideNav`) болно, `Sheet` баруун талаас гарна.
+
+Дэлгэц бүрээ утсанд эхэлж хийгээд том дэлгэцэд `md:`/`lg:` grid нэмнэ. Жишээ нь нүүр: `lg:grid-cols-[minmax(0,1fr)_380px]`, жагсаалт: `lg:grid-cols-2`. PR-т 375px ба 1440px хоёр зураг хавсаргана.
+
 ## Текст ба хэл
 
 Апп Монгол (үндсэн) ба англи хэлтэй. Feature бүр текстээ `src/features/<feature>/messages/mn.json`, `en.json`-д бичиж `useTranslations("<feature>")`-ээр уншина. Хоёр файлын түлхүүрүүд ижил байх ёстой, тест шалгана.
