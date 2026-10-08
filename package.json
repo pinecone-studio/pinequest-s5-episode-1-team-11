@@ -10,7 +10,8 @@
     "lint": "biome check",
     "format": "biome check --write",
     "test": "vitest run",
-    "check": "biome check && bun run typecheck && vitest run"
+    "check": "biome check && bun run typecheck && vitest run",
+    "vapid": "web-push generate-vapid-keys"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
