@@ -35,7 +35,7 @@ Turbopack тухайн орчинд ажиллахгүй бол `bun run build -
 
 ## Supabase холбох
 
-1. `supabase/migrations/` доторх гурван SQL файлыг filename-ийн дарааллаар өөрийн Supabase project дээр ажиллуулна. Дарааллаар нь tables → RLS/storage → household/pairing/invite functions.
+1. `supabase/migrations/` доторх бүх SQL файлыг filename-ийн дарааллаар өөрийн Supabase project дээр ажиллуулна (`supabase db push` эсвэл SQL Editor). Дарааллаар нь tables → RLS/storage → household/pairing/invite functions → device API functions.
 2. `.env.local`-д URL, publishable key тавина. `SUPABASE_SECRET_KEY` нь зөвхөн server-side device API болон development хэрэгсэлд хэрэглэгдэнэ.
 3. Supabase Auth-ийн Site URL-ийг `NEXT_PUBLIC_SITE_URL`-тай тааруулж, `/auth/callback` URL-ийг Redirect URLs-д зөвшөөрнө. Email confirmation асаалттай бүртгэл PKCE callback ашиглана; token-hash email template ашиглавал `/auth/confirm?token_hash=…&type=email` route бэлэн.
 4. Push мэдэгдлийн VAPID түлхүүр үүсгэнэ: `bun run vapid`. Public Key-г `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, Private Key-г `VAPID_PRIVATE_KEY`-д тавина. Түлхүүрийг нэг удаа үүсгээд бүх хүн, Vercel ижлийг ашиглана; солих юм бол өмнөх бүх мэдэгдлийн бүртгэл хүчингүй болно. Private key-г хэзээ ч commit хийхгүй.
@@ -53,7 +53,12 @@ select set_config('halo.seed_user_id', 'YOUR_AUTH_USER_UUID', false);
 
 ## Залгах цэгүүд
 
-`src/contracts/` нь browser болон ирээдүйн CCTV төхөөрөмжийн нийтлэг device, pairing, event ingestion, push schema-г тодорхойлно. `src/lib/routes.ts` нь route-уудын shared contract.
+`src/contracts/` нь browser болон ирээдүйн CCTV төхөөрөмжийн нийтлэг device, pairing, event ingestion, push schema-г тодорхойлно.
+
+Камер төхөөрөмжийн API (`src/app/api/v1/`) нь хэрэглэгчийн cookie биш, `Authorization: Bearer <deviceToken>` ашиглана:
+
+- `POST /api/v1/devices/pair` — `{ code, kind }` → `{ deviceId, deviceToken, name, roomName }`. Код нэг удаа, 10 минут хүчинтэй. Нэг хаягаас 10 минутад 10-аас олон буруу оролдлого хийвэл 429.
+- `DELETE /api/v1/devices/me` — камер өөрийгөө салгана. Event-үүд үлдэнэ. `src/lib/routes.ts` нь route-уудын shared contract.
 
 Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scoped өгөгдлийг ашиглана. User query нь publishable client + RLS ашиглаж, private snapshot URL-ийг 60 секундээр гаргана. Supabase тохируулсан үед auth-гүй query нэвтрэх хуудас руу шилжинэ.
 
