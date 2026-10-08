@@ -5,15 +5,23 @@ import { getTranslations } from "next-intl/server";
 import { AppFrame } from "@/components/app/app-frame";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
-import { createTestEvent, setDemoScenario, setDeviceOffline } from "@/features/devtools/actions";
+import { formatPairingCode } from "@/contracts";
+import {
+  createPairingCode,
+  createTestEvent,
+  setDemoScenario,
+  setDeviceOffline,
+} from "@/features/devtools/actions";
 import { DEMO_COOKIE, demoStates } from "@/lib/data/demo";
 import { getHomeSummary } from "@/lib/data/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { serverEnv } from "@/lib/env.server";
 import { routes } from "@/lib/routes";
 
-export default async function DevPage() {
+export default async function DevPage({ searchParams }: PageProps<"/dev">) {
   if (process.env.NODE_ENV !== "development") notFound();
+  const { pairing } = await searchParams;
+  const code = typeof pairing === "string" && /^\d{6}$/.test(pairing) ? pairing : null;
   const [t, common, summary] = await Promise.all([
     getTranslations("devtools"),
     getTranslations("common"),
@@ -44,6 +52,19 @@ export default async function DevPage() {
       )}
       {isSupabaseConfigured && serverEnv.supabaseSecretKey && (
         <>
+          <form action={createPairingCode}>
+            <Button type="submit" variant="secondary">
+              {t("createPairing")}
+            </Button>
+          </form>
+          {code && (
+            <p className="glass grid gap-1 rounded-lg p-4">
+              <b className="font-display text-3xl tabular">{formatPairingCode(code)}</b>
+              <Link className="underline" href={`${routes.monitor}?code=${code}`}>
+                {t("openMonitor")}
+              </Link>
+            </p>
+          )}
           <form action={createTestEvent}>
             <Button type="submit">{t("createEvent")}</Button>
           </form>

@@ -19,7 +19,8 @@ bun dev
 [http://localhost:3000](http://localhost:3000) нээнэ. Supabase-ийн утга хоосон бол query-ууд жишээ өгөгдөл буцаана. Холбогдсон үед query алдааг жишээ өгөгдлөөр нуухгүй.
 
 - `/design` — shared component, light/dark, palette болон хэлний showcase.
-- `/dev` — хөгжүүлэлтийн үед жишээ төлөв солих, route болон query өгөгдөл шалгах. Supabase + server key тохируулсан бол нэвтэрсэн хэрэглэгчийн гэр бүлд тест event үүсгэж, төхөөрөмжийг offline болгож болно. Production-д 404.
+- `/prototype.html` — cream + гүн ногоон interactive design preview. Камер, event, pairing нь жишээ өгөгдөл; бодит AI/CCTV холболт биш.
+- `/dev` — хөгжүүлэлтийн үед жишээ төлөв солих, route болон query өгөгдөл шалгах. Supabase + server key тохируулсан бол нэвтэрсэн хэрэглэгчийн гэр бүлд тест event үүсгэх, төхөөрөмжийг offline болгох, `/monitor`-д оруулах pairing код үүсгэх боломжтой. Production-д 404.
 - `/login`, `/signup`, `/setup-household` — auth суурь.
 - `/monitor` — утас/laptop-ыг камер болгоно: 6 оронтой кодоор холбогдоод (эсвэл `?code=123456`), камер+микрофоноор унах, орилох, удаан уйлах, шил хагарах, галын дохиог илрүүлнэ. Supabase-гүй үед **Туршилтын горим** — илрүүлэлт зөвхөн дэлгэц дээр харагдана.
 - `/home`, `/events`, `/devices`, `/settings`, `/onboarding`, `/invite/[code]` болон нийтийн хуудсууд — placeholder.
