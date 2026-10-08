@@ -1,11 +1,14 @@
-import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { AppFrame } from "@/components/app/app-frame";
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
+import { IntroSlides } from "@/features/onboarding/components/intro-slides";
+import { hasSeenOnboarding } from "@/features/onboarding/queries";
+import { routes } from "@/lib/routes";
+
 export default async function Page() {
-  const t = await getTranslations("onboarding");
+  if (await hasSeenOnboarding()) redirect(routes.login);
   return (
-    <AppFrame>
-      <FeaturePlaceholder title={t("title")} subtitle={t("subtitle")} />
+    <AppFrame className="min-h-dvh content-center py-8">
+      <IntroSlides />
     </AppFrame>
   );
 }
