@@ -23,7 +23,8 @@
     "tip3": "Keep this page open and the screen on",
     "start": "Start watching",
     "permission": "Asks for camera and microphone access",
-    "disconnect": "Disconnect this camera"
+    "disconnect": "Disconnect this camera",
+    "cctv": "CCTV mode: watching the go2rtc stream on {host}"
   },
   "loading": {
     "camera": "Starting the camera…",

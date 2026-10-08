@@ -66,3 +66,60 @@ export async function fileSource(video: HTMLVideoElement, url: string): Promise<
     },
   };
 }
+
+/**
+ * A CCTV/IP camera relayed by go2rtc (RTSP → WebRTC). `url` is go2rtc's
+ * WebRTC endpoint, e.g. http://localhost:1984/api/webrtc?src=hall
+ */
+export async function go2rtcSource(video: HTMLVideoElement, url: string): Promise<VideoSource> {
+  const peer = new RTCPeerConnection();
+  peer.addTransceiver("video", { direction: "recvonly" });
+  peer.addTransceiver("audio", { direction: "recvonly" });
+  const stream = new MediaStream();
+  peer.ontrack = ({ track }) => stream.addTrack(track);
+  await peer.setLocalDescription(await peer.createOffer());
+  // go2rtc answers a complete offer in one request; wait for ICE candidates first.
+  await new Promise<void>((resolve) => {
+    if (peer.iceGatheringState === "complete") return resolve();
+    const timeout = setTimeout(resolve, 2000);
+    peer.onicegatheringstatechange = () => {
+      if (peer.iceGatheringState === "complete") {
+        clearTimeout(timeout);
+        resolve();
+      }
+    };
+  });
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: peer.localDescription?.sdp,
+  });
+  if (!response.ok) {
+    peer.close();
+    throw new Error(`go2rtc answered ${response.status}`);
+  }
+  await peer.setRemoteDescription({ type: "answer", sdp: await response.text() });
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("No video from go2rtc")), 10_000);
+    const check = () => {
+      if (stream.getVideoTracks().length) {
+        clearTimeout(timeout);
+        resolve();
+      }
+    };
+    peer.addEventListener("track", check);
+    check();
+  });
+  video.srcObject = stream;
+  video.muted = true;
+  video.playsInline = true;
+  await video.play().catch(() => undefined);
+  return {
+    video,
+    audio: stream.getAudioTracks().length ? stream : null,
+    stop: () => {
+      peer.close();
+      video.srcObject = null;
+    },
+  };
+}

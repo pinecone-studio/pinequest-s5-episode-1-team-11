@@ -20,10 +20,12 @@ export function MonitorScreen({
   code,
   apiReady,
   testVideo,
+  cctvUrl,
 }: {
   code: string;
   apiReady: boolean;
   testVideo?: string;
+  cctvUrl?: string;
 }) {
   const t = useTranslations("monitor");
   const common = useTranslations("common");
@@ -48,6 +50,7 @@ export function MonitorScreen({
       <WatchView
         device={identity === "local" ? null : identity}
         testVideo={testVideo}
+        cctvUrl={cctvUrl}
         onExit={() => setWatching(false)}
         onUnpaired={unpaired}
       />
@@ -77,6 +80,11 @@ export function MonitorScreen({
           <p className="text-md text-muted-foreground">
             {paired ? t("ready.lead", { name: paired.name }) : t("ready.localLead")}
           </p>
+          {cctvUrl && (
+            <p className="glass rounded-lg p-4 text-base">
+              {t("ready.cctv", { host: new URL(cctvUrl).host })}
+            </p>
+          )}
           <ul className="glass grid gap-4 rounded-lg p-5">
             {[t("ready.tip1"), t("ready.tip2"), t("ready.tip3")].map((tip, index) => {
               const Icon = [VideoCameraIcon, PlugIcon, CheckIcon][index];

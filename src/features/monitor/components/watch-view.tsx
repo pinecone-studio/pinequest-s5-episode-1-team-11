@@ -38,6 +38,7 @@ type Recent = { kind: DetectedKind; at: number; sent: boolean };
 export function WatchView({
   device,
   testVideo,
+  cctvUrl,
   onExit,
   onUnpaired,
 }: {
@@ -45,6 +46,8 @@ export function WatchView({
   device: PairResponse | null;
   /** Development only: watch a recording instead of the camera. */
   testVideo?: string;
+  /** go2rtc WebRTC endpoint: watch a CCTV camera instead of this device's camera. */
+  cctvUrl?: string;
   onExit(): void;
   onUnpaired(): void;
 }) {
@@ -91,14 +94,18 @@ export function WatchView({
     let lastStats = 0;
     setPhase("camera");
     (async () => {
-      const [{ cameraSource, fileSource }, { Watcher }] = await Promise.all([
+      const [{ cameraSource, fileSource, go2rtcSource }, { Watcher }] = await Promise.all([
         import("@/detection/runtime/video-source"),
         import("@/detection/runtime/watcher"),
       ]);
       // React may cancel this run right away (development double effects); never share the <video>.
       if (cancelled) return;
       try {
-        source = testVideo ? await fileSource(video, testVideo) : await cameraSource(video);
+        source = cctvUrl
+          ? await go2rtcSource(video, cctvUrl)
+          : testVideo
+            ? await fileSource(video, testVideo)
+            : await cameraSource(video);
       } catch (error) {
         console.error("camera failed", error);
         if (!cancelled) setPhase("error-camera");
@@ -155,7 +162,7 @@ export function WatchView({
       watcherRef.current = null;
       source?.stop();
     };
-  }, [attempt, outbox, testVideo]);
+  }, [attempt, outbox, testVideo, cctvUrl]);
 
   // Heartbeats keep the camera online and bring the guardian's latest settings.
   useEffect(() => {

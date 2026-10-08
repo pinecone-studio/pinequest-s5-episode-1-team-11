@@ -94,6 +94,8 @@ Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scop
 - `src/detection/engine.ts` — тохиргоо (унах/дуу/аюул асаах-унтраах, мэдрэмж), төрөл бүрийн cooldown, орилсны дараах уналтын итгэлийг өсгөнө.
 - `src/detection/runtime/` — browser-ийн камер, микрофон, model ажиллуулагч. `VideoSource` нь CCTV урсгал залгах цэг.
 
+CCTV: [`tools/cctv-sim`](tools/cctv-sim/README.md) — go2rtc RTSP/файлын урсгалыг WebRTC болгоно, `/monitor?cctv=http://localhost:1984/api/webrtc?src=hall` нээхэд камерын оронд тэр урсгалыг хянана.
+
 Дүрмүүдийг `bun run test`-ийн synthetic pose/дууны тестүүд шалгана. Камергүйгээр турших бол development үед `public/` дотор видео тавиад `/monitor?video=/clip.mp4` нээнэ (видеоны дуу бас шинжлэгдэнэ). Жишээ нь галын дохионы дуу:
 
 ```bash
