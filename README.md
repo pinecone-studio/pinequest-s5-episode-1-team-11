@@ -16,6 +16,7 @@ http://localhost:3000 нээнэ.
 ## Шалгах
 
 ```bash
-bun run typecheck
+bun run check    # Biome + TypeScript + тест — PR бүрийн өмнө алдаагүй байх ёстой
+bun run format   # формат, import-ын дарааллыг автоматаар засна
 bun run build
 ```
