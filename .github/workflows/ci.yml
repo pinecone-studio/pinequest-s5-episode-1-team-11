@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: No secrets or build output in git
+        run: |
+          bad=$(git ls-files | grep -E '(^|/)\.env($|\.)|(^|/)\.next/|(^|/)node_modules/|\.pem$' | grep -v '\.env\.example$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::These files must not be committed:"
+            echo "$bad"
+            exit 1
+          fi
+
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run build
+
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR title is a conventional commit
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! printf '%s' "$TITLE" | grep -Eq '^(feat|fix|chore|docs|style|refactor|test|ci|perf|build)(\([a-z0-9-]+\))?!?: .+'; then
+            echo "::error::PR title must look like: feat(events): add event card"
+            echo "Got: $TITLE"
+            exit 1
+          fi
