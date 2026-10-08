@@ -7,7 +7,7 @@ import { routes } from "@/lib/routes";
 export default async function Page() {
   if (await hasSeenOnboarding()) redirect(routes.login);
   return (
-    <AppFrame className="min-h-dvh content-center py-8">
+    <AppFrame width="narrow" className="pb-4 md:max-w-lg">
       <IntroSlides />
     </AppFrame>
   );
