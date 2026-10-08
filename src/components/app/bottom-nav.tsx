@@ -1,36 +1,22 @@
 "use client";
 
-import { BellIcon, HouseIcon, type Icon, UsersThreeIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
+import { activeNavIndex, navItems as tabs } from "./nav-items";
 
-const tabs: {
-  href: "/home" | "/events" | "/settings";
-  key: "home" | "events" | "family";
-  icon: Icon;
-}[] = [
-  { href: routes.home, key: "home", icon: HouseIcon },
-  { href: routes.events, key: "events", icon: BellIcon },
-  { href: routes.settings, key: "family", icon: UsersThreeIcon },
-];
-
-/** Devices belong to Family; adding a camera and alerts have no tab bar. */
+/** Phone and tablet tab bar. Adding a camera and alerts are full-screen, so it hides there. */
 export function BottomNav({ newEvents = 0 }: { newEvents?: number }) {
   const t = useTranslations("common.nav");
   const pathname = usePathname();
   if (pathname.endsWith("/alert") || pathname === routes.newDevice) return null;
-  const section = pathname.startsWith(routes.devices) ? routes.settings : pathname;
-  const active = Math.max(
-    0,
-    tabs.findIndex((tab) => section === tab.href || section.startsWith(`${tab.href}/`)),
-  );
+  const active = activeNavIndex(pathname);
   return (
     <nav
       aria-label={t("label")}
-      className="glass-strong fixed inset-x-3.5 bottom-[max(16px,env(safe-area-inset-bottom))] z-40 mx-auto grid h-[70px] max-w-md grid-cols-3 rounded-[35px] p-2"
+      className="glass-strong fixed inset-x-3.5 lg:hidden bottom-[max(16px,env(safe-area-inset-bottom))] z-40 mx-auto grid h-[70px] max-w-md grid-cols-3 rounded-[35px] p-2"
     >
       <span
         aria-hidden="true"

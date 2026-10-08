@@ -13,7 +13,7 @@ export default async function SignUp({
   const t = await getTranslations("auth");
   const params = await searchParams;
   return (
-    <AppFrame>
+    <AppFrame width="narrow">
       <p className="font-display text-xl text-primary-text">Halo</p>
       <PageHeader title={t("signup")} subtitle={t("welcome")} />
       <AuthForm mode="signup" next={safeNext(params.next)} configured={isSupabaseConfigured} />

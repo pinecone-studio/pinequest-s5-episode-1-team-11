@@ -13,7 +13,7 @@ export default async function Login({
   const t = await getTranslations("auth");
   const params = await searchParams;
   return (
-    <AppFrame>
+    <AppFrame width="narrow">
       <p className="font-display text-xl text-primary-text">Halo</p>
       <PageHeader title={t("login")} subtitle={t("welcome")} />
       <AuthForm

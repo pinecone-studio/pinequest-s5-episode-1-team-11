@@ -15,7 +15,7 @@ export default async function SetupHousehold({
   if (isSupabaseConfigured) await requireUser();
   const params = await searchParams;
   return (
-    <AppFrame>
+    <AppFrame width="narrow">
       <PageHeader title={t("householdTitle")} subtitle={t("householdDescription")} />
       <AuthForm mode="household" next={safeNext(params.next)} configured={isSupabaseConfigured} />
     </AppFrame>
