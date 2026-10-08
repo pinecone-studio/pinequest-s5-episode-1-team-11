@@ -1,5 +1,20 @@
 {
   "title": "Caregivers",
   "peopleTitle": "People you protect",
-  "inviteTitle": "Household invite"
+  "inviteTitle": "Household invite",
+  "createInviteTitle": "Invite a caregiver",
+  "createInviteHint": "Create a link and share it with someone you trust.",
+  "createInvite": "Create invite link",
+  "inviteLink": "Invite link",
+  "shareInvite": "Share or copy link",
+  "inviteCopied": "Link copied",
+  "shareError": "Could not share or copy the link. Please try again.",
+  "inviteUnavailable": "Invites are unavailable in demo mode.",
+  "inviteOwnerOnly": "Only the household owner can create invite links.",
+  "inviteLimitReached": "There are already too many active invites. Try again later.",
+  "invitedBy": "{name} invited you",
+  "joinHousehold": "Join",
+  "inviteInvalid": "This invite link is invalid or no longer available.",
+  "inviteExpired": "This invite has expired or has already been used.",
+  "inviteAlreadyInHousehold": "Your account already belongs to a household."
 }

@@ -1,7 +1,14 @@
 import { getTranslations } from "next-intl/server";
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
+import { PageHeader } from "@/components/app/page-header";
+import { InvitePanel } from "@/features/household/components/invite-panel";
 
 export default async function Page() {
   const t = await getTranslations("household");
-  return <FeaturePlaceholder title={t("title")} />;
+
+  return (
+    <>
+      <PageHeader title={t("title")} />
+      <InvitePanel />
+    </>
+  );
 }
