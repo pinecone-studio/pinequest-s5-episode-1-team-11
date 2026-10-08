@@ -1,5 +1,7 @@
 {
   "title": "Family",
+  "familyLinks": "Family",
+  "appearance": "Appearance",
   "devices": "Cameras",
   "devicesHint": "Phones, laptops, IP cameras",
   "household": "Caregivers",
