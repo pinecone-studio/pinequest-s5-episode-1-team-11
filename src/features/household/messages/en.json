@@ -3,10 +3,10 @@
   "peopleTitle": "People you protect",
   "inviteTitle": "Household invite",
   "createInviteTitle": "Invite a caregiver",
-  "createInviteHint": "Create a link and share it with someone you trust.",
+  "createInviteHint": "Create a link and share it with someone you trust. They join as a caregiver and get alerts.",
   "createInvite": "Create invite link",
   "inviteLink": "Invite link",
-  "shareInvite": "Share or copy link",
+  "shareInvite": "Share",
   "inviteCopied": "Link copied",
   "shareError": "Could not share or copy the link. Please try again.",
   "inviteUnavailable": "Invites are unavailable in demo mode.",
@@ -20,5 +20,9 @@
   "members": "Household members",
   "owner": "Owner",
   "caregiver": "Caregiver",
-  "you": "(You)"
+  "you": "You",
+  "subtitle": "People who get alerts and check on them",
+  "inviteExpiry": "Works once, for 24 hours",
+  "copyInvite": "Copy",
+  "newInvite": "New link"
 }
