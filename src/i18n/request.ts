@@ -6,5 +6,5 @@ import { getMessages } from "./messages";
 export default getRequestConfig(async () => {
   const fromCookie = (await cookies()).get(LOCALE_COOKIE)?.value;
   const locale = isLocale(fromCookie) ? fromCookie : defaultLocale;
-  return { locale, messages: getMessages(locale), timeZone: "Asia/Ulaanbaatar" };
+  return { locale, messages: getMessages(locale), timeZone: "Asia/Ulaanbaatar", now: new Date() };
 });
