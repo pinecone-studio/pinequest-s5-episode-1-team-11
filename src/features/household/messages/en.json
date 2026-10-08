@@ -1,5 +1,29 @@
 {
   "title": "Caregivers",
-  "peopleTitle": "People you protect",
-  "inviteTitle": "Household invite"
+  "peopleTitle": "People we look after",
+  "inviteTitle": "Household invite",
+  "addPerson": "Add a person",
+  "editPerson": "Edit person",
+  "personFormHint": "Enter the details needed to care for this person.",
+  "personName": "Name",
+  "nameRequired": "Enter a name.",
+  "personKind": "Type",
+  "kinds": {
+    "child": "Child",
+    "elderly": "Older adult",
+    "disabled": "Person with a disability"
+  },
+  "age": "Age",
+  "ageValue": "Age {age}",
+  "specialNotes": "Special considerations",
+  "emergencyPhone": "Emergency phone",
+  "emergencyPhoneValue": "Emergency: {phone}",
+  "save": "Save",
+  "cancel": "Cancel",
+  "emptyPeople": "No people added yet.",
+  "demoSaveUnavailable": "Saving people requires a Supabase connection; demo mode does not save changes.",
+  "invalidPerson": "Some details are invalid. Check the fields and try again.",
+  "householdRequired": "Create or join a household before adding people.",
+  "saveFailed": "Could not save this person. Please try again.",
+  "personNotFound": "This person could not be found. Refresh the page and try again."
 }
