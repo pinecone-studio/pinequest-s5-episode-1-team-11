@@ -16,5 +16,67 @@
     "generic": "Something went wrong. Please try again.",
     "offline": "No internet connection",
     "notFound": "Page not found"
+  },
+  "nav": {
+    "label": "App menu",
+    "home": "Home",
+    "events": "Events",
+    "devices": "Devices",
+    "settings": "Settings",
+    "newEvents": "{count} new alerts"
+  },
+  "eventKind": {
+    "fall": "Possible fall",
+    "scream": "Screaming",
+    "cry": "Long crying",
+    "glass": "Glass breaking",
+    "alarm": "Smoke alarm",
+    "offline": "Camera offline",
+    "test": "Test notification"
+  },
+  "severity": {
+    "critical": "Critical",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "eventStatus": {
+    "new": "New",
+    "acknowledged": "Seen",
+    "false_alarm": "False alarm",
+    "resolved": "Resolved"
+  },
+  "deviceStatus": {
+    "online": "Online",
+    "offline": "Offline",
+    "pairing": "Connecting"
+  },
+  "deviceKind": {
+    "phone": "Phone",
+    "laptop": "Laptop",
+    "ip_camera": "IP camera"
+  },
+  "slideToConfirm": {
+    "hint": "Slide or tap twice",
+    "again": "Tap again to confirm"
+  },
+  "statusRing": {
+    "rooms": "rooms",
+    "online": "online"
+  },
+  "theme": {
+    "mode": "Mode",
+    "system": "System",
+    "dark": "Dark",
+    "light": "Light",
+    "palette": "Colour",
+    "lake": "Lake",
+    "night": "Night",
+    "hearth": "Hearth",
+    "slate": "Classic"
+  },
+  "language": {
+    "label": "Language",
+    "mn": "Монгол",
+    "en": "English"
   }
 }
