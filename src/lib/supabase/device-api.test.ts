@@ -102,3 +102,32 @@ describe("device API functions", () => {
     });
   });
 });
+
+describe("offline devices", () => {
+  it("records one offline event per camera that stopped sending heartbeats", async () => {
+    const home = await createHome(alice);
+    await db.query(
+      `insert into public.devices(household_id, name, room_name, kind, status, last_seen_at) values
+        ($1, 'Stale', 'Kitchen', 'phone', 'online', now() - interval '5 minutes'),
+        ($1, 'Fresh', 'Hall', 'phone', 'online', now()),
+        ($1, 'Already', 'Bedroom', 'phone', 'offline', now() - interval '1 hour')`,
+      [home],
+    );
+    const mark = () =>
+      asService(
+        async () =>
+          (
+            await db.query<{ kind: string; room_name: string; severity: string }>(
+              "select kind, room_name, severity from public.mark_offline_devices()",
+            )
+          ).rows,
+      );
+    expect(await mark()).toEqual([{ kind: "offline", room_name: "Kitchen", severity: "info" }]);
+    expect(await mark()).toEqual([]);
+    await asUser(alice, () =>
+      expect(db.query("select * from public.mark_offline_devices()")).rejects.toThrow(
+        /permission denied/,
+      ),
+    );
+  });
+});

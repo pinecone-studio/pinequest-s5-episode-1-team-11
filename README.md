@@ -42,6 +42,22 @@ Turbopack тухайн орчинд ажиллахгүй бол `bun run build -
 3. Supabase Auth-ийн Site URL-ийг `NEXT_PUBLIC_SITE_URL`-тай тааруулж, `/auth/callback` URL-ийг Redirect URLs-д зөвшөөрнө. Email confirmation асаалттай бүртгэл PKCE callback ашиглана; token-hash email template ашиглавал `/auth/confirm?token_hash=…&type=email` route бэлэн.
 4. Push мэдэгдлийн VAPID түлхүүр үүсгэнэ: `bun run vapid`. Public Key-г `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, Private Key-г `VAPID_PRIVATE_KEY`-д тавина. Түлхүүрийг нэг удаа үүсгээд бүх хүн, Vercel ижлийг ашиглана; солих юм бол өмнөх бүх мэдэгдлийн бүртгэл хүчингүй болно. Private key-г хэзээ ч commit хийхгүй.
 5. Нэвтэрч гэр бүлээ үүсгэнэ. MVP-д нэг account нэг гэр бүлд харьяалагдана.
+6. Камер салсныг мэдэгдэх (заавал биш): `openssl rand -hex 32`-ээр `CRON_SECRET` үүсгээд `.env.local`/Vercel-д тавина. Supabase Dashboard → Integrations-аас **pg_cron**, **pg_net**-ийг асаагаад SQL Editor-т нэг удаа ажиллуулна (URL, secret-ээ орлуулна):
+
+   ```sql
+   select vault.create_secret('https://YOUR-APP.vercel.app', 'halo_site_url');
+   select vault.create_secret('YOUR_CRON_SECRET', 'halo_cron_secret');
+   select cron.schedule('halo-offline-devices', '* * * * *', $$
+     select net.http_post(
+       url := (select decrypted_secret from vault.decrypted_secrets where name = 'halo_site_url')
+         || '/api/internal/devices/offline',
+       headers := jsonb_build_object('Authorization', 'Bearer ' ||
+         (select decrypted_secret from vault.decrypted_secrets where name = 'halo_cron_secret'))
+     );
+   $$);
+   ```
+
+   Минут тутам 90 секундээс удаан heartbeat ирээгүй камерыг `offline` болгож, гэр бүлд нэг удаа `offline` event илгээнэ.
 
 Migration нь private `event-snapshots` bucket, events/devices Realtime publication болон household-scoped access policy үүсгэнэ. Бодит төхөөрөмжийн token зөвхөн hash хэлбэрээр `private.device_tokens`-д хадгалагдана.
 
@@ -62,6 +78,7 @@ select set_config('halo.seed_user_id', 'YOUR_AUTH_USER_UUID', false);
 - `POST /api/v1/devices/pair` — `{ code, kind }` → `{ deviceId, deviceToken, name, roomName }`. Код нэг удаа, 10 минут хүчинтэй. Нэг хаягаас 10 минутад 10-аас олон буруу оролдлого хийвэл 429.
 - `POST /api/v1/devices/heartbeat` — 30 секунд тутам. Төхөөрөмжийг online болгож `{ deviceId, name, roomName, settings }` буцаана, тиймээс асран хамгаалагчийн өөрчилсөн тохиргоо камерт шууд хүрнэ. 401 бол камер салгагдсан.
 - `POST /api/v1/events` — `EventIngest` (`idempotencyKey`, `kind`, `confidence`, `occurredAt`, сонголтоор `snapshot` JPEG base64). Ижил key-ээр дахин илгээвэл эхний event-ийг `duplicate: true`-тай буцаана, тиймээс сүлжээ тасарсан үед дахин оролдох нь аюулгүй. Асран хамгаалагч тухайн төрлийг унтраасан бол 202 `ignored`. Нэг камер 10 минутад 30-аас олон event илгээвэл 429. Хариу өгсний дараа `notifyEvent`-ээр гэр бүлийн бүх гишүүнд push илгээж, хүчингүй болсон subscription-ыг устгана.
+- `POST /api/internal/devices/offline` — зөвхөн scheduler (`Authorization: Bearer $CRON_SECRET`).
 - `DELETE /api/v1/devices/me` — камер өөрийгөө салгана. Event-үүд үлдэнэ. `src/lib/routes.ts` нь route-уудын shared contract.
 
 Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scoped өгөгдлийг ашиглана. User query нь publishable client + RLS ашиглаж, private snapshot URL-ийг 60 секундээр гаргана. Supabase тохируулсан үед auth-гүй query нэвтрэх хуудас руу шилжинэ.

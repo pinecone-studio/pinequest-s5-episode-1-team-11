@@ -125,6 +125,7 @@ export type Database = {
         }[];
       };
       authenticate_device: { Args: { p_token_hash: string }; Returns: DeviceRow[] };
+      mark_offline_devices: { Args: { p_after?: string }; Returns: EventRow[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
