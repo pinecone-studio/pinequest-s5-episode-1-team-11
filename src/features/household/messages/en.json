@@ -16,5 +16,9 @@
   "joinHousehold": "Join",
   "inviteInvalid": "This invite link is invalid or no longer available.",
   "inviteExpired": "This invite has expired or has already been used.",
-  "inviteAlreadyInHousehold": "Your account already belongs to a household."
+  "inviteAlreadyInHousehold": "Your account already belongs to a household.",
+  "members": "Household members",
+  "owner": "Owner",
+  "caregiver": "Caregiver",
+  "you": "(You)"
 }
