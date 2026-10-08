@@ -1,4 +1,67 @@
 {
   "title": "Camera mode",
-  "subtitle": "Use this device to watch over your home"
+  "subtitle": "Use this device to watch over your home",
+  "pair": {
+    "lead": "On the guardian's phone open Family → Add camera and enter the 6-digit code shown there.",
+    "code": "Pairing code",
+    "hint": "The code works for 10 minutes",
+    "submit": "Connect",
+    "invalid": "The code is wrong or has expired.",
+    "limited": "Too many attempts. Try again in 10 minutes.",
+    "retry": "Could not reach the server. Check your internet.",
+    "unavailable": "The server is not set up yet. You can try test mode.",
+    "removed": "This camera was removed from the family. Connect it again with a new code.",
+    "localTitle": "Test mode",
+    "localLead": "Try AI detection on this device without connecting. No notifications are sent.",
+    "local": "Start in test mode"
+  },
+  "ready": {
+    "lead": "{name} is ready to watch.",
+    "localLead": "Test mode: detections only appear on this screen.",
+    "tip1": "Place it up high where it sees the whole room",
+    "tip2": "Keep it plugged in",
+    "tip3": "Keep this page open and the screen on",
+    "start": "Start watching",
+    "permission": "Asks for camera and microphone access",
+    "disconnect": "Disconnect this camera",
+    "cctv": "CCTV mode: watching the go2rtc stream on {host}"
+  },
+  "loading": {
+    "camera": "Starting the camera…",
+    "models": "Loading the AI models…",
+    "modelsHint": "About 10 MB the first time, quick after that"
+  },
+  "error": {
+    "camera": "The camera or microphone did not open. Check the browser's permissions.",
+    "models": "Could not load the AI models. Check your internet."
+  },
+  "watch": {
+    "exit": "Exit",
+    "watching": "Watching",
+    "paused": "Paused",
+    "calm": "All is well",
+    "noPerson": "Nobody in view",
+    "falling": "Sudden movement…",
+    "down": "Lying down, checking",
+    "sent": "{kind}: notification sent",
+    "detected": "{kind}: detected",
+    "pausedTitle": "Watching is paused",
+    "local": "test",
+    "privacy": "Privacy curtain",
+    "privacyNote": "Only body points are shown",
+    "pause": "Pause",
+    "resume": "Resume",
+    "note": "The AI runs on this device. Video never leaves it; only a snapshot of a dangerous moment is sent.",
+    "queued": "{count} notifications waiting to send",
+    "hidden": "Watching stops when the screen turns off. Keep this page open.",
+    "noMic": "No microphone: watching by video only",
+    "level": "Sound level"
+  },
+  "detector": {
+    "fall": "Fall",
+    "scream": "Scream",
+    "cry": "Crying",
+    "glass": "Glass",
+    "alarm": "Fire alarm"
+  }
 }
