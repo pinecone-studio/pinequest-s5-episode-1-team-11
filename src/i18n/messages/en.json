@@ -23,7 +23,8 @@
     "events": "Events",
     "devices": "Devices",
     "settings": "Settings",
-    "newEvents": "{count} new alerts"
+    "newEvents": "{count} new alerts",
+    "family": "Family"
   },
   "eventKind": {
     "fall": "Possible fall",
@@ -78,5 +79,7 @@
     "label": "Language",
     "mn": "Монгол",
     "en": "English"
-  }
+  },
+  "featurePending": "This section is being prepared",
+  "demo": "Example data · Live camera monitoring has not started"
 }

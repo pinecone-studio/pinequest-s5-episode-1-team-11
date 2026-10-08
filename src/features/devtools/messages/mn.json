@@ -1,0 +1,10 @@
+{
+  "title": "Хөгжүүлэлтийн хэрэгсэл",
+  "connected": "Холбогдсон өгөгдлийн сан · Зөвхөн өөрийн гэр бүлийн өгөгдөл",
+  "scenario": { "calm": "Тайван", "alert": "Аюул", "offline": "Камер салсан", "empty": "Хоосон" },
+  "createEvent": "Тест event үүсгэх",
+  "offlineDevice": "{name} → offline",
+  "routes": "Хуудсууд",
+  "summary": "{devices} төхөөрөмж · {events} event · {unread} шинэ",
+  "data": "Query өгөгдөл"
+}
