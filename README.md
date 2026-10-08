@@ -21,7 +21,8 @@ bun dev
 - `/design` — shared component, light/dark, palette болон хэлний showcase.
 - `/dev` — хөгжүүлэлтийн үед жишээ төлөв солих, route болон query өгөгдөл шалгах. Supabase + server key тохируулсан бол нэвтэрсэн хэрэглэгчийн гэр бүлд тест event үүсгэж, төхөөрөмжийг offline болгож болно. Production-д 404.
 - `/login`, `/signup`, `/setup-household` — auth суурь.
-- `/home`, `/events`, `/devices`, `/settings`, `/onboarding`, `/invite/[code]`, `/monitor` болон нийтийн хуудсууд — placeholder.
+- `/monitor` — утас/laptop-ыг камер болгоно: 6 оронтой кодоор холбогдоод (эсвэл `?code=123456`), камер+микрофоноор унах, орилох, удаан уйлах, шил хагарах, галын дохиог илрүүлнэ. Supabase-гүй үед **Туршилтын горим** — илрүүлэлт зөвхөн дэлгэц дээр харагдана.
+- `/home`, `/events`, `/devices`, `/settings`, `/onboarding`, `/invite/[code]` болон нийтийн хуудсууд — placeholder.
 
 ## Шалгах
 
@@ -65,6 +66,21 @@ select set_config('halo.seed_user_id', 'YOUR_AUTH_USER_UUID', false);
 Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scoped өгөгдлийг ашиглана. User query нь publishable client + RLS ашиглаж, private snapshot URL-ийг 60 секундээр гаргана. Supabase тохируулсан үед auth-гүй query нэвтрэх хуудас руу шилжинэ.
 
 `src/features/notifications/server/notify-event.ts` дахь `notifyEvent(event, subscriptions)` одоогоор `{ sent: 0, expired: [] }` буцаадаг stub. `NotificationSettings` нь settings route-д залгах хоосон slot. Эдгээрийн бодит ажиллагааг notification feature хэрэгжүүлнэ.
+
+## AI илрүүлэлт
+
+Бүх inference төхөөрөмж дээр ажиллана, видео сервер рүү явахгүй. [MediaPipe](https://ai.google.dev/edge/mediapipe) `PoseLandmarker` (lite, ~5 MB) биеийн 33 цэг, `AudioClassifier` + YAMNet (~4 MB) дууны 521 ангиллыг өгнө. Model болон wasm-ыг эхний удаа CDN-ээс татаж browser cache-д хадгална.
+
+- `src/detection/fall.ts` — хонго огцом унах → хэвтээ байрлал → хэдэн секунд босохгүй бол унасан. Хүүхдэд илүү хүчтэй уналт, урт хугацаа шаардана (тоглож байгаад шалан дээр хэвтэх нь элбэг).
+- `src/detection/sounds.ts` — орилох (давтагдсан), удаан уйлах (20 с, хүүхдэд 60 с), шил хагарах (нэг удаа), галын дохио (3 с).
+- `src/detection/engine.ts` — тохиргоо (унах/дуу/аюул асаах-унтраах, мэдрэмж), төрөл бүрийн cooldown, орилсны дараах уналтын итгэлийг өсгөнө.
+- `src/detection/runtime/` — browser-ийн камер, микрофон, model ажиллуулагч. `VideoSource` нь CCTV урсгал залгах цэг.
+
+Дүрмүүдийг `bun run test`-ийн synthetic pose/дууны тестүүд шалгана. Камергүйгээр турших бол development үед `public/` дотор видео тавиад `/monitor?video=/clip.mp4` нээнэ (видеоны дуу бас шинжлэгдэнэ). Жишээ нь галын дохионы дуу:
+
+```bash
+ffmpeg -f lavfi -i testsrc=size=640x480:rate=15 -f lavfi -i "sine=frequency=3150,volume='if(lt(mod(t,1),0.5),1,0)':eval=frame" -t 12 -pix_fmt yuv420p -shortest public/alarm.mp4
+```
 
 ## Дэлгэцийн хэмжээ
 

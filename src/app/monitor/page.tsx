@@ -1,11 +1,15 @@
-import { getTranslations } from "next-intl/server";
-import { AppFrame } from "@/components/app/app-frame";
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-export default async function Page() {
-  const t = await getTranslations("monitor");
-  return (
-    <AppFrame>
-      <FeaturePlaceholder title={t("title")} subtitle={t("subtitle")} />
-    </AppFrame>
-  );
+import { MonitorScreen } from "@/features/monitor/components/monitor-screen";
+import { isDeviceApiConfigured } from "@/lib/device-api/auth";
+
+export default async function Page({ searchParams }: PageProps<"/monitor">) {
+  const { code, video } = await searchParams;
+  const value = typeof code === "string" && /^\d{6}$/.test(code) ? code : "";
+  // Development: /monitor?video=/clips/fall.mp4 replays a same-origin recording.
+  const testVideo =
+    process.env.NODE_ENV === "development" &&
+    typeof video === "string" &&
+    /^\/[\w\-./]+$/.test(video)
+      ? video
+      : undefined;
+  return <MonitorScreen code={value} apiReady={isDeviceApiConfigured} testVideo={testVideo} />;
 }
