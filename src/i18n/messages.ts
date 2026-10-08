@@ -1,0 +1,18 @@
+import type { Locale } from "./config";
+import commonEn from "./messages/en.json";
+import commonMn from "./messages/mn.json";
+
+/*
+ * Every feature keeps its own texts in src/features/<feature>/messages/{mn,en}.json
+ * and reads them with useTranslations("<feature>"). Register new feature files here.
+ */
+const catalogs = {
+  mn: { common: commonMn },
+  en: { common: commonEn },
+} satisfies Record<Locale, unknown>;
+
+export type Messages = (typeof catalogs)["mn"];
+
+export function getMessages(locale: Locale): Messages {
+  return catalogs[locale];
+}

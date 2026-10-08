@@ -8,6 +8,7 @@ Halo — гэртээ ганцаараа байгаа хүүхэд, ахмад �
 
 ```bash
 bun install
+cp .env.example .env.local   # Supabase-гүй бол хоосон үлдээж болно, жишээ өгөгдлөөр ажиллана
 bun dev
 ```
 
@@ -20,3 +21,7 @@ bun run check    # Biome + TypeScript + тест — PR бүрийн өмнө а
 bun run format   # формат, import-ын дарааллыг автоматаар засна
 bun run build
 ```
+
+## Текст ба хэл
+
+Апп Монгол (үндсэн) ба англи хэлтэй. Feature бүр текстээ `src/features/<feature>/messages/mn.json`, `en.json`-д бичиж `useTranslations("<feature>")`-ээр уншина. Хоёр файлын түлхүүрүүд ижил байх ёстой, тест шалгана.

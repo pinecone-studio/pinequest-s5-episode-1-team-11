@@ -1,0 +1,20 @@
+{
+  "appName": "Halo",
+  "tagline": "Look after the people you love when they are home alone",
+  "actions": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "continue": "Continue",
+    "delete": "Delete",
+    "retry": "Try again",
+    "save": "Save",
+    "seeAll": "See all"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "offline": "No internet connection",
+    "notFound": "Page not found"
+  }
+}
