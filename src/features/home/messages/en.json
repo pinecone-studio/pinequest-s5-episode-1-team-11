@@ -1,3 +1,11 @@
 {
-  "title": "Home"
+  "title": "Home",
+  "greeting": "Hello, {name}",
+  "calm": "Everything is calm",
+  "monitoringRooms": "Monitoring {count} rooms",
+  "rooms": "Rooms",
+  "devices": "Cameras",
+  "people": "Protected people",
+  "alerts": "Alerts",
+  "systemNormal": "System is operating normally"
 }

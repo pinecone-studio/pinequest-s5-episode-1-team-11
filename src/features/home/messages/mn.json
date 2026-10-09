@@ -1,3 +1,11 @@
 {
-  "title": "Нүүр"
+  "title": "Нүүр",
+  "greeting": "Сайн уу, {name}",
+  "calm": "Бүгд тайван",
+  "monitoringRooms": "{count} өрөө хянаж байна",
+  "rooms": "Өрөө",
+  "devices": "Камер",
+  "people": "Хамгаалж буй хүмүүс",
+  "alerts": "Аюулын дохио",
+  "systemNormal": "Систем хэвийн"
 }
