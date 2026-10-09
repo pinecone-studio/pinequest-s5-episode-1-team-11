@@ -6,11 +6,18 @@ import { defaultPalette, isPalette, PALETTE_COOKIE } from "@/components/theme/pa
 import { LanguageSelect, ModeSelect, PaletteSelect } from "@/components/theme/theme-switcher";
 import { ListGroup, ListItem } from "@/components/ui/list";
 import { NotificationSettings } from "@/features/notifications";
+import { AccountPanel } from "@/features/settings/components/account-panel";
+import { getProfile } from "@/features/settings/queries";
+import { isSupabaseConfigured } from "@/lib/env";
 import { routes } from "@/lib/routes";
 
 /* Family is the third tab: devices, caregivers and watched people all start here. */
 export default async function Page() {
-  const [t, cookieStore] = await Promise.all([getTranslations("settings"), cookies()]);
+  const [t, cookieStore, profile] = await Promise.all([
+    getTranslations("settings"),
+    cookies(),
+    getProfile(),
+  ]);
   const saved = cookieStore.get(PALETTE_COOKIE)?.value;
   const palette = isPalette(saved) ? saved : defaultPalette;
   const icon = "size-6 text-primary-text";
@@ -42,14 +49,17 @@ export default async function Page() {
           </ListGroup>
           <NotificationSettings />
         </div>
-        <section aria-labelledby="appearance" className="grid gap-3">
-          <h2 id="appearance" className="pl-1 text-base font-bold text-muted-foreground">
-            {t("appearance")}
-          </h2>
-          <LanguageSelect />
-          <ModeSelect />
-          <PaletteSelect value={palette} />
-        </section>
+        <div className="grid gap-8">
+          <section aria-labelledby="appearance" className="grid gap-3">
+            <h2 id="appearance" className="pl-1 text-base font-bold text-muted-foreground">
+              {t("appearance")}
+            </h2>
+            <LanguageSelect />
+            <ModeSelect />
+            <PaletteSelect value={palette} />
+          </section>
+          <AccountPanel profile={profile} demo={!isSupabaseConfigured} />
+        </div>
       </div>
     </>
   );

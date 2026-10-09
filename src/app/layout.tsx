@@ -6,7 +6,10 @@ import { onest, unbounded } from "@/components/theme/fonts";
 import { defaultPalette, isPalette, PALETTE_COOKIE } from "@/components/theme/palettes";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { PushAccountBoundary, ServiceWorkerRegistration } from "@/features/notifications";
+import { getUser } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
+import { isSupabaseConfigured } from "@/lib/env";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,6 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { default: t("appName"), template: `%s · ${t("appName")}` },
     description: t("tagline"),
+    applicationName: "Halo",
+    appleWebApp: { capable: true, statusBarStyle: "default", title: "Halo" },
+    icons: { apple: "/icons/apple-touch-icon.png" },
   };
 }
 
@@ -29,6 +35,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const user = isSupabaseConfigured ? await getUser() : null;
   const saved = (await cookies()).get(PALETTE_COOKIE)?.value;
   const palette = isPalette(saved) ? saved : defaultPalette;
   return (
@@ -40,7 +47,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            {isSupabaseConfigured && <PushAccountBoundary userId={user?.id ?? null} />}
+            {children}
+          </NextIntlClientProvider>
+          <ServiceWorkerRegistration />
           <Toaster />
         </ThemeProvider>
       </body>

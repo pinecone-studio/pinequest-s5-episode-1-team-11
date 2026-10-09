@@ -1,4 +1,42 @@
 {
   "title": "Notifications",
-  "pending": "Notification settings are being prepared"
+  "retry": "Retry notification check",
+  "accountBoundaryFailed": "We could not verify this browser's notification account. Alerts from a previous account may still arrive until this check succeeds.",
+  "description": "Get Halo alerts on this phone or browser, even when the app is closed.",
+  "enable": "Enable notifications",
+  "disable": "Turn off on this device",
+  "test": "Send a test",
+  "testTitle": "Halo test notification",
+  "testBody": "Notifications are working on this device. Open Halo to return to your family.",
+  "testSent": "Test accepted. Look for Halo in your notification center.",
+  "deliveryHint": "Alerts need internet access and notification permission on this device.",
+  "deniedHelp": "Allow notifications for Halo in your browser or phone settings, then return here.",
+  "status": {
+    "checking": "Checking this device…",
+    "demo": "You are exploring example data. Notifications become available when Halo is connected to your account.",
+    "unconfigured": "Notifications have not been set up for this Halo service yet.",
+    "unsupported": "This browser cannot receive push notifications. Open Halo in an up-to-date browser using a secure connection.",
+    "install": "On iPhone and iPad, add Halo to your Home Screen before enabling notifications.",
+    "denied": "Notification permission is blocked on this device.",
+    "off": "Notifications are off on this device.",
+    "on": "Notifications are enabled on this device.",
+    "error": "We could not check notification settings. You can try again."
+  },
+  "ios": {
+    "openSafari": "Open Halo in Safari.",
+    "share": "Tap Share, then Add to Home Screen and Add.",
+    "openHalo": "Open Halo from your Home Screen and enable notifications here."
+  },
+  "errors": {
+    "demo": "Notifications cannot be saved while you are exploring example data.",
+    "login": "Your session has expired. Sign in again to manage notifications.",
+    "unconfigured": "This Halo service is not ready to send notifications yet.",
+    "invalid": "This browser's push subscription was not accepted. Try enabling it again.",
+    "saveFailed": "Could not save notifications. Check your connection and try again.",
+    "removeFailed": "Could not turn off notifications. Check your connection and try again.",
+    "stateFailed": "Could not check your saved notification settings. Try again.",
+    "noSubscription": "This device is no longer subscribed. Enable notifications again.",
+    "sendFailed": "The test was not accepted. Check your connection and try again.",
+    "browserFailed": "The browser could not update notifications. Check its permissions and try again."
+  }
 }
