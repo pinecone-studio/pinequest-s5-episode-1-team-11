@@ -102,6 +102,22 @@ export function AuthForm({
           </Button>
         </>
       )}
+      {mode === "login" && (
+        <Link
+          className="grid min-h-11 place-items-center text-base font-semibold text-muted-foreground"
+          href={`/forgot-password?next=${encodeURIComponent(next)}`}
+        >
+          {t("forgotPassword")}
+        </Link>
+      )}
+      {mode === "signup" && state.success && (
+        <Link
+          className="grid min-h-11 place-items-center text-base font-semibold text-muted-foreground"
+          href={`/forgot-password?type=confirmation&next=${encodeURIComponent(next)}`}
+        >
+          {t("resendConfirmation")}
+        </Link>
+      )}
       {mode !== "household" && (
         <Link
           className="grid min-h-11 place-items-center text-base font-semibold text-primary-text"

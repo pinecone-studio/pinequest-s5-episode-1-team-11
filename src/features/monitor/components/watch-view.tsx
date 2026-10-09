@@ -32,7 +32,7 @@ const HIT_MS = 8000;
 const METER_BARS = 18;
 
 type Phase = "camera" | "models" | "running" | "error-camera" | "error-models";
-type Recent = { kind: DetectedKind; at: number; sent: boolean };
+type Recent = { kind: DetectedKind; at: number };
 
 /** Full-screen camera with body points, detector lights and a calm status panel. */
 export function WatchView({
@@ -116,12 +116,9 @@ export function WatchView({
       setPhase("models");
       const watcher = new Watcher(source, settingsRef.current, {
         onDetection(detection: DetectionWithSnapshot) {
-          if (pausedRef.current) return;
+          if (cancelled || pausedRef.current) return;
           const paired = deviceRef.current;
-          setRecent((list) => [
-            { kind: detection.kind, at: Date.now(), sent: Boolean(paired) },
-            ...list.slice(0, 9),
-          ]);
+          setRecent((list) => [{ kind: detection.kind, at: Date.now() }, ...list.slice(0, 9)]);
           navigator.vibrate?.([120, 60, 120]);
           if (!paired) return;
           outbox.add({
@@ -151,7 +148,10 @@ export function WatchView({
         await watcher.start();
       } catch (error) {
         console.error("models failed", error);
-        if (!cancelled) setPhase("error-models");
+        if (!cancelled) {
+          source.stop();
+          setPhase("error-models");
+        }
         return;
       }
       if (!cancelled) setPhase("running");
@@ -230,7 +230,7 @@ export function WatchView({
   const alarm = Boolean(latest);
   const kindLabel = (kind: DetectedKind) => t(`detector.${kind}`);
   const title = latest
-    ? t(latest.sent ? "watch.sent" : "watch.detected", { kind: kindLabel(latest.kind) })
+    ? t("watch.detected", { kind: kindLabel(latest.kind) })
     : paused
       ? t("watch.pausedTitle")
       : stats?.fallState === "falling"
@@ -275,7 +275,7 @@ export function WatchView({
         )}
       />
 
-      <header className="absolute inset-x-3 top-[max(12px,env(safe-area-inset-top))] z-10 flex items-center justify-between gap-2">
+      <header className="absolute inset-x-3 top-[max(12px,env(safe-area-inset-top))] z-20 flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={onExit}

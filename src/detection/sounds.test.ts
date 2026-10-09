@@ -49,4 +49,40 @@ describe("sound detector", () => {
     expect(run(repeat({ cry: 0.5 }, 40), "child")).toEqual([]);
     expect(run(repeat({ cry: 0.5 }, 72), "child").map((s) => s.kind)).toEqual(["cry"]);
   });
+
+  it("expires screaming evidence across a gap while accepting fresh repeated scores", () => {
+    const detector = new SoundDetector(soundPreset({ watching: "elderly", sensitivity: "medium" }));
+    const scream = { ...quiet, scream: 0.4 };
+
+    expect(detector.update(0, scream)).toEqual([]);
+    expect(detector.update(60_000, scream)).toEqual([]);
+    expect(detector.update(60_000 + SOUND_HOP_MS, scream)).toMatchObject([{ kind: "scream" }]);
+  });
+
+  it("expires each kind's evidence at its configured time window", () => {
+    const detector = new SoundDetector(soundPreset({ watching: "elderly", sensitivity: "medium" }));
+    for (const time of [0, 500, 1000]) {
+      expect(detector.update(time, { ...quiet, alarm: 0.5 })).toEqual([]);
+    }
+
+    // The first score is now outside the alarm's six 500 ms windows.
+    expect(detector.update(3000, { ...quiet, alarm: 0.5 })).toEqual([]);
+    expect(detector.update(3500, { ...quiet, alarm: 0.5 })).toEqual([]);
+    expect(detector.update(4000, { ...quiet, alarm: 0.5 })).toEqual([]);
+    expect(detector.update(4500, { ...quiet, alarm: 0.5 })).toMatchObject([{ kind: "alarm" }]);
+  });
+
+  it("requires fresh crying evidence after monitoring is interrupted", () => {
+    const detector = new SoundDetector(soundPreset({ watching: "elderly", sensitivity: "medium" }));
+    for (let index = 0; index < 23; index++) {
+      expect(detector.update(index * SOUND_HOP_MS, { ...quiet, cry: 0.5 })).toEqual([]);
+    }
+
+    expect(detector.update(120_000, { ...quiet, cry: 0.5 })).toEqual([]);
+    const signals = [];
+    for (let index = 1; index < 24; index++) {
+      signals.push(...detector.update(120_000 + index * SOUND_HOP_MS, { ...quiet, cry: 0.5 }));
+    }
+    expect(signals).toMatchObject([{ kind: "cry" }]);
+  });
 });

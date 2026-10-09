@@ -6,5 +6,21 @@
   "household": "Caregivers",
   "householdHint": "Members and invites",
   "people": "People we look after",
-  "peopleHint": "Age and special needs"
+  "peopleHint": "Age and special needs",
+  "account": "Account",
+  "signOut": "Sign out",
+  "deleteAccount": "Delete account",
+  "deleteTitle": "Delete your account?",
+  "deleteHint": "Your account and sign-in are removed for good. If you are the only member, cameras are disconnected and all household data and snapshots are deleted. This cannot be undone.",
+  "deleteConfirm": "Type DELETE to confirm",
+  "deleteConfirmError": "Type DELETE in the confirmation field.",
+  "deleteOwnerError": "An owner with other caregivers cannot delete their account. Household ownership must be transferred first.",
+  "deleteSnapshotsError": "Could not remove the saved snapshots. Try again.",
+  "accountDemo": "You are exploring a demo and are not signed in to a real account.",
+  "accountError": "The account action failed. Please try again.",
+  "signOutPushError": "Could not turn off alerts for this browser. Check your connection and try again.",
+  "transferError": "Could not transfer ownership. Only the owner can hand it to a current caregiver.",
+  "makeOwner": "Make owner",
+  "makeOwnerTitle": "Make {name} the household owner?",
+  "makeOwnerHint": "You become a caregiver. Creating invites and deleting the household move to the new owner. Pending invites stop working."
 }

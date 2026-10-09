@@ -46,15 +46,23 @@ export class Watcher {
 
   /** Loads the models (several MB on first use; the browser caches them). */
   async start() {
-    this.pose = await createPoseRunner();
-    if (this.source.audio) {
-      this.sound = await createSoundRunner(this.source.audio, (time, scores, level) => {
-        this.stats = { ...this.stats, sound: scores, level };
-        for (const detection of this.engine.sound(time, scores)) this.emit(detection);
-      });
+    if (this.stopped) return;
+    try {
+      this.pose = await createPoseRunner();
+      if (this.stopped) return this.stop();
+      if (this.source.audio) {
+        this.sound = await createSoundRunner(this.source.audio, (time, scores, level) => {
+          if (this.stopped) return;
+          this.stats = { ...this.stats, sound: scores, level };
+          for (const detection of this.engine.sound(time, scores)) this.emit(detection);
+        });
+      }
+      if (this.stopped) return this.stop();
+      this.schedule();
+    } catch (error) {
+      await this.stop();
+      throw error;
     }
-    if (this.stopped) return this.stop();
-    this.schedule();
   }
 
   configure(settings: DetectionSettings) {
@@ -66,10 +74,13 @@ export class Watcher {
     const video = this.source.video;
     if ("cancelVideoFrameCallback" in video) video.cancelVideoFrameCallback(this.frameHandle);
     cancelAnimationFrame(this.frameHandle);
-    this.pose?.close();
+    const pose = this.pose;
+    const sound = this.sound;
+    // Detach before awaiting cleanup so overlapping stops cannot close a runner twice.
     this.pose = null;
-    await this.sound?.close();
     this.sound = null;
+    pose?.close();
+    await sound?.close();
   }
 
   private schedule() {

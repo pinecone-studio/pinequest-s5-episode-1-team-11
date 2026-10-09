@@ -18,6 +18,9 @@ export async function signIn(_previous: AuthState, form: FormData): Promise<Auth
   if (!input.success) return { error: t("invalidForm") };
   const client = await createClient();
   if (!client) return { error: t("demoDescription") };
+  // A stale login form must not replace another account's active browser session.
+  const { data: current } = await client.auth.getUser();
+  if (current.user) redirect("/home");
   const { error } = await client.auth.signInWithPassword(input.data);
   if (error) return { error: t("signInError") };
   const next = safeNext(String(form.get("next") ?? "/home"));
@@ -43,6 +46,8 @@ export async function signUp(_previous: AuthState, form: FormData): Promise<Auth
   if (!input.success) return { error: t("invalidForm") };
   const client = await createClient();
   if (!client) return { error: t("demoDescription") };
+  const { data: current } = await client.auth.getUser();
+  if (current.user) redirect("/home");
   const next = safeNext(String(form.get("next") ?? "/home"));
   const { data, error } = await client.auth.signUp({
     email: input.data.email,
@@ -74,6 +79,12 @@ export async function createHousehold(_previous: AuthState, form: FormData): Pro
 
 export async function signOut() {
   const client = await createClient();
-  if (client) await client.auth.signOut({ scope: "local" });
+  if (client) {
+    const { error } = await client.auth.signOut({ scope: "local" });
+    if (error) {
+      const t = await getTranslations("auth");
+      return { error: t("genericError") };
+    }
+  }
   redirect("/login");
 }

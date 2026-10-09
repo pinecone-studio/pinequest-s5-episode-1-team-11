@@ -16,6 +16,7 @@ export class Outbox {
   private items: EventIngest[];
   private failures = 0;
   private nextAttempt = 0;
+  private flushing: Promise<FlushOutcome> | null = null;
 
   constructor(private storage: Storage | null) {
     try {
@@ -38,14 +39,27 @@ export class Outbox {
   }
 
   /** Sends in order. Stops at the first temporary failure and backs off exponentially. */
-  async flush(
+  flush(
     send: (event: EventIngest) => Promise<ApiResult<null>>,
     now = Date.now(),
+  ): Promise<FlushOutcome> {
+    // Detection, heartbeats and reconnection may all request a flush at once.
+    if (this.flushing) return this.flushing;
+    this.flushing = this.drain(send, now).finally(() => {
+      this.flushing = null;
+    });
+    return this.flushing;
+  }
+
+  private async drain(
+    send: (event: EventIngest) => Promise<ApiResult<null>>,
+    now: number,
   ): Promise<FlushOutcome> {
     if (!this.items.length) return "empty";
     if (now < this.nextAttempt) return "waiting";
     while (this.items.length) {
-      const result = await send(this.items[0]);
+      const event = this.items[0];
+      const result = await send(event);
       if (!result.ok && result.reason === "unauthorized") return "unauthorized";
       if (!result.ok && result.reason !== "invalid") {
         this.failures++;
@@ -53,7 +67,9 @@ export class Outbox {
         return "waiting";
       }
       // Sent, or rejected for good (e.g. too old): either way it leaves the queue.
-      this.items.shift();
+      // New detections can evict the oldest item while its request is in flight.
+      const index = this.items.findIndex((item) => item.idempotencyKey === event.idempotencyKey);
+      if (index !== -1) this.items.splice(index, 1);
       this.save();
     }
     this.failures = 0;

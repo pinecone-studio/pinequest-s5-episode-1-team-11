@@ -12,15 +12,21 @@ function authorized(request: Request) {
   return timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }
 
-/** Every minute (Supabase pg_cron + pg_net): mark silent cameras offline and tell the family. */
+/**
+ * Every minute (Supabase pg_cron + pg_net): mark silent cameras offline, then send every queued
+ * push that is due, including alerts whose first delivery was lost.
+ */
 export async function POST(request: Request) {
   if (!isDeviceApiConfigured || !serverEnv.cronSecret) return apiError(503, "not_configured");
   if (!authorized(request)) return apiError(401, "unauthorized");
-  const { data, error } = await createAdminClient().rpc("mark_offline_devices", {});
-  if (error) throw error;
-  const results = await Promise.allSettled(data.map((event) => notifyHousehold(event)));
+  const admin = createAdminClient();
+  const offline = await admin.rpc("mark_offline_devices", {});
+  if (offline.error) throw offline.error;
+  const due = await admin.rpc("claim_push_deliveries", { p_limit: 20 });
+  if (due.error) throw due.error;
+  const results = await Promise.allSettled(due.data.map((event) => notifyHousehold(event)));
   for (const result of results) {
-    if (result.status === "rejected") console.error("offline notification failed", result.reason);
+    if (result.status === "rejected") console.error("queued notification failed", result.reason);
   }
-  return apiJson({ offline: data.length });
+  return apiJson({ offline: offline.data.length, delivered: due.data.length });
 }
