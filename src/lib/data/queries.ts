@@ -224,13 +224,16 @@ export async function listOwnPushSubscriptions() {
 }
 
 export async function getHomeSummary() {
-  const [profile, household, devices, events, watchedPeople] = await Promise.all([
-    getProfile(),
-    getHousehold(),
-    listDevices(),
-    listEvents(),
-    listWatchedPeople(),
-  ]);
+  const [profile, household, devices, events, watchedPeople, unreadCount, criticalEvent] =
+    await Promise.all([
+      getProfile(),
+      getHousehold(),
+      listDevices(),
+      listEvents(),
+      listWatchedPeople(),
+      getUnreadCount(),
+      getActiveCriticalEvent(),
+    ]);
   return {
     profile,
     household,
@@ -238,9 +241,30 @@ export async function getHomeSummary() {
     events,
     watchedPeople,
     onlineCount: devices.filter((device) => device.status === "online").length,
-    unreadCount: events.filter((event) => event.status === "new").length,
-    criticalEvent:
-      events.find((event) => event.severity === "critical" && event.status === "new") ?? null,
+    unreadCount,
+    criticalEvent,
     latestEvent: events[0] ?? null,
   };
+}
+
+/** Active safety alerts must not disappear when the latest-events list reaches its limit. */
+async function getActiveCriticalEvent() {
+  const context = await getHomeContext();
+  if (!context)
+    return (
+      (await getDemoFixtures()).events.find(
+        (event) => event.severity === "critical" && event.status === "new",
+      ) ?? null
+    );
+  const { data, error } = await context.client
+    .from("events")
+    .select("*")
+    .eq("household_id", context.householdId)
+    .eq("severity", "critical")
+    .eq("status", "new")
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapEvent(data) : null;
 }

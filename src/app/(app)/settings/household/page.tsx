@@ -5,9 +5,12 @@ import { ListGroup, ListItem } from "@/components/ui/list";
 import { Pill } from "@/components/ui/pill";
 import { InvitePanel } from "@/features/household/components/invite-panel";
 import { listMembers } from "@/features/household/queries";
+import { MakeOwnerButton } from "@/features/settings/components/make-owner-button";
+import { isSupabaseConfigured } from "@/lib/env";
 
 export default async function Page() {
   const [t, members] = await Promise.all([getTranslations("household"), listMembers()]);
+  const iAmOwner = members.some((member) => member.isMe && member.role === "owner");
 
   return (
     <>
@@ -21,9 +24,14 @@ export default async function Page() {
               title={member.name}
               description={member.isMe ? t("you") : undefined}
               trailing={
-                <Pill tone={member.role === "owner" ? "ok" : "neutral"} dot={false}>
-                  {member.role === "owner" ? t("owner") : t("caregiver")}
-                </Pill>
+                <span className="flex items-center gap-2">
+                  {iAmOwner && isSupabaseConfigured && member.role === "caregiver" && (
+                    <MakeOwnerButton userId={member.userId} name={member.name} />
+                  )}
+                  <Pill tone={member.role === "owner" ? "ok" : "neutral"} dot={false}>
+                    {member.role === "owner" ? t("owner") : t("caregiver")}
+                  </Pill>
+                </span>
               }
             />
           ))}

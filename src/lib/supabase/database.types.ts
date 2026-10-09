@@ -126,6 +126,28 @@ export type Database = {
       };
       authenticate_device: { Args: { p_token_hash: string }; Returns: DeviceRow[] };
       mark_offline_devices: { Args: { p_after?: string }; Returns: EventRow[] };
+      transfer_household_ownership: { Args: { p_new_owner: string }; Returns: string };
+      begin_account_cleanup: { Args: Record<string, never>; Returns: string };
+      account_cleanup_prepared: { Args: Record<string, never>; Returns: boolean };
+      finish_account_cleanup: { Args: Record<string, never>; Returns: boolean };
+      cancel_account_cleanup: { Args: Record<string, never>; Returns: undefined };
+      ingest_event: {
+        Args: {
+          p_device_id: string;
+          p_idempotency_key: string;
+          p_kind: string;
+          p_severity: string;
+          p_confidence: number;
+          p_occurred_at: string;
+          p_person_name: string | null;
+        };
+        Returns: {
+          status: "created" | "duplicate" | "limited" | "unauthorized";
+          event_id: string | null;
+        }[];
+      };
+      claim_push_deliveries: { Args: { p_limit?: number }; Returns: EventRow[] };
+      complete_push_delivery: { Args: { p_event_id: string }; Returns: undefined };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -1,5 +1,96 @@
 {
   "title": "Events",
   "detailTitle": "Event details",
-  "alertTitle": "Safety alert"
+  "alertTitle": "Safety alert",
+  "subtitle": "Your household's safety timeline",
+  "count": "{count, plural, one {# event} other {# events}}",
+  "historyLimit": "Showing up to the 100 most recent events.",
+  "filters": {
+    "label": "Filter events",
+    "all": "All",
+    "new": "New",
+    "critical": "Critical",
+    "clear": "Show all events"
+  },
+  "days": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "date": "{month} {day}, {year}",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "empty": {
+    "title": "No events yet",
+    "body": "Detections and camera status changes will appear here. Check that your camera is online.",
+    "cameras": "Check cameras",
+    "filteredTitle": "No events match this filter",
+    "filteredBody": "Try viewing all events to see the rest of your timeline."
+  },
+  "detail": {
+    "facts": "What happened",
+    "status": "Status",
+    "time": "Detected at",
+    "room": "Room",
+    "person": "Person",
+    "confidence": "Model score",
+    "notification": "Push sent at",
+    "notNotified": "No confirmed push delivery",
+    "responder": "Reviewed by",
+    "camera": "View camera",
+    "openAlert": "Open safety alert",
+    "checkHint": "An automatic detection needs a human check. Review the situation before marking it as a false alarm."
+  },
+  "snapshot": {
+    "alt": "Camera snapshot captured for this event",
+    "missing": "No snapshot is available for this event.",
+    "expired": "The private snapshot could not be loaded. Refresh its access link to try again.",
+    "refresh": "Refresh snapshot",
+    "private": "Private snapshot · accessible to your household"
+  },
+  "alert": {
+    "check": "Please check on your loved one. If urgent help is needed, call emergency services.",
+    "call": "103 · Ambulance",
+    "callHint": "Opens the phone dialer. Halo does not place a call automatically."
+  },
+  "action": {
+    "title": "Respond to this event",
+    "acknowledge": "I've seen this · I'm checking",
+    "falseAlarm": "Mark as false alarm",
+    "falseAlarmConfirm": "Confirm false alarm",
+    "cancel": "Cancel",
+    "note": "What happened? (optional)",
+    "notePlaceholder": "For example, a dropped cup",
+    "falseAlarmHint": "Use this after checking that no help is needed. The event stays in your timeline.",
+    "acknowledged": "Your acknowledgement was saved.",
+    "falseAlarmSaved": "The false alarm was saved.",
+    "closed": "This event has already been reviewed.",
+    "demo": "Example event. Responses are disabled until a real household is connected.",
+    "invalid": "Check the event and response, then try again.",
+    "unavailable": "Responses cannot be saved in demo mode.",
+    "householdRequired": "Join a household before responding to events.",
+    "changed": "This event was updated or is no longer available. Refresh the page to see its current status.",
+    "failed": "Your response was not saved. Please try again."
+  },
+  "error": {
+    "title": "Events could not be loaded",
+    "body": "Check your connection and try again.",
+    "retry": "Try again"
+  },
+  "missing": {
+    "title": "Event not found",
+    "body": "It may have been removed or may belong to another household.",
+    "back": "Back to events"
+  }
 }

@@ -1,1 +1,1 @@
-export { getDevice, listDevices } from "@/lib/data/queries";
+export { getDevice, getHousehold, listDevices } from "@/lib/data/queries";

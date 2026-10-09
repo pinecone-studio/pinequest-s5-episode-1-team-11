@@ -66,7 +66,12 @@ export type SoundSignal = { kind: SoundKind; time: number; confidence: number };
 
 /** Turns per-window classifier scores into sound events, each needing sustained evidence. */
 export class SoundDetector {
-  private recent: Record<SoundKind, number[]> = { scream: [], cry: [], glass: [], alarm: [] };
+  private recent: Record<SoundKind, { time: number; score: number }[]> = {
+    scream: [],
+    cry: [],
+    glass: [],
+    alarm: [],
+  };
 
   constructor(private preset: SoundPreset) {}
 
@@ -79,11 +84,13 @@ export class SoundDetector {
     for (const kind of soundKinds) {
       const rule = this.preset[kind];
       const recent = this.recent[kind];
-      recent.push(scores[kind]);
-      while (recent.length > rule.of) recent.shift();
-      const hits = recent.filter((score) => score >= rule.threshold);
+      recent.push({ time, score: scores[kind] });
+      // A suspended tab or interrupted microphone must not reuse stale evidence.
+      const oldest = time - rule.of * SOUND_HOP_MS;
+      while (recent.length > rule.of || recent[0].time <= oldest) recent.shift();
+      const hits = recent.filter(({ score }) => score >= rule.threshold);
       if (hits.length >= rule.needed || (rule.instant && scores[kind] >= rule.instant)) {
-        const confidence = Math.max(...hits, scores[kind]);
+        const confidence = Math.max(...hits.map(({ score }) => score), scores[kind]);
         signals.push({ kind, time, confidence: Number(Math.min(0.99, confidence).toFixed(2)) });
         // Fresh evidence is needed for the next event of this kind.
         this.recent[kind] = [];

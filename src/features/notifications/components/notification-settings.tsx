@@ -1,12 +1,16 @@
-import { getTranslations } from "next-intl/server";
+import { getUser } from "@/lib/auth/session";
+import { isSupabaseConfigured, publicEnv } from "@/lib/env";
+import { isPushConfigured } from "../server/web-push";
+import { NotificationControls } from "./notification-controls";
 
-/** Public slot consumed by Settings. The notification feature owner replaces its contents. */
 export async function NotificationSettings() {
-  const t = await getTranslations("notifications");
+  const user = isSupabaseConfigured ? await getUser() : null;
   return (
-    <section className="glass grid gap-2 rounded-lg p-4">
-      <h2 className="text-base font-bold">{t("title")}</h2>
-      <p className="text-sm text-muted-foreground">{t("pending")}</p>
-    </section>
+    <NotificationControls
+      configured={isSupabaseConfigured}
+      pushConfigured={isPushConfigured()}
+      publicKey={publicEnv.vapidPublicKey ?? ""}
+      userId={user?.id ?? null}
+    />
   );
 }

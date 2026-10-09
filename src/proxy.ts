@@ -14,6 +14,8 @@ export const config = {
     "/setup-household",
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
     "/invite/:path*",
     "/auth/:path*",
     "/dev/:path*",

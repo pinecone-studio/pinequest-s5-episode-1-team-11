@@ -6,9 +6,6 @@ import { decodeSnapshot, isKindEnabled, normalizeOccurredAt } from "@/lib/device
 import { notifyHousehold } from "@/lib/device-api/notify";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const MAX_EVENTS_PER_WINDOW = 30;
-const WINDOW_MS = 10 * 60_000;
-
 function respond(body: EventIngestResponse, status: number) {
   return apiJson(EventIngestResponse.parse(body), status);
 }
@@ -24,75 +21,50 @@ export async function POST(request: Request) {
   if (!isKindEnabled(body.kind, device.settings))
     return respond({ eventId: null, ignored: true }, 202);
 
+  // Deduplication, the rate limit, the event and its push delivery row commit together.
   const admin = createAdminClient();
-  const findExisting = () =>
-    admin
-      .from("events")
-      .select("id")
-      .eq("device_id", device.id)
-      .eq("idempotency_key", body.idempotencyKey)
-      .maybeSingle();
-  const existing = await findExisting();
-  if (existing.error) throw existing.error;
-  if (existing.data) return respond({ eventId: existing.data.id, duplicate: true }, 200);
-
-  const recent = await admin
-    .from("events")
-    .select("id", { count: "exact", head: true })
-    .eq("device_id", device.id)
-    .gte("created_at", new Date(Date.now() - WINDOW_MS).toISOString());
-  if (recent.error) throw recent.error;
-  if ((recent.count ?? 0) >= MAX_EVENTS_PER_WINDOW) return apiError(429, "rate_limited");
-
-  const inserted = await admin
-    .from("events")
-    .insert({
-      household_id: device.household_id,
-      device_id: device.id,
-      idempotency_key: body.idempotencyKey,
-      kind: body.kind,
-      severity: severityOf[body.kind],
-      confidence: body.confidence,
-      person_name: body.personName ?? null,
-      room_name: device.room_name,
-      occurred_at: occurredAt,
-    })
-    .select("*")
-    .single();
-  if (inserted.error?.code === "23505") {
-    // A concurrent retry won the race; answer with its event.
-    const winner = await findExisting();
-    if (winner.error) throw winner.error;
-    return respond({ eventId: winner.data?.id ?? null, duplicate: true }, 200);
-  }
-  if (inserted.error) throw inserted.error;
-  let row = inserted.data;
+  const ingested = await admin.rpc("ingest_event", {
+    p_device_id: device.id,
+    p_idempotency_key: body.idempotencyKey,
+    p_kind: body.kind,
+    p_severity: severityOf[body.kind],
+    p_confidence: body.confidence,
+    p_occurred_at: occurredAt,
+    p_person_name: body.personName ?? null,
+  });
+  if (ingested.error) throw ingested.error;
+  const outcome = ingested.data?.[0];
+  if (!outcome || outcome.status === "unauthorized" || !outcome.event_id)
+    return outcome?.status === "limited"
+      ? apiError(429, "rate_limited")
+      : apiError(401, "unauthorized");
+  if (outcome.status === "duplicate")
+    return respond({ eventId: outcome.event_id, duplicate: true }, 200);
+  const eventId = outcome.event_id;
 
   const snapshot = body.snapshot ? decodeSnapshot(body.snapshot) : null;
   if (snapshot) {
-    const path = `${row.household_id}/${row.id}.jpg`;
+    const path = `${device.household_id}/${eventId}.jpg`;
     const upload = await admin.storage
       .from("event-snapshots")
       .upload(path, snapshot, { contentType: "image/jpeg", upsert: true });
     if (upload.error) {
       console.error("snapshot upload failed", upload.error.message);
     } else {
-      const updated = await admin
-        .from("events")
-        .update({ snapshot_path: path })
-        .eq("id", row.id)
-        .select("*")
-        .single();
-      if (updated.error) throw updated.error;
-      row = updated.data;
+      const updated = await admin.from("events").update({ snapshot_path: path }).eq("id", eventId);
+      if (updated.error) console.error("snapshot metadata update failed", updated.error.message);
     }
   }
 
-  // The camera gets its answer immediately; push delivery continues after the response.
-  after(() =>
-    notifyHousehold(row).catch((error: unknown) =>
-      console.error("event notification failed", error),
-    ),
-  );
-  return respond({ eventId: row.id }, 201);
+  // The camera gets its answer immediately. If this push is lost, the minute job retries it.
+  after(async () => {
+    try {
+      const { data, error } = await admin.from("events").select("*").eq("id", eventId).single();
+      if (error) throw error;
+      await notifyHousehold(data);
+    } catch (error) {
+      console.error("event notification failed", error);
+    }
+  });
+  return respond({ eventId }, 201);
 }

@@ -23,7 +23,7 @@ export async function openDatabase() {
       bucket_id text references storage.buckets, name text);
     alter table storage.objects enable row level security;
     grant usage on schema public, auth, storage to anon, authenticated, service_role;
-    grant select on storage.objects to authenticated;
+    grant select, insert, update, delete on storage.objects to authenticated;
   `);
   const dir = new URL("../../../supabase/migrations/", import.meta.url);
   for (const file of readdirSync(dir)

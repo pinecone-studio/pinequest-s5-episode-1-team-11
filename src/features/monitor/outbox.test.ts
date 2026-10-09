@@ -51,4 +51,46 @@ describe("event outbox", () => {
     );
     expect(box.size).toBe(1);
   });
+
+  it("shares an in-flight flush so another trigger cannot drop the next event", async () => {
+    const box = new Outbox(memory());
+    box.add(event("a"));
+    box.add(event("b"));
+    const sent: string[] = [];
+    let finish!: (result: ApiResult<null>) => void;
+    const firstResponse = new Promise<ApiResult<null>>((resolve) => {
+      finish = resolve;
+    });
+    const send = async (item: EventIngest) => {
+      sent.push(item.idempotencyKey);
+      return sent.length === 1 ? firstResponse : ok;
+    };
+    const first = box.flush(send);
+    const second = box.flush(send);
+    finish(ok);
+
+    expect(await Promise.all([first, second])).toEqual(["sent", "sent"]);
+    expect(sent).toEqual(["event-a", "event-b"]);
+    expect(box.size).toBe(0);
+  });
+
+  it("does not remove an unsent event when the in-flight item was evicted", async () => {
+    const box = new Outbox(memory());
+    for (let i = 0; i < 20; i++) box.add(event(String(i)));
+    const sent: string[] = [];
+    let finish!: (result: ApiResult<null>) => void;
+    const firstResponse = new Promise<ApiResult<null>>((resolve) => {
+      finish = resolve;
+    });
+    const flush = box.flush(async (item) => {
+      sent.push(item.idempotencyKey);
+      return sent.length === 1 ? firstResponse : ok;
+    });
+    box.add(event("20"));
+    finish(ok);
+
+    expect(await flush).toBe("sent");
+    expect(sent).toEqual(Array.from({ length: 21 }, (_, i) => `event-${i}`));
+    expect(box.size).toBe(0);
+  });
 });

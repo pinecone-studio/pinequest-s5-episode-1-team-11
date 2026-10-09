@@ -1,5 +1,163 @@
 {
-  "privacy": "Privacy",
-  "faq": "FAQ",
-  "cameras": "Supported cameras"
+  "privacy": "Privacy and data",
+  "faq": "Questions",
+  "cameras": "Camera setup",
+  "nav": {
+    "home": "Halo home",
+    "login": "Sign in",
+    "label": "Public navigation",
+    "dashboard": "Your dashboard"
+  },
+  "footer": {
+    "label": "Helpful links",
+    "note": "Halo helps your family notice possible danger. Detections can be missed or mistaken, and notifications can be delayed. Review what happened and decide how to help."
+  },
+  "hero": {
+    "eyebrow": "Care that reaches home",
+    "title": "A little closer to home.",
+    "body": "Turn a spare phone or laptop into a camera that helps notice possible falls and distress sounds. Your family can review events and respond from wherever they are.",
+    "start": "Get started",
+    "try": "Try Camera mode",
+    "privacy": "Detection runs on the watching device. Continuous video is not uploaded to Halo."
+  },
+  "preview": {
+    "label": "Example",
+    "room": "Living room",
+    "caption": "A room you can keep an eye on",
+    "alert": "Possible fall detected",
+    "action": "Review the moment and check on your family",
+    "example": "Illustration with example content. No live camera is connected here."
+  },
+  "features": {
+    "title": "Small signals, useful context.",
+    "body": "A camera, a microphone and a shared place to decide what happens next.",
+    "detection": {
+      "title": "Notice a possible fall",
+      "body": "The camera looks for a sudden change in body position followed by staying down. A clear view and enough light matter."
+    },
+    "sound": {
+      "title": "Listen for distress",
+      "body": "With a microphone, Halo can flag screaming, prolonged crying, breaking glass and smoke or fire alarm sounds."
+    },
+    "family": {
+      "title": "Respond together",
+      "body": "Share event history with your household. Acknowledge an event so the others can see someone is checking on it."
+    },
+    "privacy": {
+      "title": "Process video on the device",
+      "body": "Continuous video is analysed in the watching browser. Event details and optional snapshots provide context to your family."
+    }
+  },
+  "steps": {
+    "title": "Three steps to start.",
+    "connect": {
+      "title": "Connect a camera",
+      "body": "Give it a room and a name. Use a six-digit connection code or QR link on the camera device."
+    },
+    "watch": {
+      "title": "Keep the room in view",
+      "body": "Allow camera and microphone access, start watching and keep the device plugged in with its screen awake."
+    },
+    "review": {
+      "title": "Review and respond",
+      "body": "Enable notifications on each caregiver device. Open an event, review its context and tell the family when you are checking."
+    }
+  },
+  "closing": {
+    "title": "Start with a device you already have.",
+    "body": "A spare phone or laptop is the first setup to try. The camera guide explains permissions, power and the extra requirements for an IP camera.",
+    "limit": "Human judgement remains essential; Halo does not automatically call emergency services.",
+    "guide": "Read the camera guide"
+  },
+  "faqContent": {
+    "subtitle": "What to expect before you start watching",
+    "devices": {
+      "question": "What can I use as a camera?",
+      "answer": "Start with a phone or laptop browser that can access its camera and microphone. Keep it plugged in and use a secure Halo address. IP cameras need an additional RTSP-to-WebRTC relay; see the camera guide."
+    },
+    "internet": {
+      "question": "Does Halo need an internet connection?",
+      "answer": "The first use downloads the detection models. Pairing, connection signals, event delivery and caregiver notifications need internet access to the configured server. Local analysis may continue offline after loading, but your family will not receive new events until delivery resumes."
+    },
+    "background": {
+      "question": "Can I lock the screen or close the camera page?",
+      "answer": "Keep Camera mode open in the foreground and the screen awake. Browsers can suspend video, audio and computation when a tab is hidden or the device sleeps. Connection status shows recent contact with a device; it does not guarantee active detection or safety."
+    },
+    "data": {
+      "question": "Is my continuous video uploaded?",
+      "answer": "Halo analyses frames and audio on the watching device and does not upload continuous video or audio recordings. It sends detected event details and may include a snapshot of a critical moment. Snapshots use private storage and household-scoped access."
+    },
+    "push": {
+      "question": "Will notifications always arrive immediately?",
+      "answer": "Each caregiver device needs notification permission and an active subscription. Browser and operating-system support, installation requirements, internet access and device settings affect delivery. Web Push is not guaranteed to arrive immediately; check the event history as well."
+    },
+    "accuracy": {
+      "question": "Can the AI miss an event or send a false alert?",
+      "answer": "Yes. Lighting, camera angle, occlusion, noise and how a person moves all affect detection. Halo has synthetic rule tests but no established accuracy guarantee from real camera footage. Review each event and contact your family or emergency services when needed."
+    },
+    "cctv": {
+      "question": "Can I connect any CCTV camera?",
+      "answer": "Compatibility is conditional. Your model and firmware must expose a usable RTSP stream, a local go2rtc relay must convert it for WebRTC, and the browser must be able to reach the relay. Audio detection additionally needs an accessible audio track. No physical IP camera has been validated for this release."
+    },
+    "removal": {
+      "question": "What happens when I remove a camera?",
+      "answer": "Removing it revokes its device token, so it can no longer send events to your family. Earlier events remain in the history. Reconnecting that camera later requires a new connection code."
+    }
+  },
+  "privacyContent": {
+    "subtitle": "How the current Halo application handles your information",
+    "lead": "Detection runs in the watching browser. Your household receives event information and optional snapshots instead of a continuous video recording.",
+    "video": {
+      "title": "Frames and audio",
+      "body": "Pose and sound models process the camera or selected stream on the watching device. Halo does not upload continuous video or audio recordings. Model and runtime files are downloaded from external model/CDN hosts on first use."
+    },
+    "events": {
+      "title": "Events and snapshots",
+      "body": "Event records include the camera, room, event type, time, detection confidence and response status. Critical detections may include a JPEG snapshot to help you assess what happened. That image can contain people and surroundings; choose the camera location with everyone in the room in mind."
+    },
+    "access": {
+      "title": "Who can see the data",
+      "body": "Signed-in members of the same household can access its devices and events. Snapshots are stored in a private bucket and accessed through short-lived links. Camera bearer tokens are hashed on the server and are not exposed to guardian clients."
+    },
+    "permissions": {
+      "title": "Permissions you choose",
+      "body": "The camera device asks for camera and microphone permission. Caregiver devices ask separately for notification permission. The browser and operating system control these permissions. You can withdraw them in their settings."
+    },
+    "control": {
+      "title": "Your controls",
+      "body": "You can change a camera’s detection categories and sensitivity, pause watching from Camera mode, or remove the camera. Removing a camera revokes access but retains earlier event records. Account and household management are available in Settings."
+    },
+    "hosting": {
+      "title": "Where records live",
+      "body": "The connected deployment uses its configured Supabase database and private image storage. Device and household records, event data and push subscription details are handled there. Retention and hosting region depend on that deployment; no automatic deletion schedule is promised here."
+    }
+  },
+  "cameraGuide": {
+    "subtitle": "Choose a setup, then check it in your own room",
+    "add": "Add a camera",
+    "questions": "More questions and limitations",
+    "browser": {
+      "title": "Phone or laptop",
+      "body": "The first setup to try uses a browser camera and microphone. You can try local Camera mode before connecting it to a family.",
+      "step1": "Sign in on the guardian’s device. Open Devices → Add a camera and create a connection code.",
+      "step2": "On the camera device, scan the QR link or open Camera mode and enter the code. Allow camera and microphone access, then start watching.",
+      "step3": "Place it where the person’s whole body is visible with enough light. Plug it in and keep the page open and screen awake."
+    },
+    "ip": {
+      "title": "IP camera through a local relay",
+      "body": "This integration requires a camera with an accessible RTSP stream, local go2rtc, WebRTC support and browser network access. TP-Link documents RTSP/ONVIF for models including Tapo C200/C210; model and firmware details still need checking.",
+      "step1": "Confirm RTSP support with the manufacturer and configure the stream in your local go2rtc relay. Keep the camera username and password in the local relay configuration, never in a shared Halo link.",
+      "step2": "Verify playback in go2rtc before using Halo. Keep the relay and its management interface restricted to your trusted network. Check the manufacturer and relay documentation for your setup.",
+      "step3": "Open Camera mode with a cctv query parameter containing your reachable go2rtc WebRTC endpoint, then enter the family’s connection code. The endpoint uses a stream name; it must not include camera credentials.",
+      "limit": "Physical-camera integration has not been tested in this release. Codec, audio track, browser permissions, HTTPS/mixed-content rules and network reachability can prevent it from working.",
+      "relayDocs": "Official go2rtc documentation",
+      "vendorDocs": "TP-Link: RTSP and ONVIF setup",
+      "vendorModels": "TP-Link: model support and limitations"
+    },
+    "keepReady": {
+      "title": "Keep the setup ready",
+      "body": "Test what happens if power or internet is lost. A camera is shown disconnected when its recent connection signals stop. This status reports device contact, not a guarantee that every event will be detected.",
+      "network": "Use a secure, reachable Halo address for devices on your network. localhost refers to the device opening the link, so a QR link pointing at localhost will not reach a server on a different phone or computer."
+    }
+  }
 }

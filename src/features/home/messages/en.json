@@ -1,11 +1,40 @@
 {
   "title": "Home",
-  "greeting": "Hello, {name}",
-  "calm": "Everything is calm",
-  "monitoringRooms": "Monitoring {count} rooms",
-  "rooms": "Rooms",
-  "devices": "Cameras",
-  "people": "Protected people",
-  "alerts": "Alerts",
-  "systemNormal": "System is operating normally"
+  "greeting": "Hi, {name}",
+  "cameras": "Cameras · {online}/{total} online",
+  "addCamera": "Add camera",
+  "allCameras": "See all cameras",
+  "recentEvents": "Recent events",
+  "noCameras": "No cameras connected",
+  "noCamerasHint": "Connect an old phone or laptop as your first camera.",
+  "noEvents": "No events yet",
+  "noEventsHint": "Detected moments will appear here in time order.",
+  "monitorHint": "Keep the camera's browser open. Halo does not replace emergency services.",
+  "state": {
+    "calm": {
+      "title": "All is calm",
+      "hint": "Cameras are connected. There are no unseen new alerts.",
+      "action": "View event history"
+    },
+    "alert": {
+      "title": "Check now",
+      "hint": "A new potentially dangerous event needs your attention. Check what happened.",
+      "action": "Check alert"
+    },
+    "offline": {
+      "title": "Check your cameras",
+      "hint": "Some cameras are disconnected. Check power, internet and the browser.",
+      "action": "Check cameras"
+    },
+    "empty": {
+      "title": "Start looking after your home",
+      "hint": "Connect your first camera to receive alerts about the people you love.",
+      "action": "Add first camera"
+    },
+    "attention": {
+      "title": "New alerts to check",
+      "hint": "There are unseen events. Open them and record what happened.",
+      "action": "View events"
+    }
+  }
 }

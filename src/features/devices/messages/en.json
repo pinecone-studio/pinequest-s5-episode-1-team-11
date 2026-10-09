@@ -1,5 +1,104 @@
 {
   "title": "Devices",
   "detailTitle": "Device details",
-  "newTitle": "New device"
+  "newTitle": "Add a camera",
+  "newSubtitle": "Connect a spare phone, laptop or IP camera",
+  "summary": "{online} of {total} cameras online",
+  "add": "Add a camera",
+  "back": "All cameras",
+  "lastSeen": "Last connection",
+  "neverSeen": "Not connected yet",
+  "demoNotice": "Example data. Connecting, saving and removing cameras require a configured server and a signed-in family account.",
+  "kinds": { "phone": "Phone", "laptop": "Laptop", "ip_camera": "IP camera" },
+  "empty": {
+    "title": "Your first camera starts here",
+    "body": "Use a spare phone or laptop to watch over a room. Add a camera to create its connection code."
+  },
+  "offline": {
+    "title": "A camera is disconnected",
+    "body": "No connection signal has arrived for at least 90 seconds. This camera cannot send new alerts while disconnected.",
+    "help": "Check its power and internet. Keep the camera page open and the screen awake. It reconnects when connection signals resume."
+  },
+  "fields": {
+    "name": "Camera name",
+    "room": "Room",
+    "kind": "Camera type",
+    "namePlaceholder": "Living room phone",
+    "roomPlaceholder": "Living room"
+  },
+  "pairing": {
+    "create": "Create connection code",
+    "cctv": "An IP camera needs a configured go2rtc bridge. Open Camera mode with that stream URL, then enter this code.",
+    "scanTitle": "Connect the camera device",
+    "scanBody": "Scan this QR code on the camera's phone or laptop, or open Camera mode there and enter the six-digit code.",
+    "qrAlt": "QR code to connect this camera",
+    "code": "Connection code",
+    "expires": "Code expires in {time}",
+    "waiting": "Waiting for the camera to connect…",
+    "checking": "Checking the connection…",
+    "copy": "Copy camera link",
+    "copied": "Camera link copied",
+    "copyFailed": "Could not copy. Scan the QR code or enter the code instead.",
+    "openMonitor": "Open Camera mode",
+    "expiredTitle": "This code has expired",
+    "expiredBody": "Create another code to connect the camera. Each code works once for ten minutes.",
+    "regenerate": "Create a new code",
+    "successTitle": "Camera connected",
+    "successBody": "{name} has joined your family. On the camera device, allow camera and microphone access and start watching.",
+    "openDevice": "Camera settings",
+    "guideTitle": "Before you start",
+    "step1": "Give the camera a name and choose its room.",
+    "step2": "Open the connection link on the device that will become the camera.",
+    "step3": "Allow camera and microphone access. Keep it plugged in, with the screen awake."
+  },
+  "details": {
+    "identity": "Camera details",
+    "watching": "Who are you watching?",
+    "sensitivity": "Detection sensitivity",
+    "sensitivityHint": "Higher sensitivity can detect smaller changes and may produce more false alerts.",
+    "syncHint": "Changes reach a connected camera with its next connection signal, usually within 30 seconds.",
+    "save": "Save changes",
+    "reload": "Review latest settings",
+    "saved": "Changes saved. The camera will receive them on its next connection signal."
+  },
+  "watching": {
+    "elderly": {
+      "label": "Older adult",
+      "hint": "Quicker alerts for a fall or prolonged distress"
+    },
+    "child": { "label": "Child", "hint": "Allows more movement and waits longer for crying" },
+    "disabled": {
+      "label": "Person with mobility needs",
+      "hint": "Considers shorter falls and mobility aids"
+    }
+  },
+  "sensitivity": { "low": "Low", "medium": "Medium", "high": "High" },
+  "detection": {
+    "fall": { "label": "Falls", "hint": "Sudden descent followed by staying down" },
+    "distress": { "label": "Distress sounds", "hint": "Screaming and prolonged crying" },
+    "hazard": { "label": "Hazard sounds", "hint": "Breaking glass and smoke or fire alarms" }
+  },
+  "delete": {
+    "title": "Remove camera",
+    "explanation": "Removing it stops its access to your family. Earlier events remain in your history.",
+    "button": "Remove this camera",
+    "confirmTitle": "Remove this camera?",
+    "confirmBody": "{name} will stop sending alerts to your family. To reconnect it later, you will need a new connection code.",
+    "confirm": "Remove camera",
+    "cancel": "Keep camera"
+  },
+  "errors": {
+    "invalid": "Check the name, room and detection settings. Names must contain 1–60 characters.",
+    "unavailable": "The server is not configured. This example cannot save changes or connect cameras.",
+    "unauthorized": "Sign in to your family account to continue.",
+    "notFound": "This camera or connection code is no longer available to your family.",
+    "failed": "Could not complete this request. Check your connection and try again.",
+    "limit": "Your family already has five active codes. Use one or wait for it to expire.",
+    "conflict": "Another caregiver changed this camera. Review the latest settings before saving. This will discard your unsaved draft."
+  },
+  "loadError": {
+    "title": "Could not load cameras",
+    "body": "Check your connection and try again. Your camera settings have not been changed.",
+    "retry": "Try again"
+  }
 }
