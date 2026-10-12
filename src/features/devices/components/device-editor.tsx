@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/switch";
 import type { DetectionSettings, Device } from "@/contracts";
 import { routes } from "@/lib/routes";
@@ -152,44 +151,7 @@ export function DeviceEditor({ device, demo }: { device: Device; demo: boolean }
             <p className="text-sm text-muted-foreground">{t("details.syncHint")}</p>
           </section>
           <section className="glass grid min-w-0 gap-6 rounded-lg p-5 sm:p-6">
-            <fieldset className="grid gap-3">
-              <legend className="mb-3 text-lg font-bold">{t("details.watching")}</legend>
-              {(["elderly", "child", "disabled"] as const).map((value) => (
-                <label
-                  key={value}
-                  className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-hairline p-4 has-checked:border-primary has-checked:bg-primary/5"
-                >
-                  <input
-                    type="radio"
-                    name="watching"
-                    value={value}
-                    checked={settings.watching === value}
-                    onChange={() => configure({ watching: value })}
-                    className="size-5 shrink-0 accent-primary"
-                  />
-                  <span className="grid gap-1">
-                    <span className="text-md font-bold">{t(`watching.${value}.label`)}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {t(`watching.${value}.hint`)}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-            <div className="grid gap-3">
-              <h2 className="text-md font-bold">{t("details.sensitivity")}</h2>
-              <SegmentedControl
-                label={t("details.sensitivity")}
-                value={settings.sensitivity}
-                onValueChange={(sensitivity) => configure({ sensitivity })}
-                options={(["low", "medium", "high"] as const).map((value) => ({
-                  value,
-                  label: t(`sensitivity.${value}`),
-                }))}
-              />
-              <p className="text-sm text-muted-foreground">{t("details.sensitivityHint")}</p>
-            </div>
-            <div className="grid gap-4 border-t border-hairline pt-5">
+            <div className="grid gap-4">
               {(["fall", "distress", "hazard"] as const).map((key) => (
                 <div key={key} className="flex min-h-16 items-center justify-between gap-4">
                   <label htmlFor={`detection-${key}`} className="grid cursor-pointer gap-1">

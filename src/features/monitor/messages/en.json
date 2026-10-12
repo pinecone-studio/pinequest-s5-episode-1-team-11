@@ -17,8 +17,11 @@
   },
   "ready": {
     "lead": "{name} is ready to watch.",
+    "reopen": "If this page closes, this phone gets a “Halo camera is off” notification. Tap it and the camera starts again. Start watching asks for notification permission; allow it.",
+    "savedCode": "This phone is already connected. Continue using the current camera, or use the new code to make another connection.",
+    "useNewCode": "Connect with the new code",
     "localLead": "Test mode: detections only appear on this screen.",
-    "tip1": "Place it up high where it sees the whole room",
+    "tip1": "Keep the camera still with the full body and floor in frame",
     "tip2": "Keep it plugged in",
     "tip3": "Keep this page open and the screen on",
     "start": "Start watching",
@@ -29,9 +32,13 @@
   "loading": {
     "camera": "Starting the camera…",
     "models": "Loading the AI models…",
-    "modelsHint": "About 10 MB the first time, quick after that"
+    "modelsHint": "About 10 MB the first time, quick after that",
+    "settings": "Loading camera settings…"
   },
   "error": {
+    "interrupted": "The camera picture has stopped.",
+    "saved": "Your camera connection is saved. You do not need another code.",
+    "reopen": "Reopen camera",
     "camera": "The camera or microphone did not open. Check the browser's permissions.",
     "models": "Could not load the AI models. Check your internet."
   },
@@ -41,9 +48,10 @@
     "paused": "Paused",
     "calm": "All is well",
     "noPerson": "Nobody in view",
+    "bodyIncomplete": "Body is partly out of view",
+    "framingHint": "Keep shoulders, hips, feet and floor in frame to track falls.",
     "falling": "Sudden movement…",
     "down": "Lying down, checking",
-    "sent": "{kind}: notification sent",
     "detected": "{kind}: detected",
     "pausedTitle": "Watching is paused",
     "local": "test",
@@ -55,7 +63,16 @@
     "queued": "{count} notifications waiting to send",
     "hidden": "Watching stops when the screen turns off. Keep this page open.",
     "noMic": "No microphone: watching by video only",
-    "level": "Sound level"
+    "level": "Sound level",
+    "enableMic": "Enable microphone",
+    "micError": "Sound recognition stopped. Video monitoring continues; retry to enable sound.",
+    "diagnostics": "Check detection",
+    "bodyCount": "People in frame: {count}",
+    "placement": "Keep the phone still with shoulders, hips, feet and floor in frame. Green body points should be visible.",
+    "waitHint": "Current settings require staying down for {seconds, number} seconds after a fall. Crying alerts require prolonged crying.",
+    "beingWatched": "Family is watching",
+    "micLevel": "Microphone: {level}",
+    "heard": "Hearing: {name} {percent}%"
   },
   "detector": {
     "fall": "Fall",

@@ -1,6 +1,5 @@
 {
   "title": "Devices",
-  "detailTitle": "Device details",
   "newTitle": "Add a camera",
   "newSubtitle": "Connect a spare phone, laptop or IP camera",
   "summary": "{online} of {total} cameras online",
@@ -9,7 +8,11 @@
   "lastSeen": "Last connection",
   "neverSeen": "Not connected yet",
   "demoNotice": "Example data. Connecting, saving and removing cameras require a configured server and a signed-in family account.",
-  "kinds": { "phone": "Phone", "laptop": "Laptop", "ip_camera": "IP camera" },
+  "kinds": {
+    "phone": "Phone",
+    "laptop": "Laptop",
+    "ip_camera": "IP camera"
+  },
   "empty": {
     "title": "Your first camera starts here",
     "body": "Use a spare phone or laptop to watch over a room. Add a camera to create its connection code."
@@ -17,7 +20,25 @@
   "offline": {
     "title": "A camera is disconnected",
     "body": "No connection signal has arrived for at least 90 seconds. This camera cannot send new alerts while disconnected.",
-    "help": "Check its power and internet. Keep the camera page open and the screen awake. It reconnects when connection signals resume."
+    "help": "Check its power and internet. Keep the camera page open and the screen awake. It reconnects when connection signals resume.",
+    "wake": {
+      "button": "Wake the camera",
+      "hint": "A notification goes to the camera phone. When someone at home taps it, the camera starts again.",
+      "sent": "Notification sent to the camera phone",
+      "unavailable": "This camera can't receive notifications yet, or one was just sent. Use Reconnect with QR below.",
+      "failed": "Couldn't send the notification. Try again."
+    },
+    "reconnect": {
+      "button": "Reconnect with QR",
+      "hint": "Scan the QR with the camera phone. This camera comes back with its room, settings and history and starts watching.",
+      "scan": "On the camera phone, open the camera app and scan this QR, or enter the code on the camera page.",
+      "waiting": "Waiting for the phone · {time}",
+      "expired": "The code has expired.",
+      "again": "New QR",
+      "done": "Camera reconnected",
+      "failed": "Couldn't create a QR. Try again.",
+      "qrAlt": "QR code to reconnect the camera"
+    }
   },
   "fields": {
     "name": "Camera name",
@@ -53,30 +74,24 @@
   },
   "details": {
     "identity": "Camera details",
-    "watching": "Who are you watching?",
-    "sensitivity": "Detection sensitivity",
-    "sensitivityHint": "Higher sensitivity can detect smaller changes and may produce more false alerts.",
     "syncHint": "Changes reach a connected camera with its next connection signal, usually within 30 seconds.",
     "save": "Save changes",
     "reload": "Review latest settings",
     "saved": "Changes saved. The camera will receive them on its next connection signal."
   },
-  "watching": {
-    "elderly": {
-      "label": "Older adult",
-      "hint": "Quicker alerts for a fall or prolonged distress"
-    },
-    "child": { "label": "Child", "hint": "Allows more movement and waits longer for crying" },
-    "disabled": {
-      "label": "Person with mobility needs",
-      "hint": "Considers shorter falls and mobility aids"
-    }
-  },
-  "sensitivity": { "low": "Low", "medium": "Medium", "high": "High" },
   "detection": {
-    "fall": { "label": "Falls", "hint": "Sudden descent followed by staying down" },
-    "distress": { "label": "Distress sounds", "hint": "Screaming and prolonged crying" },
-    "hazard": { "label": "Hazard sounds", "hint": "Breaking glass and smoke or fire alarms" }
+    "fall": {
+      "label": "Falls",
+      "hint": "Sudden descent followed by staying down"
+    },
+    "distress": {
+      "label": "Distress sounds",
+      "hint": "Screaming and prolonged crying"
+    },
+    "hazard": {
+      "label": "Hazard sounds",
+      "hint": "Breaking glass and smoke or fire alarms"
+    }
   },
   "delete": {
     "title": "Remove camera",

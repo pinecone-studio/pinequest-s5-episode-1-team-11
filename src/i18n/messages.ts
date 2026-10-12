@@ -1,17 +1,15 @@
 import authEn from "@/features/auth/messages/en.json";
 import authMn from "@/features/auth/messages/mn.json";
-import designEn from "@/features/design/messages/en.json";
-import designMn from "@/features/design/messages/mn.json";
 import devicesEn from "@/features/devices/messages/en.json";
 import devicesMn from "@/features/devices/messages/mn.json";
-import devtoolsEn from "@/features/devtools/messages/en.json";
-import devtoolsMn from "@/features/devtools/messages/mn.json";
 import eventsEn from "@/features/events/messages/en.json";
 import eventsMn from "@/features/events/messages/mn.json";
 import homeEn from "@/features/home/messages/en.json";
 import homeMn from "@/features/home/messages/mn.json";
 import householdEn from "@/features/household/messages/en.json";
 import householdMn from "@/features/household/messages/mn.json";
+import liveEn from "@/features/live/messages/en.json";
+import liveMn from "@/features/live/messages/mn.json";
 import marketingEn from "@/features/marketing/messages/en.json";
 import marketingMn from "@/features/marketing/messages/mn.json";
 import monitorEn from "@/features/monitor/messages/en.json";
@@ -34,12 +32,11 @@ const catalogs = {
   mn: {
     common: commonMn,
     auth: authMn,
-    design: designMn,
-    devtools: devtoolsMn,
     devices: devicesMn,
     events: eventsMn,
     home: homeMn,
     household: householdMn,
+    live: liveMn,
     marketing: marketingMn,
     monitor: monitorMn,
     notifications: notificationsMn,
@@ -49,12 +46,11 @@ const catalogs = {
   en: {
     common: commonEn,
     auth: authEn,
-    design: designEn,
-    devtools: devtoolsEn,
     devices: devicesEn,
     events: eventsEn,
     home: homeEn,
     household: householdEn,
+    live: liveEn,
     marketing: marketingEn,
     monitor: monitorEn,
     notifications: notificationsEn,

@@ -9,23 +9,12 @@ const mocks = vi.hoisted(() => ({
   eq: vi.fn(),
   maybeSingle: vi.fn(),
   deleteRows: vi.fn(),
-  inRows: vi.fn(),
-  deliverPush: vi.fn(),
   isPushConfigured: vi.fn(),
 }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
-vi.mock("./server/web-push", () => ({
-  deliverPush: mocks.deliverPush,
-  isPushConfigured: mocks.isPushConfigured,
-}));
-vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
+vi.mock("./server/web-push", () => ({ isPushConfigured: mocks.isPushConfigured }));
 
-import {
-  getPushSubscriptionState,
-  removePushSubscription,
-  savePushSubscription,
-  sendTestNotification,
-} from "./actions";
+import { getPushSubscriptionState, removePushSubscription, savePushSubscription } from "./actions";
 
 const endpoint = "https://fcm.googleapis.com/fcm/send/browser";
 const subscription = { endpoint, keys: { p256dh: "B".repeat(87), auth: "a".repeat(22) } };
@@ -35,7 +24,6 @@ const builder = {
   eq: mocks.eq,
   maybeSingle: mocks.maybeSingle,
   delete: mocks.deleteRows,
-  in: mocks.inRows,
 };
 
 beforeEach(() => {
@@ -46,7 +34,6 @@ beforeEach(() => {
   mocks.select.mockReturnValue(builder);
   mocks.eq.mockReturnValue(builder);
   mocks.deleteRows.mockReturnValue(builder);
-  mocks.inRows.mockResolvedValue({ error: null });
   mocks.upsert.mockResolvedValue({ error: null });
   mocks.maybeSingle.mockResolvedValue({
     data: {
@@ -58,7 +45,6 @@ beforeEach(() => {
     error: null,
   });
   mocks.isPushConfigured.mockReturnValue(true);
-  mocks.deliverPush.mockResolvedValue({ sent: 1, expired: [] });
 });
 
 describe("authenticated notification actions", () => {
@@ -101,7 +87,6 @@ describe("authenticated notification actions", () => {
   it("reports missing delivery configuration and persistence failures", async () => {
     mocks.isPushConfigured.mockReturnValue(false);
     expect(await savePushSubscription(subscription)).toEqual({ ok: false, error: "unconfigured" });
-    expect(await sendTestNotification(endpoint)).toEqual({ ok: false, error: "unconfigured" });
     expect(mocks.from).not.toHaveBeenCalled();
     mocks.isPushConfigured.mockReturnValue(true);
     mocks.upsert.mockResolvedValue({ error: { message: "RLS rejected endpoint" } });
@@ -119,33 +104,5 @@ describe("authenticated notification actions", () => {
       ["user_id", "current-user"],
       ["endpoint", endpoint],
     ]);
-  });
-
-  it("sends the test through the server delivery boundary after checking own subscription", async () => {
-    expect(await sendTestNotification(endpoint)).toEqual({ ok: true, data: undefined });
-    expect(mocks.deliverPush).toHaveBeenCalledWith(
-      {
-        title: "testTitle",
-        body: "testBody",
-        url: "/settings",
-        tag: "halo-notification-test",
-        severity: "info",
-      },
-      [{ ...subscription, expirationTime: null }],
-    );
-    expect(mocks.eq).toHaveBeenCalledWith("user_id", "current-user");
-    mocks.maybeSingle.mockResolvedValue({ data: null, error: null });
-    mocks.deliverPush.mockClear();
-    expect(await sendTestNotification(endpoint)).toEqual({ ok: false, error: "noSubscription" });
-    expect(mocks.deliverPush).not.toHaveBeenCalled();
-  });
-
-  it("removes expired own subscriptions and reports failed delivery truthfully", async () => {
-    mocks.deliverPush.mockResolvedValue({ sent: 0, expired: [endpoint] });
-    expect(await sendTestNotification(endpoint)).toEqual({ ok: false, error: "noSubscription" });
-    expect(mocks.deleteRows).toHaveBeenCalledOnce();
-    expect(mocks.inRows).toHaveBeenCalledWith("endpoint", [endpoint]);
-    mocks.deliverPush.mockResolvedValue({ sent: 0, expired: [] });
-    expect(await sendTestNotification(endpoint)).toEqual({ ok: false, error: "sendFailed" });
   });
 });

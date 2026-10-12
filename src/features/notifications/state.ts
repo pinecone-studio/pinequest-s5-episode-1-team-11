@@ -5,9 +5,7 @@ export type NotificationError =
   | "invalid"
   | "saveFailed"
   | "removeFailed"
-  | "stateFailed"
-  | "noSubscription"
-  | "sendFailed";
+  | "stateFailed";
 
 export type NotificationActionResult<T = undefined> =
   | { ok: true; data: T }

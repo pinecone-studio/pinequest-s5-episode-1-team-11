@@ -10,8 +10,6 @@ export const routes = {
   login: "/login",
   signup: "/signup",
   monitor: "/monitor",
-  design: "/design",
-  dev: "/dev",
   event: (id: string) => `/events/${encodeURIComponent(id)}`,
   alert: (id: string) => `/events/${encodeURIComponent(id)}/alert`,
   device: (id: string) => `/devices/${encodeURIComponent(id)}`,

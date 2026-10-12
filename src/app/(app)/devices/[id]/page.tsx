@@ -8,7 +8,10 @@ import { DeviceStatus } from "@/components/domain/device-status";
 import { RelativeTime } from "@/components/domain/relative-time";
 import { Button } from "@/components/ui/button";
 import { DeviceEditor } from "@/features/devices/components/device-editor";
+import { ReconnectPanel } from "@/features/devices/components/reconnect-panel";
+import { WakeButton } from "@/features/devices/components/wake-button";
 import { getDevice } from "@/features/devices/queries";
+import { LiveView } from "@/features/live/components/live-view";
 import { isSupabaseConfigured } from "@/lib/env";
 import { routes } from "@/lib/routes";
 
@@ -41,10 +44,15 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </p>
       </div>
       {device.status === "offline" && (
-        <p className="rounded-md border border-warning/25 bg-warning/5 p-4 text-base text-warning-text">
-          {t("offline.body")}
-        </p>
+        <div className="grid gap-4 rounded-md border border-warning/25 bg-warning/5 p-4">
+          <p className="text-base text-warning-text">{t("offline.body")}</p>
+          {isSupabaseConfigured && <WakeButton deviceId={device.id} />}
+        </div>
       )}
+      {isSupabaseConfigured && device.status !== "pairing" && (
+        <LiveView deviceId={device.id} online={device.status === "online"} />
+      )}
+      {isSupabaseConfigured && <ReconnectPanel deviceId={device.id} />}
       <DeviceEditor key={device.id} device={device} demo={!isSupabaseConfigured} />
     </>
   );

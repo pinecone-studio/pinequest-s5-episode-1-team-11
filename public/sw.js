@@ -7,7 +7,7 @@ function safeDestination(value) {
     const url = new URL(typeof value === "string" ? value : "/events", self.location.origin);
     if (
       url.origin === self.location.origin &&
-      /^\/(events(?:\/[a-f0-9-]+(?:\/alert)?)?|settings)\/?$/i.test(url.pathname)
+      /^\/(events(?:\/[a-f0-9-]+(?:\/alert)?)?|settings|monitor)\/?$/i.test(url.pathname)
     ) {
       return url.href;
     }

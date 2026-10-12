@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultDetectionSettings } from "@/contracts";
+import { wakeCamera } from "@/lib/device-api/wake";
 import { createClient } from "@/lib/supabase/server";
-import { createDevicePairing, deleteDevice, getPairingStatus, updateDevice } from "./actions";
+import {
+  createDevicePairing,
+  deleteDevice,
+  getPairingStatus,
+  updateDevice,
+  wakeDevice,
+} from "./actions";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/device-api/wake", () => ({ wakeCamera: vi.fn() }));
 
 const id = "00000000-0000-4000-8000-0000000000d1";
 const householdId = "00000000-0000-4000-8000-0000000000a1";
@@ -97,6 +105,19 @@ describe("guardian device actions", () => {
   it("reports a concurrent update when the camera still exists after a rejected save", async () => {
     devices.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
     expect(await updateDevice(input)).toEqual({ ok: false, error: "conflict" });
+  });
+
+  it("wakes only a camera in the caller's household", async () => {
+    vi.mocked(wakeCamera).mockResolvedValue("sent");
+    expect(await wakeDevice(id)).toEqual({ ok: true, data: "sent" });
+    expect(devices.eq).toHaveBeenCalledWith("household_id", householdId);
+    expect(wakeCamera).toHaveBeenCalledWith(id);
+
+    vi.mocked(wakeCamera).mockClear();
+    devices.maybeSingle.mockResolvedValue({ data: null, error: null });
+    expect(await wakeDevice(id)).toEqual({ ok: false, error: "notFound" });
+    expect(wakeCamera).not.toHaveBeenCalled();
+    expect(await wakeDevice("not-a-uuid")).toEqual({ ok: false, error: "invalid" });
   });
 
   it("does not pretend to persist or generate a usable code in demo mode", async () => {

@@ -13,8 +13,6 @@ export const PairingCode = z.object({
 });
 export type PairingCode = z.infer<typeof PairingCode>;
 
-export const PAIRING_TTL_MS = 10 * 60_000;
-
 /** The camera device (/monitor) sends this to POST /api/v1/devices/pair. */
 export const PairRequest = z.object({
   code: PairingCodeValue,

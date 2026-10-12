@@ -23,44 +23,38 @@ export default async function Page() {
   const icon = "size-6 text-primary-text";
 
   return (
-    <>
+    <div className="mx-auto grid w-full max-w-2xl gap-8">
       <PageHeader title={t("title")} />
-      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
-        <div className="grid gap-8">
-          <ListGroup>
-            <ListItem
-              href={routes.devices}
-              leading={<CameraIcon weight="duotone" aria-hidden="true" className={icon} />}
-              title={t("devices")}
-              description={t("devicesHint")}
-            />
-            <ListItem
-              href={routes.people}
-              leading={<UsersIcon weight="duotone" aria-hidden="true" className={icon} />}
-              title={t("people")}
-              description={t("peopleHint")}
-            />
-            <ListItem
-              href={routes.household}
-              leading={<UsersThreeIcon weight="duotone" aria-hidden="true" className={icon} />}
-              title={t("household")}
-              description={t("householdHint")}
-            />
-          </ListGroup>
-          <NotificationSettings />
-        </div>
-        <div className="grid gap-8">
-          <section aria-labelledby="appearance" className="grid gap-3">
-            <h2 id="appearance" className="pl-1 text-base font-bold text-muted-foreground">
-              {t("appearance")}
-            </h2>
-            <LanguageSelect />
-            <ModeSelect />
-            <PaletteSelect value={palette} />
-          </section>
-          <AccountPanel profile={profile} demo={!isSupabaseConfigured} />
-        </div>
-      </div>
-    </>
+      <ListGroup>
+        <ListItem
+          href={routes.devices}
+          leading={<CameraIcon weight="duotone" aria-hidden="true" className={icon} />}
+          title={t("devices")}
+          description={t("devicesHint")}
+        />
+        <ListItem
+          href={routes.people}
+          leading={<UsersIcon weight="duotone" aria-hidden="true" className={icon} />}
+          title={t("people")}
+          description={t("peopleHint")}
+        />
+        <ListItem
+          href={routes.household}
+          leading={<UsersThreeIcon weight="duotone" aria-hidden="true" className={icon} />}
+          title={t("household")}
+          description={t("householdHint")}
+        />
+      </ListGroup>
+      <NotificationSettings />
+      <section aria-labelledby="appearance" className="grid gap-3">
+        <h2 id="appearance" className="pl-1 text-base font-bold text-muted-foreground">
+          {t("appearance")}
+        </h2>
+        <LanguageSelect />
+        <ModeSelect />
+        <PaletteSelect value={palette} />
+      </section>
+      <AccountPanel profile={profile} demo={!isSupabaseConfigured} />
+    </div>
   );
 }

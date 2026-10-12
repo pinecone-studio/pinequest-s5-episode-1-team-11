@@ -1,4 +1,5 @@
 import { DeviceConfig } from "@/contracts";
+import { liveChannelsFor } from "@/features/live/server/channel";
 import { authenticateDevice, isDeviceApiConfigured } from "@/lib/device-api/auth";
 import { apiError, apiJson } from "@/lib/device-api/http";
 
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
       name: device.name,
       roomName: device.room_name,
       settings: device.settings,
+      liveChannels: liveChannelsFor(device.id) ?? undefined,
     }),
   );
 }

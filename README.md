@@ -18,9 +18,6 @@ bun dev
 
 [http://localhost:3000](http://localhost:3000) нээнэ. Supabase-ийн утга хоосон бол query-ууд жишээ өгөгдөл буцаана. Холбогдсон үед query алдааг жишээ өгөгдлөөр нуухгүй.
 
-- `/design` — shared component, light/dark, palette болон хэлний showcase.
-- `/prototype.html` — cream + гүн ногоон interactive design preview. Камер, event, pairing нь жишээ өгөгдөл; бодит AI/CCTV холболт биш.
-- `/dev` — хөгжүүлэлтийн үед жишээ төлөв солих, route болон query өгөгдөл шалгах. Supabase + server key тохируулсан бол нэвтэрсэн хэрэглэгчийн гэр бүлд тест event үүсгэх, төхөөрөмжийг offline болгох, `/monitor`-д оруулах pairing код үүсгэх боломжтой. Production-д 404.
 - `/login`, `/signup`, `/setup-household` — auth суурь.
 - `/monitor` — утас/laptop-ыг камер болгоно: 6 оронтой кодоор холбогдоод (эсвэл `?code=123456`), камер+микрофоноор унах, орилох, удаан уйлах, шил хагарах, галын дохиог илрүүлнэ. Supabase-гүй үед **Туршилтын горим** — илрүүлэлт зөвхөн дэлгэц дээр харагдана.
 - `/home`, `/events`, `/devices`, `/settings`, `/onboarding`, `/invite/[code]` болон нийтийн хуудсууд — placeholder.
@@ -38,7 +35,7 @@ Turbopack тухайн орчинд ажиллахгүй бол `bun run build -
 ## Supabase холбох
 
 1. `supabase/migrations/` доторх бүх SQL файлыг filename-ийн дарааллаар өөрийн Supabase project дээр ажиллуулна (`supabase db push` эсвэл SQL Editor). Дарааллаар нь tables → RLS/storage → household/pairing/invite functions → device API → offline job → нэг удаагийн pairing код → эзэмшил шилжүүлэх ба бүртгэл цэвэрлэх → атомаар event хүлээн авах ба push-ийн дараалал.
-2. `.env.local`-д URL, publishable key тавина. `SUPABASE_SECRET_KEY` нь зөвхөн server-side device API болон development хэрэгсэлд хэрэглэгдэнэ.
+2. `.env.local`-д URL, publishable key тавина. `SUPABASE_SECRET_KEY` нь зөвхөн server-side device API-д хэрэглэгдэнэ.
 3. Supabase Auth-ийн Site URL-ийг `NEXT_PUBLIC_SITE_URL`-тай тааруулж, `/auth/callback` URL-ийг Redirect URLs-д зөвшөөрнө. Email confirmation асаалттай бүртгэл PKCE callback ашиглана; token-hash email template ашиглавал `/auth/confirm?token_hash=…&type=email` route бэлэн.
 4. Push мэдэгдлийн VAPID түлхүүр үүсгэнэ: `bun run vapid`. Public Key-г `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, Private Key-г `VAPID_PRIVATE_KEY`-д тавина. Түлхүүрийг нэг удаа үүсгээд бүх хүн, Vercel ижлийг ашиглана; солих юм бол өмнөх бүх мэдэгдлийн бүртгэл хүчингүй болно. Private key-г хэзээ ч commit хийхгүй.
 5. Нэвтэрч гэр бүлээ үүсгэнэ. MVP-д нэг account нэг гэр бүлд харьяалагдана.
@@ -98,11 +95,7 @@ Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scop
 
 CCTV: [`tools/cctv-sim`](tools/cctv-sim/README.md) — go2rtc RTSP/файлын урсгалыг WebRTC болгоно, `/monitor?cctv=http://localhost:1984/api/webrtc?src=hall` нээхэд камерын оронд тэр урсгалыг хянана.
 
-Дүрмүүдийг `bun run test`-ийн synthetic pose/дууны тестүүд шалгана. Камергүйгээр турших бол development үед `public/` дотор видео тавиад `/monitor?video=/clip.mp4` нээнэ (видеоны дуу бас шинжлэгдэнэ). Жишээ нь галын дохионы дуу:
-
-```bash
-ffmpeg -f lavfi -i testsrc=size=640x480:rate=15 -f lavfi -i "sine=frequency=3150,volume='if(lt(mod(t,1),0.5),1,0)':eval=frame" -t 12 -pix_fmt yuv420p -shortest public/alarm.mp4
-```
+Дүрмүүдийг `bun run test`-ийн synthetic pose/дууны автомат тестүүд шалгана.
 
 ## Дэлгэцийн хэмжээ
 

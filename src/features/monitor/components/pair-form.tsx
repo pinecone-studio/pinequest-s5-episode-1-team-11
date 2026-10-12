@@ -1,6 +1,6 @@
 "use client";
 
-import { FlaskIcon } from "@phosphor-icons/react";
+import { DeviceMobileCameraIcon, FlaskIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,8 +40,13 @@ export function PairForm({
 
   return (
     <div className="grid gap-8">
-      <form onSubmit={submit} className="grid gap-5">
-        <p className="text-md text-muted-foreground">{t("lead")}</p>
+      <form onSubmit={submit} className="glass grid gap-5 rounded-xl p-5 sm:p-6">
+        <div className="flex items-start gap-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary-text">
+            <DeviceMobileCameraIcon aria-hidden="true" className="size-6" />
+          </span>
+          <p className="text-md text-muted-foreground">{t("lead")}</p>
+        </div>
         <Input
           label={t("code")}
           hint={t("hint")}

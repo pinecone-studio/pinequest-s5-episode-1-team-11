@@ -31,7 +31,7 @@ const bearer = (token: string) => ({
   "content-type": "application/json",
 });
 
-export function guessDeviceKind(): DeviceKind {
+function guessDeviceKind(): DeviceKind {
   return /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? "phone" : "laptop";
 }
 
@@ -65,4 +65,15 @@ export async function sendEvent(token: string, event: EventIngest): Promise<ApiR
 
 export async function unpairDevice(token: string) {
   await call("/api/v1/devices/me", { method: "DELETE", headers: bearer(token) });
+}
+
+/** Fire-and-forget from pagehide: keepalive lets the request outlive the closing page. */
+export function sendAway(token: string) {
+  try {
+    void fetch("/api/v1/devices/away", {
+      method: "POST",
+      keepalive: true,
+      headers: bearer(token),
+    }).catch(() => undefined);
+  } catch {}
 }

@@ -18,6 +18,5 @@ export const config = {
     "/reset-password",
     "/invite/:path*",
     "/auth/:path*",
-    "/dev/:path*",
   ],
 };

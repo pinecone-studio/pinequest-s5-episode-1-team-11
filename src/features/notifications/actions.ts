@@ -1,8 +1,7 @@
 "use server";
 
-import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { deliverPush, isPushConfigured } from "./server/web-push";
+import { isPushConfigured } from "./server/web-push";
 import type { NotificationActionResult } from "./state";
 import { StoredPushSubscription, SubscriptionEndpoint } from "./subscription";
 
@@ -62,48 +61,4 @@ export async function removePushSubscription(input: unknown): Promise<Notificati
     .eq("user_id", context.userId)
     .eq("endpoint", parsed.data);
   return error ? { ok: false, error: "removeFailed" } : { ok: true, data: undefined };
-}
-
-/** Send only to this browser's endpoint, after confirming it belongs to the signed-in user. */
-export async function sendTestNotification(input: unknown): Promise<NotificationActionResult> {
-  const context = await authenticatedClient();
-  if (!context.ok) return context;
-  if (!isPushConfigured()) return { ok: false, error: "unconfigured" };
-  const parsed = SubscriptionEndpoint.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "invalid" };
-  const { data, error } = await context.client
-    .from("push_subscriptions")
-    .select("*")
-    .eq("user_id", context.userId)
-    .eq("endpoint", parsed.data)
-    .maybeSingle();
-  if (error) return { ok: false, error: "stateFailed" };
-  if (!data) return { ok: false, error: "noSubscription" };
-  const subscription = StoredPushSubscription.safeParse({
-    endpoint: data.endpoint,
-    keys: { p256dh: data.p256dh, auth: data.auth },
-    expirationTime: data.expiration_time,
-  });
-  if (!subscription.success) return { ok: false, error: "invalid" };
-  const t = await getTranslations("notifications");
-  const result = await deliverPush(
-    {
-      title: t("testTitle"),
-      body: t("testBody"),
-      url: "/settings",
-      tag: "halo-notification-test",
-      severity: "info",
-    },
-    [subscription.data],
-  );
-  if (result.expired.length) {
-    const { error: removeError } = await context.client
-      .from("push_subscriptions")
-      .delete()
-      .eq("user_id", context.userId)
-      .in("endpoint", result.expired);
-    if (removeError) return { ok: false, error: "removeFailed" };
-    return { ok: false, error: "noSubscription" };
-  }
-  return result.sent > 0 ? { ok: true, data: undefined } : { ok: false, error: "sendFailed" };
 }
