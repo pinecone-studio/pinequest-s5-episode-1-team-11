@@ -19,7 +19,10 @@
     "alert": {
       "title": "Check now",
       "hint": "A new potentially dangerous event needs your attention. Check what happened.",
-      "action": "Check alert"
+      "action": "Check alert",
+      "urgent": "Urgent",
+      "view": "Look now",
+      "call": "Call 103"
     },
     "offline": {
       "title": "Check your cameras",

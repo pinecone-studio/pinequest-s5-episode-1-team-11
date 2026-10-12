@@ -11,6 +11,7 @@ import { EventActions } from "@/features/events/components/event-actions";
 import { EventFacts } from "@/features/events/components/event-facts";
 import { EventSnapshot } from "@/features/events/components/event-snapshot";
 import { getEvent } from "@/features/events/queries";
+import { LiveView } from "@/features/live/components/live-view";
 import { getHousehold } from "@/lib/data/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { routes } from "@/lib/routes";
@@ -52,6 +53,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)]">
         <div className="grid gap-6">
           <EventSnapshot url={event.snapshotUrl} />
+          {isSupabaseConfigured && event.deviceId && <LiveView deviceId={event.deviceId} online />}
           <EventFacts event={event} />
         </div>
         <aside className="glass grid gap-6 rounded-2xl p-6 lg:sticky lg:top-8">

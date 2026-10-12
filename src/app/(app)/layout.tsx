@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AlertBanner } from "@/components/app/alert-banner";
 import { AppFrame } from "@/components/app/app-frame";
 import { BottomNav } from "@/components/app/bottom-nav";
 import { SideNav } from "@/components/app/side-nav";
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </AppFrame>
       <SideNav newEvents={unreadCount} profileName={profile.name} householdName={household?.name} />
       <BottomNav newEvents={unreadCount} />
+      {isSupabaseConfigured && household && <AlertBanner householdId={household.id} />}
     </>
   );
 }
