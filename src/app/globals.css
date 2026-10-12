@@ -175,7 +175,7 @@
   --color-scrim: var(--scrim);
 
   --font-sans: var(--font-onest), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-unbounded), var(--font-onest), system-ui, sans-serif;
+  --font-display: var(--font-geologica), var(--font-onest), system-ui, sans-serif;
 }
 
 /* One scale for everything. Type 12/13/14/16/18/22/28/40 · space 4/8/12/16/20/24/32/40 · controls 28/40/44/52/64/72 · icons 16/20/24 */
@@ -215,6 +215,74 @@
   --animate-sonar-fast: sonar 1.2s ease-out infinite;
   --animate-blink: blink 1.8s ease-in-out infinite;
   --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-packet-x: packet-x 3.6s var(--ease-smooth) infinite;
+  --animate-packet-y: packet-y 3.6s var(--ease-smooth) infinite;
+  --animate-wave: wave 1.1s ease-in-out infinite;
+  --animate-rise: rise 420ms var(--ease-smooth);
+  --animate-draw: draw 1.4s var(--ease-smooth) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes packet-x {
+    0% {
+      left: 0;
+      opacity: 0;
+    }
+    12%,
+    82% {
+      opacity: 1;
+    }
+    100% {
+      left: calc(100% - 12px);
+      opacity: 0;
+    }
+  }
+  @keyframes packet-y {
+    0% {
+      top: 0;
+      opacity: 0;
+    }
+    12%,
+    82% {
+      opacity: 1;
+    }
+    100% {
+      top: calc(100% - 12px);
+      opacity: 0;
+    }
+  }
+  @keyframes wave {
+    0%,
+    100% {
+      transform: scaleY(0.35);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
 
   @keyframes breathe {
     0%,
@@ -286,16 +354,58 @@
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   backdrop-filter: blur(24px) saturate(160%);
 }
+/* A tappable card or row: lights its edge on hover, settles slightly on press. */
+@utility tap {
+  transition:
+    transform 160ms var(--ease-standard),
+    border-color 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard);
+  @media (hover: hover) {
+    &:hover {
+      border-color: color-mix(in srgb, var(--primary) 32%, var(--glass-border));
+    }
+  }
+  &:active {
+    transform: scale(0.985);
+  }
+}
+/* Page blocks arrive in a short cascade, each 45 ms after the one above. */
+@utility enter-stagger {
+  & > * {
+    animation: rise 420ms var(--ease-smooth) both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 45ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 90ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 135ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 180ms;
+  }
+  & > :nth-child(n + 6) {
+    animation-delay: 225ms;
+  }
+}
 @utility bg-aurora-calm {
   background: var(--aurora-calm);
 }
+/* A screen showing an unanswered critical alert turns the whole page red. */
+.app-frame:has([data-tone="alert"]) {
+  background: var(--aurora-alert);
+  background-attachment: fixed;
+}
+
 @utility bg-aurora-alert {
   background: var(--aurora-alert);
 }
 @utility font-display {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 @utility tabular {
   font-variant-numeric: tabular-nums;
@@ -305,6 +415,12 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    scrollbar-color: var(--border) transparent;
+    caret-color: var(--primary);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 34%, transparent);
+    color: var(--foreground);
   }
   body {
     background: var(--background);

@@ -64,7 +64,10 @@ export function ListItem({
   const base = cn("flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left", className);
   if (href)
     return (
-      <Link href={href} className={cn(base, "transition-colors hover:bg-hairline")}>
+      <Link
+        href={href}
+        className={cn(base, "transition-colors hover:bg-hairline active:bg-hairline")}
+      >
         {body}
       </Link>
     );
@@ -73,7 +76,7 @@ export function ListItem({
       <button
         type="button"
         onClick={onClick}
-        className={cn(base, "transition-colors hover:bg-hairline")}
+        className={cn(base, "transition-colors hover:bg-hairline active:bg-hairline")}
       >
         {body}
       </button>

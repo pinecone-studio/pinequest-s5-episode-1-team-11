@@ -6,47 +6,31 @@
     "home": "Halo home",
     "login": "Sign in",
     "label": "Public navigation",
-    "dashboard": "Your dashboard"
+    "dashboard": "Your dashboard",
+    "menu": "Menu",
+    "close": "Close menu",
+    "language": "Монгол хэл рүү шилжих",
+    "languageShort": "МН"
   },
   "footer": {
     "label": "Helpful links",
     "note": "Halo helps your family notice possible danger. Detections can be missed or mistaken, and notifications can be delayed. Review what happened and decide how to help."
   },
   "hero": {
-    "eyebrow": "Care that reaches home",
     "title": "A little closer to home.",
     "body": "Turn a spare phone or laptop into a camera that helps notice possible falls and distress sounds. Your family can review events and respond from wherever they are.",
     "start": "Get started",
     "try": "Try Camera mode",
-    "privacy": "Detection runs on the watching device. Continuous video is not uploaded to Halo."
-  },
-  "preview": {
-    "label": "Example",
-    "room": "Living room",
-    "caption": "A room you can keep an eye on",
-    "alert": "Possible fall detected",
-    "action": "Review the moment and check on your family",
-    "example": "Illustration with example content. No live camera is connected here."
-  },
-  "features": {
-    "title": "Small signals, useful context.",
-    "body": "A camera, a microphone and a shared place to decide what happens next.",
-    "detection": {
-      "title": "Notice a possible fall",
-      "body": "The camera looks for a sudden change in body position followed by staying down. A clear view and enough light matter."
+    "privacy": "Detection runs on the watching device. Continuous video is not uploaded to Halo.",
+    "orbCount": "03",
+    "orbLabel": "online",
+    "rooms": {
+      "living": "Living room",
+      "bedroom": "Bedroom",
+      "kitchen": "Kitchen"
     },
-    "sound": {
-      "title": "Listen for distress",
-      "body": "With a microphone, Halo can flag screaming, prolonged crying, breaking glass and smoke or fire alarm sounds."
-    },
-    "family": {
-      "title": "Respond together",
-      "body": "Share event history with your household. Acknowledge an event so the others can see someone is checking on it."
-    },
-    "privacy": {
-      "title": "Process video on the device",
-      "body": "Continuous video is analysed in the watching browser. Event details and optional snapshots provide context to your family."
-    }
+    "online": "Online",
+    "example": "Illustration"
   },
   "steps": {
     "title": "Three steps to start.",
@@ -61,13 +45,15 @@
     "review": {
       "title": "Review and respond",
       "body": "Enable notifications on each caregiver device. Open an event, review its context and tell the family when you are checking."
-    }
+    },
+    "code": "482 913"
   },
   "closing": {
     "title": "Start with a device you already have.",
     "body": "A spare phone or laptop is the first setup to try. The camera guide explains permissions, power and the extra requirements for an IP camera.",
     "limit": "Human judgement remains essential; Halo does not automatically call emergency services.",
-    "guide": "Read the camera guide"
+    "guide": "Read the camera guide",
+    "start": "Get started"
   },
   "faqContent": {
     "subtitle": "What to expect before you start watching",
@@ -130,6 +116,10 @@
     "hosting": {
       "title": "Where records live",
       "body": "The connected deployment uses its configured Supabase database and private image storage. Device and household records, event data and push subscription details are handled there. Retention and hosting region depend on that deployment; no automatic deletion schedule is promised here."
+    },
+    "live": {
+      "title": "Live view",
+      "body": "A family member can watch and listen to a camera when they choose. Video goes straight from the camera to that person's device over WebRTC and is not stored. The camera screen shows “Family is watching”. With the privacy curtain or Pause on, no picture or sound is sent. A live view closes by itself after 10 minutes."
     }
   },
   "cameraGuide": {
@@ -141,7 +131,8 @@
       "body": "The first setup to try uses a browser camera and microphone. You can try local Camera mode before connecting it to a family.",
       "step1": "Sign in on the guardian’s device. Open Devices → Add a camera and create a connection code.",
       "step2": "On the camera device, scan the QR link or open Camera mode and enter the code. Allow camera and microphone access, then start watching.",
-      "step3": "Place it where the person’s whole body is visible with enough light. Plug it in and keep the page open and screen awake."
+      "step3": "Place it where the person’s whole body is visible with enough light. Plug it in and keep the page open and screen awake.",
+      "short": "Phone or laptop"
     },
     "ip": {
       "title": "IP camera through a local relay",
@@ -152,12 +143,92 @@
       "limit": "Physical-camera integration has not been tested in this release. Codec, audio track, browser permissions, HTTPS/mixed-content rules and network reachability can prevent it from working.",
       "relayDocs": "Official go2rtc documentation",
       "vendorDocs": "TP-Link: RTSP and ONVIF setup",
-      "vendorModels": "TP-Link: model support and limitations"
+      "vendorModels": "TP-Link: model support and limitations",
+      "short": "IP camera"
     },
     "keepReady": {
       "title": "Keep the setup ready",
       "body": "Test what happens if power or internet is lost. A camera is shown disconnected when its recent connection signals stop. This status reports device contact, not a guarantee that every event will be detected.",
       "network": "Use a secure, reachable Halo address for devices on your network. localhost refers to the device opening the link, so a QR link pointing at localhost will not reach a server on a different phone or computer."
     }
+  },
+  "story": {
+    "title": "One moment. Four steps.",
+    "body": "Scroll to see what Halo notices and how it reaches your family.",
+    "example": "Illustration. No live camera is connected here.",
+    "progress": "Story step",
+    "watch": {
+      "label": "Watch",
+      "title": "The camera keeps the room in view",
+      "body": "A spare phone or laptop camera reads body position and its microphone listens. All of that analysis runs on the device itself."
+    },
+    "detect": {
+      "label": "Detect",
+      "title": "It recognises a fall",
+      "body": "A sudden drop in body position followed by staying down counts as a possible fall. Screaming, prolonged crying, breaking glass and fire alarms are flagged too."
+    },
+    "notify": {
+      "label": "Notify",
+      "title": "Your family gets a push",
+      "body": "Every caregiver's phone gets a push notification. Not video: only what happened, plus one snapshot for serious moments."
+    },
+    "respond": {
+      "label": "Respond",
+      "title": "Someone answers",
+      "body": "Open the event and mark it Seen or False alarm. The others see who is checking. If needed, you call 103 yourself."
+    },
+    "stage": {
+      "room": "Living room",
+      "watching": "Watching",
+      "onDevice": "On device",
+      "fall": "Possible fall",
+      "time": "21:47",
+      "now": "Now",
+      "pushBody": "Living room · Check the moment",
+      "seen": "Seen",
+      "seenBy": "Family notified",
+      "calm": "All calm"
+    }
+  },
+  "signals": {
+    "title": "What Halo notices.",
+    "body": "Pick one to see what Halo is looking and listening for.",
+    "label": "Signal type",
+    "camera": "Camera",
+    "mic": "Microphone",
+    "critical": "Urgent",
+    "warning": "Check soon",
+    "note": "Light, camera angle, obstruction and noise affect detection. Halo can miss events or raise false alarms.",
+    "fall": {
+      "name": "Possible fall",
+      "body": "Looks for a sudden drop in body position followed by staying down. A full-body view and enough light matter."
+    },
+    "scream": {
+      "name": "Screaming",
+      "body": "Listens for sudden, loud screaming. Works when the camera device has a microphone."
+    },
+    "cry": {
+      "name": "Prolonged crying",
+      "body": "Notices crying that keeps going for a while. Useful for a child or someone alone at home."
+    },
+    "glass": {
+      "name": "Breaking glass",
+      "body": "Recognises glass or dishes breaking and asks the family to check."
+    },
+    "alarm": {
+      "name": "Smoke or fire alarm",
+      "body": "Listens for smoke detectors and fire alarms and reports them as urgent."
+    }
+  },
+  "boundary": {
+    "title": "The picture stays at home.",
+    "body": "Continuous video is analysed in the watching browser. Your family only receives event details and, for serious moments, an optional snapshot.",
+    "home": "Your home",
+    "camera": "Camera",
+    "model": "AI model",
+    "stays": "Continuous video and audio stay here",
+    "packet": "Event + snapshot",
+    "family": "Family",
+    "more": "Privacy details"
   }
 }

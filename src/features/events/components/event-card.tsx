@@ -14,7 +14,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
     <Link
       href={routes.event(event.id)}
       className={cn(
-        "glass grid gap-4 rounded-2xl border p-4 transition-colors hover:bg-card focus-visible:outline-3 focus-visible:outline-ring md:p-6",
+        "glass tap grid gap-4 rounded-2xl border p-4 focus-visible:outline-3 focus-visible:outline-ring md:p-6",
         event.severity === "critical" && event.status === "new" && "border-destructive/40",
       )}
     >
