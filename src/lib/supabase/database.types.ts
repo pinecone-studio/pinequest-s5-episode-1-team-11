@@ -62,6 +62,7 @@ export type PairingRow = {
   kind: DeviceRow["kind"];
   expires_at: string;
   device_id: string | null;
+  reconnect_device_id: string | null;
   created_at: string;
 };
 export type InviteRow = {
@@ -102,6 +103,10 @@ export type Database = {
       create_household: { Args: { p_name: string }; Returns: string };
       create_pairing: {
         Args: { p_name: string; p_room_name: string; p_kind?: string };
+        Returns: { code: string; expires_at: string; device_id: string | null }[];
+      };
+      create_reconnect_pairing: {
+        Args: { p_device_id: string };
         Returns: { code: string; expires_at: string; device_id: string | null }[];
       };
       create_invite: {
@@ -148,6 +153,15 @@ export type Database = {
       };
       claim_push_deliveries: { Args: { p_limit?: number }; Returns: EventRow[] };
       complete_push_delivery: { Args: { p_event_id: string }; Returns: undefined };
+      save_device_push: {
+        Args: { p_device_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
+        Returns: undefined;
+      };
+      claim_device_wake: {
+        Args: { p_device_id: string };
+        Returns: { endpoint: string; p256dh: string; auth: string }[];
+      };
+      forget_device_push: { Args: { p_device_id: string; p_endpoint: string }; Returns: undefined };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

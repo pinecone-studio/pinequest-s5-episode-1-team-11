@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { alice, asUser, createHome, openDatabase, resetDatabase } from "./migration-test-utils";
+import {
+  alice,
+  asUser,
+  bob,
+  createHome,
+  openDatabase,
+  resetDatabase,
+} from "./migration-test-utils";
 
 let db: PGlite;
 const client = "a".repeat(64);
@@ -55,6 +62,28 @@ describe("device API functions", () => {
       "select d.kind, d.status, t.token_hash from public.devices d join private.device_tokens t on t.device_id = d.id",
     );
     expect(rows).toEqual([{ kind: "laptop", status: "online", token_hash: tokenHash }]);
+  });
+
+  it("reconnects an existing camera with a new token instead of adding another camera", async () => {
+    const first = await claim(await newCode());
+    const camera = first.device_id as string;
+    await db.exec(`update public.devices set status = 'offline' where id = '${camera}'`);
+    const { rows } = await asUser(alice, () =>
+      db.query<{ code: string }>("select code from public.create_reconnect_pairing($1)", [camera]),
+    );
+    const again = await claim(rows[0].code, "d".repeat(64), "e".repeat(64));
+    expect(again).toMatchObject({ status: "paired", device_id: camera, name: "Kitchen phone" });
+    const after = await db.query<{ status: string; token_hash: string }>(
+      "select d.status, t.token_hash from public.devices d join private.device_tokens t on t.device_id = d.id",
+    );
+    // Same single camera, now online, and the previous browser's token no longer matches.
+    expect(after.rows).toEqual([{ status: "online", token_hash: "d".repeat(64) }]);
+    expect((await claim(rows[0].code, "f".repeat(64), "e".repeat(64))).status).toBe("invalid");
+    // Someone outside the household cannot create a reconnect code for this camera.
+    await createHome(bob);
+    await expect(
+      asUser(bob, () => db.query("select * from public.create_reconnect_pairing($1)", [camera])),
+    ).rejects.toThrow();
   });
 
   it("rejects expired codes and limits guessing per client", async () => {

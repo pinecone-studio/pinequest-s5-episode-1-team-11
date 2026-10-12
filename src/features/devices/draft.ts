@@ -7,7 +7,7 @@ export function deviceDraft(device: DeviceDraft): DeviceDraft {
   return { name: device.name, roomName: device.roomName, settings: { ...device.settings } };
 }
 
-export function sameDraft(left: DeviceDraft, right: DeviceDraft) {
+function sameDraft(left: DeviceDraft, right: DeviceDraft) {
   return (
     left.name === right.name &&
     left.roomName === right.roomName &&

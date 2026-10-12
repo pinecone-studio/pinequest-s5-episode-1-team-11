@@ -1,8 +1,8 @@
 import { after } from "next/server";
-import { EventIngest, EventIngestResponse, severityOf } from "@/contracts";
+import { EventIngest, EventIngestResponse, isKindEnabled, severityOf } from "@/contracts";
 import { authenticateDevice, isDeviceApiConfigured } from "@/lib/device-api/auth";
 import { apiError, apiJson, readJson } from "@/lib/device-api/http";
-import { decodeSnapshot, isKindEnabled, normalizeOccurredAt } from "@/lib/device-api/ingest";
+import { decodeSnapshot, normalizeOccurredAt } from "@/lib/device-api/ingest";
 import { notifyHousehold } from "@/lib/device-api/notify";
 import { createAdminClient } from "@/lib/supabase/admin";
 

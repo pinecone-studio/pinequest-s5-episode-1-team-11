@@ -52,5 +52,7 @@ export const DeviceConfig = z.object({
   name: z.string(),
   roomName: z.string(),
   settings: DetectionSettings,
+  /** Realtime channels for on-demand live view (this hour, last hour); absent without the server key. */
+  liveChannels: z.array(z.string()).optional(),
 });
 export type DeviceConfig = z.infer<typeof DeviceConfig>;

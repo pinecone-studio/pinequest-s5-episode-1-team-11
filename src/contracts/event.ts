@@ -1,6 +1,7 @@
 import { z } from "zod";
+import type { DetectionSettings } from "./device";
 
-export const eventKinds = ["fall", "scream", "cry", "glass", "alarm", "offline", "test"] as const;
+const eventKinds = ["fall", "scream", "cry", "glass", "alarm", "offline", "test"] as const;
 export const EventKind = z.enum(eventKinds);
 export type EventKind = z.infer<typeof EventKind>;
 
@@ -65,3 +66,10 @@ export const severityOf: Record<EventKind, Severity> = {
   offline: "info",
   test: "info",
 };
+
+/** The guardian's per-camera switches. Cameras check them; the server checks again as a backstop. */
+export function isKindEnabled(kind: EventIngest["kind"], settings: DetectionSettings) {
+  if (kind === "fall") return settings.fall;
+  if (kind === "scream" || kind === "cry") return settings.distress;
+  return settings.hazard;
+}

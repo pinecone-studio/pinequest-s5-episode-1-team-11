@@ -1,0 +1,16 @@
+{
+  "title": "Live view",
+  "watch": "Watch live",
+  "hint": "See and hear the camera now. Video is not stored; it goes straight from the camera to your device. The camera screen shows that someone is watching.",
+  "offline": "Live view is available while the camera is online.",
+  "connecting": "Connecting to the camera…",
+  "live": "Live",
+  "blocked": "The privacy curtain is on at the camera",
+  "busy": "Several people are watching this camera. Wait a moment and try again.",
+  "timeout": "The camera did not answer. Check that the camera page is open on the phone.",
+  "ended": "Live view ended.",
+  "failed": "Couldn't connect. Check your network and try again.",
+  "mute": "Mute",
+  "unmute": "Listen",
+  "close": "Close live view"
+}

@@ -17,7 +17,7 @@ const BONES = [
   [0, 12],
 ] as const;
 
-/** Draws body points over an object-fit: cover video, matching its crop. */
+/** Draws body points over an object-fit: contain video, matching the full camera frame. */
 export function drawSkeletons(
   canvas: HTMLCanvasElement,
   video: HTMLVideoElement,
@@ -36,7 +36,7 @@ export function drawSkeletons(
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   context.clearRect(0, 0, width, height);
   if (!video.videoWidth) return;
-  const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+  const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
   const offsetX = (width - video.videoWidth * scale) / 2;
   const offsetY = (height - video.videoHeight * scale) / 2;
   const at = (index: number, pose: Pose) => ({

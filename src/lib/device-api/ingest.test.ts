@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { defaultDetectionSettings } from "@/contracts";
-import { decodeSnapshot, isKindEnabled, normalizeOccurredAt } from "./ingest";
+import { defaultDetectionSettings, isKindEnabled } from "@/contracts";
+import { decodeSnapshot, normalizeOccurredAt } from "./ingest";
 
 describe("event ingestion rules", () => {
   it("maps each kind to the guardian's switch", () => {

@@ -2,10 +2,10 @@ import { defaultDetectionSettings } from "./device";
 import type { Device, Event, Household, Member, Profile, WatchedPerson } from "./index";
 
 /*
- * Example data used when Supabase is not configured, in tests and on /design.
+ * Example data used when Supabase is not configured and in tests.
  * Times are relative to `now`, so "Өнөөдөр" and "Өчигдөр" groups always have rows.
  */
-export const ids = {
+const ids = {
   me: "00000000-0000-4000-8000-000000000001",
   bat: "00000000-0000-4000-8000-000000000002",
   household: "00000000-0000-4000-8000-0000000000a1",

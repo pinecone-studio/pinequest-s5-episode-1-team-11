@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { PairingCode, PairingCodeValue } from "@/contracts";
+import { wakeCamera } from "@/lib/device-api/wake";
 import { publicEnv } from "@/lib/env";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -59,8 +60,14 @@ export async function createDevicePairing(
     },
   );
   if (!pairing.success) return { ok: false, error: "failed" };
+  return { ok: true, data: await withQr(pairing.data) };
+}
+
+/** The camera link and its QR. A reconnect link restores an existing camera on scan. */
+async function withQr(pairing: PairingCode, reconnect = false): Promise<PairingDetails> {
   const url = new URL(routes.monitor, publicEnv.siteUrl);
-  url.searchParams.set("code", pairing.data.code);
+  url.searchParams.set("code", pairing.code);
+  if (reconnect) url.searchParams.set("reconnect", "1");
   const svg = await QRCode.toString(url.toString(), {
     type: "svg",
     width: 240,
@@ -68,13 +75,30 @@ export async function createDevicePairing(
     color: { dark: "#173B2F", light: "#FFFFFF" },
   });
   return {
-    ok: true,
-    data: {
-      ...pairing.data,
-      monitorUrl: url.toString(),
-      qrDataUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`,
-    },
+    ...pairing,
+    monitorUrl: url.toString(),
+    qrDataUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`,
   };
+}
+
+/** A code that brings this same camera back on a phone, keeping its room, settings and history. */
+export async function createReconnectPairing(
+  deviceId: unknown,
+): Promise<DeviceActionResult<PairingDetails>> {
+  const parsed = z.uuid().safeParse(deviceId);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const access = await context();
+  if (!access.ok) return access;
+  const { data, error } = await access.client.rpc("create_reconnect_pairing", {
+    p_device_id: parsed.data,
+  });
+  if (error) return { ok: false, error: error.code === "42501" ? "notFound" : "failed" };
+  const row = data?.[0];
+  const pairing = PairingCode.safeParse(
+    row && { code: row.code, expiresAt: row.expires_at, deviceId: row.device_id },
+  );
+  if (!pairing.success) return { ok: false, error: "failed" };
+  return { ok: true, data: await withQr(pairing.data, true) };
 }
 
 export async function getPairingStatus(code: unknown): Promise<DeviceActionResult<PairingStatus>> {
@@ -151,4 +175,27 @@ export async function deleteDevice(id: unknown): Promise<DeviceActionResult> {
   revalidatePath(routes.device(parsed.data));
   revalidatePath(routes.home);
   return { ok: true, data: undefined };
+}
+
+/** Sends a "reopen the camera" notification to an offline camera's own phone. */
+export async function wakeDevice(id: unknown): Promise<DeviceActionResult<"sent" | "unavailable">> {
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const access = await context();
+  if (!access.ok) return access;
+  // RLS proves the device belongs to the caller's household before the server key is used.
+  const { data, error } = await access.client
+    .from("devices")
+    .select("id")
+    .eq("id", parsed.data)
+    .eq("household_id", access.householdId)
+    .maybeSingle();
+  if (error) return { ok: false, error: "failed" };
+  if (!data) return { ok: false, error: "notFound" };
+  try {
+    const result = await wakeCamera(data.id);
+    return result === "failed" ? { ok: false, error: "failed" } : { ok: true, data: result };
+  } catch {
+    return { ok: false, error: "failed" };
+  }
 }
