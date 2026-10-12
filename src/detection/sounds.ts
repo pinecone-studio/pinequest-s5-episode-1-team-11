@@ -1,16 +1,16 @@
-import type { DetectionSettings } from "@/contracts";
-
 export type SoundKind = "scream" | "cry" | "glass" | "alarm";
-export const soundKinds: readonly SoundKind[] = ["scream", "cry", "glass", "alarm"];
+const soundKinds: readonly SoundKind[] = ["scream", "cry", "glass", "alarm"];
 
 /** YAMNet (AudioSet) class names behind each kind. Sirens and shouting play are left out. */
-export const soundClasses: Record<SoundKind, readonly string[]> = {
-  scream: ["Screaming"],
-  cry: ["Crying, sobbing", "Baby cry, infant cry", "Wail, moan"],
+const soundClasses: Record<SoundKind, readonly string[]> = {
+  // People in danger yell and shout as often as they scream.
+  scream: ["Screaming", "Yell", "Shout", "Bellow"],
+  // AudioSet places human Whimper under Crying, sobbing; Whimper (dog) is separate.
+  cry: ["Crying, sobbing", "Baby cry, infant cry", "Wail, moan", "Whimper"],
   glass: ["Shatter", "Breaking", "Glass"],
-  alarm: ["Smoke detector, smoke alarm", "Fire alarm"],
+  // Many home alarms are tagged as a generic alarm or buzzer rather than a smoke detector.
+  alarm: ["Smoke detector, smoke alarm", "Fire alarm", "Alarm", "Alarm clock", "Buzzer"],
 };
-export const soundClassNames = soundKinds.flatMap((kind) => soundClasses[kind]);
 
 export type SoundScores = Record<SoundKind, number>;
 
@@ -39,34 +39,23 @@ type Rule = {
 };
 export type SoundPreset = Record<SoundKind, Rule>;
 
-const windows = (ms: number) => Math.round(ms / SOUND_HOP_MS);
-
-export function soundPreset({
-  watching,
-  sensitivity,
-}: Pick<DetectionSettings, "watching" | "sensitivity">): SoundPreset {
-  const factor = { low: 1.25, medium: 1, high: 0.8 }[sensitivity];
-  // Children cry often; only long, nearly unbroken crying is worth a notification.
-  const cryMs = watching === "child" ? 60_000 : 20_000;
-  const preset: SoundPreset = {
-    scream: { threshold: 0.3, needed: 2, of: 3, instant: 0.6 },
-    cry: { threshold: 0.25, needed: Math.ceil(windows(cryMs) * 0.6), of: windows(cryMs) },
-    glass: { threshold: 0.35, needed: 1, of: 1 },
-    alarm: { threshold: 0.3, needed: 4, of: 6 },
+export function soundPreset(): SoundPreset {
+  return {
+    scream: { threshold: 0.25, needed: 2, of: 3, instant: 0.45 },
+    // Crying is reported at once: one clear window, or two faint ones out of the last three.
+    // On phone microphones even loud crying scores only about 0.2.
+    cry: { threshold: 0.05, needed: 2, of: 3, instant: 0.12 },
+    glass: { threshold: 0.3, needed: 1, of: 1 },
+    alarm: { threshold: 0.3, needed: 3, of: 4 },
   };
-  for (const kind of soundKinds) {
-    const rule = preset[kind];
-    rule.threshold = Math.min(0.95, rule.threshold * factor);
-    if (rule.instant) rule.instant = Math.min(0.95, rule.instant * factor);
-  }
-  return preset;
 }
 
 export type SoundSignal = { kind: SoundKind; time: number; confidence: number };
+type ScoredWindow = { time: number; score: number };
 
 /** Turns per-window classifier scores into sound events, each needing sustained evidence. */
 export class SoundDetector {
-  private recent: Record<SoundKind, { time: number; score: number }[]> = {
+  private recent: Record<SoundKind, ScoredWindow[]> = {
     scream: [],
     cry: [],
     glass: [],
@@ -74,10 +63,6 @@ export class SoundDetector {
   };
 
   constructor(private preset: SoundPreset) {}
-
-  configure(preset: SoundPreset) {
-    this.preset = preset;
-  }
 
   update(time: number, scores: SoundScores): SoundSignal[] {
     const signals: SoundSignal[] = [];

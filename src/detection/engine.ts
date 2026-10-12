@@ -1,4 +1,5 @@
-import { type DetectionSettings, type EventIngest, severityOf } from "@/contracts";
+import { type DetectionSettings, type EventIngest, isKindEnabled, severityOf } from "@/contracts";
+import { DownedDetector } from "./downed";
 import { FallDetector, fallPreset } from "./fall";
 import type { PoseFrame } from "./pose";
 import { SoundDetector, type SoundScores, soundPreset } from "./sounds";
@@ -16,37 +17,42 @@ export type Detection = {
 };
 
 /** The same kind is not reported again within this time. */
-export const COOLDOWN_MS: Record<DetectedKind, number> = {
+const COOLDOWN_MS: Record<DetectedKind, number> = {
   fall: 30_000,
   scream: 60_000,
-  cry: 5 * 60_000,
+  cry: 60_000,
   glass: 60_000,
   alarm: 2 * 60_000,
 };
 const SCREAM_BOOST_MS = 10_000;
 
-function enabled(kind: DetectedKind, settings: DetectionSettings) {
-  if (kind === "fall") return settings.fall;
-  if (kind === "scream" || kind === "cry") return settings.distress;
-  return settings.hazard;
-}
-
 /** Combines the pose and sound detectors, applies the guardian's settings and cooldowns. */
 export class DetectionEngine {
   private fall: FallDetector;
+  private downed = new DownedDetector();
   private sounds: SoundDetector;
   private lastReported = new Map<DetectedKind, number>();
   private lastScream = Number.NEGATIVE_INFINITY;
 
   constructor(private settings: DetectionSettings) {
-    this.fall = new FallDetector(fallPreset(settings));
-    this.sounds = new SoundDetector(soundPreset(settings));
+    this.fall = new FallDetector(fallPreset());
+    this.sounds = new SoundDetector(soundPreset());
   }
 
   configure(settings: DetectionSettings) {
     this.settings = settings;
-    this.fall.configure(fallPreset(settings));
-    this.sounds.configure(soundPreset(settings));
+  }
+
+  /** A pause or interrupted source invalidates motion/audio evidence, but not alert cooldowns. */
+  resetEvidence() {
+    this.fall.reset();
+    this.downed.reset();
+    this.resetSoundEvidence();
+  }
+
+  resetSoundEvidence() {
+    this.sounds = new SoundDetector(soundPreset());
+    this.lastScream = Number.NEGATIVE_INFINITY;
   }
 
   /** Current fall-detector state, for the monitor's status line. */
@@ -55,7 +61,10 @@ export class DetectionEngine {
   }
 
   pose(frame: PoseFrame): Detection[] {
-    const signal = this.fall.update(frame);
+    // Both see every frame; the person-box backup covers bodies the pose model loses.
+    const fell = this.fall.update(frame);
+    const downed = this.downed.update(frame);
+    const signal = fell ?? downed;
     if (!signal) return [];
     // A scream just before a fall makes it much more likely to be real.
     const boost = signal.time - this.lastScream <= SCREAM_BOOST_MS ? 0.1 : 0;
@@ -75,7 +84,7 @@ export class DetectionEngine {
   }
 
   private report(kind: DetectedKind, time: number, confidence: number, now: number) {
-    if (!enabled(kind, this.settings)) return [];
+    if (!isKindEnabled(kind, this.settings)) return [];
     const last = this.lastReported.get(kind);
     if (last !== undefined && now - last < COOLDOWN_MS[kind]) return [];
     this.lastReported.set(kind, now);

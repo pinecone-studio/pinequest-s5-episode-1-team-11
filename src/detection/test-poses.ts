@@ -36,6 +36,49 @@ export function lying(hipY = 0.8, torso = 0.15, x = 0.5): Pose {
   });
 }
 
+export function leaning(hipY = 0.58, angle = 35, torso = 0.15): Pose {
+  const radians = (angle * Math.PI) / 180;
+  const dx = Math.sin(radians) * torso;
+  const dy = Math.cos(radians) * torso;
+  return standing(hipY, torso).map((point, index) => {
+    if (index === 0) return { ...point, x: 0.5 - dx * 1.3, y: hipY - dy * 1.3 };
+    if (index === 11 || index === 12) return { ...point, x: point.x - dx, y: hipY - dy };
+    return point;
+  });
+}
+
+/** A body foreshortened along the camera's depth axis, with the legs still visible. */
+export function depthCollapsed(): Pose {
+  return body({
+    0: [0.5, 0.46],
+    11: [0.45, 0.48],
+    12: [0.55, 0.48],
+    23: [0.46, 0.52],
+    24: [0.54, 0.52],
+    25: [0.46, 0.55],
+    26: [0.54, 0.55],
+    27: [0.46, 0.59],
+    28: [0.54, 0.59],
+  });
+}
+
+/** A squat with an upright trunk and feet planted at their original image height. */
+export function crouching(hideFeet = false): Pose {
+  return body({
+    0: [0.5, 0.58],
+    11: [0.45, 0.6],
+    12: [0.55, 0.6],
+    23: [0.46, 0.68],
+    24: [0.54, 0.68],
+    25: [0.58, 0.69],
+    26: [0.54, 0.71],
+    27: [0.46, 0.77],
+    28: [0.54, 0.77],
+  }).map((point, index) =>
+    hideFeet && (index === 27 || index === 28) ? { ...point, visibility: 0 } : point,
+  );
+}
+
 function lerp(a: Pose, b: Pose, t: number): Pose {
   return a.map((p, i) => ({
     x: p.x + (b[i].x - p.x) * t,
@@ -55,7 +98,9 @@ export function timeline(
   for (const part of steps) {
     for (let elapsed = 0; elapsed < part.ms; elapsed += step) {
       const pose =
-        "hold" in part ? part.hold : lerp(part.from, part.to, (elapsed + step) / part.ms);
+        "hold" in part
+          ? part.hold
+          : lerp(part.from, part.to, Math.min(1, (elapsed + step) / part.ms));
       frames.push({ time, poses: pose ? [pose] : [] });
       time += step;
     }
