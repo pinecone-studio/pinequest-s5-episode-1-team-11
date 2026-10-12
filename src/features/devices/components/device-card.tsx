@@ -20,10 +20,7 @@ export async function DeviceCard({ device }: { device: Device }) {
         ? DesktopIcon
         : VideoCameraIcon;
   return (
-    <Link
-      href={routes.device(device.id)}
-      className="glass grid min-w-0 gap-4 rounded-lg p-5 transition-colors hover:border-primary/40"
-    >
+    <Link href={routes.device(device.id)} className="glass tap grid min-w-0 gap-4 rounded-lg p-5">
       <div className="flex items-center justify-between gap-3">
         <span className="grid size-12 shrink-0 place-items-center rounded-md bg-primary/10 text-primary-text">
           <Icon className="size-6" weight="duotone" aria-hidden="true" />

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { onest, unbounded } from "@/components/theme/fonts";
+import { geologica, onest } from "@/components/theme/fonts";
 import { defaultPalette, isPalette, PALETTE_COOKIE } from "@/components/theme/palettes";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       data-palette={palette}
-      className={cn(onest.variable, unbounded.variable, "h-full")}
+      className={cn(onest.variable, geologica.variable, "h-full")}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

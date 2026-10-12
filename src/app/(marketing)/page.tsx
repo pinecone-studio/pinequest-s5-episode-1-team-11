@@ -2,145 +2,155 @@ import {
   ArrowRightIcon,
   BellRingingIcon,
   CheckIcon,
-  DeviceMobileIcon,
-  EyeIcon,
-  HeartIcon,
+  LinkSimpleIcon,
   ShieldCheckIcon,
   VideoCameraIcon,
-  WaveformIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
-import { Pill } from "@/components/ui/pill";
+import { HaloMark } from "@/features/marketing/components/halo-mark";
+import { HeroOrb } from "@/features/marketing/components/hero-orb";
+import { PrivacyBoundary } from "@/features/marketing/components/privacy-boundary";
+import { Signals } from "@/features/marketing/components/signals";
+import { Story } from "@/features/marketing/components/story";
 import { routes } from "@/lib/routes";
 
 export default async function Page() {
   const t = await getTranslations("marketing");
-  const features = [
-    { key: "detection", Icon: EyeIcon },
-    { key: "sound", Icon: WaveformIcon },
-    { key: "family", Icon: HeartIcon },
-    { key: "privacy", Icon: ShieldCheckIcon },
+  const steps = [
+    { key: "connect", Icon: LinkSimpleIcon },
+    { key: "watch", Icon: VideoCameraIcon },
+    { key: "review", Icon: BellRingingIcon },
   ] as const;
   return (
     <>
-      <section className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="grid gap-6">
-          <Pill dot={false} className="w-fit">
-            {t("hero.eyebrow")}
-          </Pill>
-          <h1 className="max-w-[18ch] font-display text-[36px] leading-tight text-balance sm:text-[44px] lg:text-[52px]">
+      <section className="grid min-h-[calc(100dvh-120px)] items-center gap-10 pt-4 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6">
+        <div className="grid gap-7">
+          <h1 className="max-w-[12ch] font-display text-[clamp(40px,7.4vw,76px)] leading-[1.02] tracking-[-0.025em] text-balance">
             {t("hero.title")}
           </h1>
-          <p className="max-w-xl text-md leading-relaxed text-muted-foreground">{t("hero.body")}</p>
+          <p className="max-w-[52ch] text-lg leading-relaxed text-muted-foreground">
+            {t("hero.body")}
+          </p>
           <div className="grid gap-3 sm:flex sm:flex-wrap">
-            <Button asChild>
+            <Button asChild size="lg">
               <Link href="/onboarding">
                 {t("hero.start")}
                 <ArrowRightIcon aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild variant="secondary">
+            <Button asChild size="lg" variant="secondary">
               <Link href={routes.monitor}>{t("hero.try")}</Link>
             </Button>
           </div>
-          <p className="flex items-start gap-2 text-base text-muted-foreground">
+          <p className="flex max-w-[52ch] items-start gap-2 text-base text-muted-foreground">
             <ShieldCheckIcon
+              weight="duotone"
               className="mt-0.5 size-5 shrink-0 text-primary-text"
               aria-hidden="true"
             />
             {t("hero.privacy")}
           </p>
         </div>
-        <div className="glass relative grid gap-5 overflow-hidden rounded-xl p-5 sm:p-8">
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-md font-bold">
-              <HeartIcon className="size-5 text-primary-text" weight="fill" aria-hidden="true" />
-              Halo
-            </span>
-            <Pill dot={false}>{t("preview.label")}</Pill>
-          </div>
-          <div
-            className="relative grid min-h-48 place-items-center overflow-hidden rounded-lg border border-primary/15 bg-primary/5"
-            aria-hidden="true"
+        <HeroOrb
+          count={t("hero.orbCount")}
+          label={t("hero.orbLabel")}
+          caption={t("hero.example")}
+          rooms={(["living", "bedroom", "kitchen"] as const).map((key) => ({
+            name: t(`hero.rooms.${key}`),
+            status: t("hero.online"),
+          }))}
+        />
+      </section>
+
+      <Story />
+
+      <Signals />
+
+      <section aria-labelledby="boundary-title" className="grid gap-8">
+        <div className="grid max-w-2xl gap-3">
+          <h2
+            id="boundary-title"
+            className="font-display text-[clamp(28px,4.4vw,44px)] leading-[1.1]"
           >
-            <div className="absolute h-32 w-52 rounded-t-[80px] border border-primary/20" />
-            <span className="absolute bottom-6 left-5 h-12 w-20 rounded-t-md border border-primary/20 bg-primary/10" />
-            <span className="absolute right-5 bottom-6 h-24 w-12 rounded-t-full border border-primary/20 bg-primary/10" />
-            <span className="z-10 grid size-20 place-items-center rounded-full border border-primary/20 bg-card text-primary-text">
-              <VideoCameraIcon weight="duotone" className="size-10" />
-            </span>
-          </div>
-          <div className="grid gap-1">
-            <h2 className="text-lg font-bold">{t("preview.room")}</h2>
-            <p className="text-base text-muted-foreground">{t("preview.caption")}</p>
-          </div>
-          <div className="flex items-start gap-3 rounded-md border border-warning/25 bg-warning/5 p-4">
-            <BellRingingIcon
-              weight="duotone"
-              className="size-6 shrink-0 text-warning-text"
-              aria-hidden="true"
-            />
-            <div className="grid gap-1">
-              <p className="text-md font-bold">{t("preview.alert")}</p>
-              <p className="text-base text-muted-foreground">{t("preview.action")}</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">{t("preview.example")}</p>
+            {t("boundary.title")}
+          </h2>
+          <p className="text-md leading-relaxed text-muted-foreground">{t("boundary.body")}</p>
         </div>
+        <PrivacyBoundary />
+        <Link
+          href="/privacy"
+          className="flex min-h-11 w-fit items-center gap-2 text-base font-bold text-primary-text underline-offset-4 hover:underline"
+        >
+          {t("boundary.more")}
+          <ArrowRightIcon aria-hidden="true" className="size-4" />
+        </Link>
       </section>
-      <section className="grid gap-6">
-        <div className="grid gap-3">
-          <h2 className="font-display text-2xl">{t("features.title")}</h2>
-          <p className="max-w-2xl text-md text-muted-foreground">{t("features.body")}</p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {features.map(({ key, Icon }) => (
-            <article key={key} className="glass grid gap-3 rounded-lg p-6">
-              <Icon weight="duotone" className="size-7 text-primary-text" aria-hidden="true" />
-              <h3 className="text-lg font-bold">{t(`features.${key}.title`)}</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                {t(`features.${key}.body`)}
-              </p>
-            </article>
+
+      <section aria-labelledby="steps-title" className="grid gap-8">
+        <h2 id="steps-title" className="font-display text-[clamp(28px,4.4vw,44px)] leading-[1.1]">
+          {t("steps.title")}
+        </h2>
+        <ol className="relative grid gap-8 md:grid-cols-3 md:gap-6">
+          <span
+            aria-hidden="true"
+            className="absolute top-7 bottom-7 left-7 w-px bg-hairline md:top-7 md:right-[16%] md:bottom-auto md:left-[10%] md:h-px md:w-auto"
+          />
+          {steps.map(({ key, Icon }, index) => (
+            <li key={key} className="relative grid grid-cols-[56px_1fr] gap-4 md:grid-cols-1">
+              <span className="glass-strong relative grid size-14 place-items-center rounded-full text-primary-text">
+                <Icon weight="duotone" className="size-6" aria-hidden="true" />
+                <b className="absolute -top-1 -right-1 grid size-6 place-items-center rounded-full bg-primary text-xs text-primary-foreground tabular-nums">
+                  {index + 1}
+                </b>
+              </span>
+              <div className="grid content-start gap-2">
+                <h3 className="text-lg font-bold">{t(`steps.${key}.title`)}</h3>
+                <p className="max-w-sm text-base leading-relaxed text-muted-foreground">
+                  {t(`steps.${key}.body`)}
+                </p>
+                {key === "connect" && (
+                  <span
+                    aria-hidden="true"
+                    className="glass mt-1 w-fit rounded-xl px-4 py-2 font-display text-xl tracking-[0.12em] tabular-nums"
+                  >
+                    {t("steps.code")}
+                  </span>
+                )}
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
-      <section className="grid gap-6">
-        <h2 className="font-display text-2xl">{t("steps.title")}</h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {(["connect", "watch", "review"] as const).map((key, index) => (
-            <article key={key} className="grid gap-3 border-t border-hairline pt-5">
-              <span className="tabular text-xl font-bold text-primary-text">0{index + 1}</span>
-              <h3 className="text-lg font-bold">{t(`steps.${key}.title`)}</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                {t(`steps.${key}.body`)}
-              </p>
-            </article>
-          ))}
+
+      <section className="glass relative grid justify-items-center gap-5 overflow-hidden rounded-xl px-6 py-14 text-center sm:px-10 lg:py-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-40 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+        />
+        <HaloMark className="relative size-14 animate-breathe shadow-[0_0_48px_-4px_var(--primary)]" />
+        <h2 className="relative max-w-[18ch] font-display text-[clamp(28px,4.4vw,44px)] leading-[1.1] text-balance">
+          {t("closing.title")}
+        </h2>
+        <p className="relative max-w-[56ch] text-md leading-relaxed text-muted-foreground">
+          {t("closing.body")}
+        </p>
+        <div className="relative grid w-full gap-3 sm:flex sm:w-auto sm:flex-wrap sm:justify-center">
+          <Button asChild size="lg">
+            <Link href="/onboarding">
+              {t("closing.start")}
+              <ArrowRightIcon aria-hidden="true" />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/cameras">{t("closing.guide")}</Link>
+          </Button>
         </div>
-      </section>
-      <section className="glass grid gap-6 rounded-xl p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="grid gap-3">
-          <div className="flex items-center gap-3">
-            <DeviceMobileIcon className="size-7 text-primary-text" aria-hidden="true" />
-            <h2 className="font-display text-xl">{t("closing.title")}</h2>
-          </div>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            {t("closing.body")}
-          </p>
-          <p className="flex gap-2 text-sm text-muted-foreground">
-            <CheckIcon aria-hidden="true" className="size-4 shrink-0" />
-            {t("closing.limit")}
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/cameras">
-            {t("closing.guide")}
-            <ArrowRightIcon aria-hidden="true" />
-          </Link>
-        </Button>
+        <p className="relative flex max-w-[56ch] gap-2 text-sm text-muted-foreground">
+          <CheckIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          {t("closing.limit")}
+        </p>
       </section>
     </>
   );

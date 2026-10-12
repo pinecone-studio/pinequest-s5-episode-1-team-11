@@ -1,23 +1,49 @@
-import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  DatabaseIcon,
+  EyeIcon,
+  HandPalmIcon,
+  ImageIcon,
+  MonitorPlayIcon,
+  SlidersHorizontalIcon,
+  UsersThreeIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/app/page-header";
+import { PageIntro } from "@/features/marketing/components/page-intro";
+import { PrivacyBoundary } from "@/features/marketing/components/privacy-boundary";
+
+const sections = [
+  { key: "video", Icon: EyeIcon },
+  { key: "events", Icon: ImageIcon },
+  { key: "live", Icon: MonitorPlayIcon },
+  { key: "access", Icon: UsersThreeIcon },
+  { key: "permissions", Icon: HandPalmIcon },
+  { key: "control", Icon: SlidersHorizontalIcon },
+  { key: "hosting", Icon: DatabaseIcon },
+] as const;
+
 export default async function Page() {
   const t = await getTranslations("marketing");
   return (
-    <div className="grid max-w-3xl gap-8">
-      <PageHeader title={t("privacy")} subtitle={t("privacyContent.subtitle")} />
-      <div className="flex gap-3 rounded-lg border border-primary/20 bg-primary/5 p-5">
-        <ShieldCheckIcon className="size-7 shrink-0 text-primary-text" aria-hidden="true" />
-        <p className="text-md leading-relaxed">{t("privacyContent.lead")}</p>
+    <div className="grid gap-14">
+      <PageIntro title={t("privacy")} lead={t("privacyContent.lead")} />
+      <PrivacyBoundary />
+      <div className="grid gap-x-12 gap-y-10 md:grid-cols-2">
+        {sections.map(({ key, Icon }) => (
+          <section key={key} className="grid content-start gap-3 border-t border-hairline pt-6">
+            <h2 className="flex items-center gap-3 text-xl font-bold">
+              <Icon
+                weight="duotone"
+                className="size-6 shrink-0 text-primary-text"
+                aria-hidden="true"
+              />
+              {t(`privacyContent.${key}.title`)}
+            </h2>
+            <p className="max-w-[60ch] text-md leading-relaxed text-muted-foreground">
+              {t(`privacyContent.${key}.body`)}
+            </p>
+          </section>
+        ))}
       </div>
-      {(["video", "events", "access", "permissions", "control", "hosting"] as const).map((key) => (
-        <section key={key} className="grid gap-3">
-          <h2 className="text-lg font-bold">{t(`privacyContent.${key}.title`)}</h2>
-          <p className="text-base leading-relaxed text-muted-foreground">
-            {t(`privacyContent.${key}.body`)}
-          </p>
-        </section>
-      ))}
     </div>
   );
 }

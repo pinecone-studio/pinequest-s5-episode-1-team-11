@@ -4,12 +4,13 @@ import { cn } from "@/lib/cn";
 import { Spinner } from "./spinner";
 
 const variants = {
-  primary: "bg-primary text-primary-foreground shadow-[0_14px_34px_-16px_var(--primary)]",
-  secondary: "glass text-foreground",
+  primary:
+    "bg-primary text-primary-foreground shadow-[0_14px_34px_-16px_var(--primary)] hover:brightness-110",
+  secondary: "glass text-foreground hover:border-primary/30",
   ghost: "bg-transparent text-foreground hover:bg-hairline",
   destructive:
-    "bg-destructive text-destructive-foreground shadow-[0_14px_34px_-14px_var(--destructive)]",
-  warning: "bg-warning text-warning-foreground",
+    "bg-destructive text-destructive-foreground shadow-[0_14px_34px_-14px_var(--destructive)] hover:brightness-110",
+  warning: "bg-warning text-warning-foreground hover:brightness-110",
 } as const;
 
 const sizes = {
@@ -47,7 +48,7 @@ export function Button({
       disabled={asChild ? undefined : disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex select-none items-center justify-center rounded-full font-bold transition-[transform,opacity] duration-150 ease-[var(--ease-standard)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex select-none items-center justify-center rounded-full font-bold transition-[transform,opacity,filter] duration-150 ease-[var(--ease-standard)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50",
         variants[variant],
         sizes[size],
         block && "w-full",

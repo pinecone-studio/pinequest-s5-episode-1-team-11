@@ -1,15 +1,15 @@
-import { Onest, Unbounded } from "next/font/google";
+import { Geologica, Onest } from "next/font/google";
 
-/* Both fonts carry cyrillic-ext, which holds the Mongolian Ө and Ү. */
+/* Both fonts carry cyrillic-ext and draw the Mongolian Ө and Ү themselves (Unbounded did not). */
 export const onest = Onest({
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
   variable: "--font-onest",
   display: "swap",
 });
 
-export const unbounded = Unbounded({
+export const geologica = Geologica({
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
   weight: ["500", "600", "700"],
-  variable: "--font-unbounded",
+  variable: "--font-geologica",
   display: "swap",
 });
