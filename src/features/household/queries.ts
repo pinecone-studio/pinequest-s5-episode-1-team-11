@@ -1,1 +1,1 @@
-export { getHousehold, getInvite, listMembers, listWatchedPeople } from "@/lib/data/queries";
+export { getInvite, listMembers, listWatchedPeople } from "@/lib/data/queries";

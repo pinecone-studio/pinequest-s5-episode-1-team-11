@@ -5,8 +5,6 @@
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
-    "confirm": "Confirm",
-    "continue": "Continue",
     "delete": "Delete",
     "retry": "Try again",
     "save": "Save",
@@ -14,15 +12,12 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "offline": "No internet connection",
-    "notFound": "Page not found"
+    "offline": "No internet connection"
   },
   "nav": {
     "label": "App menu",
     "home": "Home",
     "events": "Events",
-    "devices": "Devices",
-    "settings": "Settings",
     "newEvents": "{count} new alerts",
     "family": "Family"
   },
@@ -51,17 +46,7 @@
     "offline": "Offline",
     "pairing": "Connecting"
   },
-  "deviceKind": {
-    "phone": "Phone",
-    "laptop": "Laptop",
-    "ip_camera": "IP camera"
-  },
-  "slideToConfirm": {
-    "hint": "Slide or tap twice",
-    "again": "Tap again to confirm"
-  },
   "statusRing": {
-    "rooms": "rooms",
     "online": "online"
   },
   "theme": {
@@ -80,7 +65,6 @@
     "mn": "Монгол",
     "en": "English"
   },
-  "featurePending": "This section is being prepared",
   "demo": "Example data · Live camera monitoring has not started",
   "relativeTime": {
     "now": "Just now",
@@ -99,5 +83,10 @@
       "month": "{count, plural, one {in # month} other {in # months}}",
       "year": "{count, plural, one {in # year} other {in # years}}"
     }
+  },
+  "alertBanner": {
+    "now": "Now",
+    "critical": "Check right away.",
+    "warning": "Take a look."
   }
 }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { WatchedKind } from "@/contracts";
 
-export const PersonInput = z.object({
+const PersonInput = z.object({
   id: z.union([z.literal(""), z.uuid()]),
   name: z.string().trim().min(1).max(60),
   kind: WatchedKind,

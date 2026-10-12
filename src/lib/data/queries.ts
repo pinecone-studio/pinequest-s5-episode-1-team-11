@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { z } from "zod";
-import { Invite, Member, Profile, PushSubscriptionJSON } from "@/contracts";
+import { Invite, Member, Profile } from "@/contracts";
 import { getUser, requireUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -203,24 +203,6 @@ export async function getInvite(code: string) {
         expiresAt: row.expires_at,
       })
     : null;
-}
-
-/** User-facing settings can only read the current user's subscriptions. */
-export async function listOwnPushSubscriptions() {
-  const context = await getContext();
-  if (!context) return [];
-  const { data, error } = await context.client
-    .from("push_subscriptions")
-    .select("*")
-    .eq("user_id", context.user.id);
-  if (error) throw error;
-  return data.map((row) =>
-    PushSubscriptionJSON.parse({
-      endpoint: row.endpoint,
-      expirationTime: row.expiration_time,
-      keys: { p256dh: row.p256dh, auth: row.auth },
-    }),
-  );
 }
 
 export async function getHomeSummary() {
