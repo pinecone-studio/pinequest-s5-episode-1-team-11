@@ -1,0 +1,55 @@
+export type Household = { id: string; name: string; owner_id: string };
+export type Member = {
+  household_id: string;
+  user_id: string;
+  role: "owner" | "caregiver";
+};
+export type Profile = { id: string; name: string | null };
+export type Device = {
+  id: string;
+  household_id: string;
+  name: string;
+  room_name: string | null;
+  kind: "phone" | "laptop" | "ip_camera";
+  status: "online" | "offline" | "pairing";
+  last_seen_at: string | null;
+};
+export type HaloEvent = {
+  id: string;
+  household_id: string;
+  device_id: string | null;
+  kind: "fall" | "scream" | "cry" | "glass" | "alarm" | "offline" | "test";
+  severity: "critical" | "warning" | "info";
+  status: "new" | "acknowledged" | "false_alarm" | "resolved";
+  confidence: number | null;
+  person_name: string | null;
+  room_name: string | null;
+  occurred_at: string;
+  snapshot_path: string | null;
+  acknowledged_by: string | null;
+  acknowledged_at: string | null;
+  note: string | null;
+  created_at: string;
+};
+type Table<Row> = {
+  Row: Row;
+  Insert: Partial<Row>;
+  Update: Partial<Row>;
+  Relationships: [];
+};
+// Only the tables this client uses. Replace with generated types if available.
+export type Database = {
+  public: {
+    Tables: {
+      households: Table<Household>;
+      household_members: Table<Member>;
+      profiles: Table<Profile>;
+      devices: Table<Device>;
+      events: Table<HaloEvent>;
+    };
+    Views: { [key in never]: never };
+    Functions: { [key in never]: never };
+    Enums: { [key in never]: never };
+    CompositeTypes: { [key in never]: never };
+  };
+};
