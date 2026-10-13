@@ -24,16 +24,16 @@ import { useData, useHomes } from "../providers/HouseholdProvider";
 
 export const colors = {
   bg: "#07191D",
-  card: "#0D2830",
-  border: "#29454D",
+  card: "#0C252D",
+  border: "#2B454C",
   text: "#F1F6F7",
-  muted: "#A2B9C0",
+  muted: "#91ABB1",
   primary: "#5EEAD4",
   danger: "#FB7185",
 };
 export const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { padding: 20, gap: 16 },
+  content: { padding: 20, paddingBottom: 116, gap: 16 },
   title: {
     color: colors.text,
     fontSize: 28,
@@ -96,11 +96,13 @@ export function Screen({
       colors={
         danger
           ? ["#8A292F", "#260D18", "#160A10"]
-          : ["#134D47", colors.bg, "#0A2D37"]
+          : ["#123D3A", "#07191D", "#082832"]
       }
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0.8 }}
       style={styles.fill}
     >
-      <SafeAreaView style={styles.fill}>{children}</SafeAreaView>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.fill}>{children}</SafeAreaView>
     </LinearGradient>
   );
 }
