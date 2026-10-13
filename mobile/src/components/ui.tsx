@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import {
@@ -95,14 +96,16 @@ export function Screen({
     <LinearGradient
       colors={
         danger
-          ? ["#8A292F", "#260D18", "#160A10"]
+          ? ["#722025", "#280D16", "#13070D"]
           : ["#123D3A", "#07191D", "#082832"]
       }
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0.8 }}
       style={styles.fill}
     >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.fill}>{children}</SafeAreaView>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.fill}>
+        {children}
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -115,12 +118,14 @@ export function Button({
   secondary = false,
   disabled = false,
   busy = false,
+  textOnly = false,
 }: {
   title: string;
   onPress: () => void;
   secondary?: boolean;
   disabled?: boolean;
   busy?: boolean;
+  textOnly?: boolean;
 }) {
   return (
     <Pressable
@@ -131,13 +136,28 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         secondary && styles.buttonSecondary,
+        textOnly && {
+          backgroundColor: "transparent",
+          borderWidth: 0,
+          padding: 8,
+        },
         { opacity: disabled || busy ? 0.5 : pressed ? 0.8 : 1 },
       ]}
     >
       {busy ? (
         <ActivityIndicator color={secondary ? colors.text : "#063A34"} />
       ) : (
-        <Text style={[styles.buttonText, secondary && { color: colors.text }]}>
+        <Text
+          style={[
+            styles.buttonText,
+            secondary && { color: colors.text },
+            textOnly && {
+              color: colors.muted,
+              fontSize: 12,
+              textDecorationLine: "underline",
+            },
+          ]}
+        >
           {title}
         </Text>
       )}
@@ -235,9 +255,13 @@ export function EventCard({ event }: { event: HaloEvent }) {
 export function EventActions({
   event,
   onUpdated,
+  alertMode = false,
+  afterAcknowledge,
 }: {
   event: HaloEvent;
   onUpdated?: (row: HaloEvent) => void;
+  alertMode?: boolean;
+  afterAcknowledge?: ReactNode;
 }) {
   const { session } = useAuth();
   const { applyEvent, refresh } = useData();
@@ -267,16 +291,67 @@ export function EventActions({
   }
   return (
     <View style={{ gap: 10 }}>
+      {alertMode ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Би очиж байна. Дохиог харсан гэж тэмдэглэх"
+          accessibilityState={{
+            disabled: busy || event.status !== "new",
+            busy,
+          }}
+          disabled={busy || event.status !== "new"}
+          onPress={() => {
+            void submit("acknowledged");
+          }}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            borderRadius: 36,
+            padding: 6,
+            backgroundColor: "#102D32",
+            opacity: busy || pressed ? 0.7 : 1,
+          })}
+        >
+          <View
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.primary,
+            }}
+          >
+            {busy ? (
+              <ActivityIndicator color="#063A34" />
+            ) : (
+              <Ionicons name="arrow-forward" size={25} color="#063A34" />
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.text, { fontWeight: "700" }]}>
+              Би очиж байна
+            </Text>
+            <Text style={[styles.muted, { fontSize: 11 }]}>
+              Дохиог харсан гэж тэмдэглэх
+            </Text>
+          </View>
+        </Pressable>
+      ) : (
+        <Button
+          title="Харлаа"
+          busy={busy}
+          disabled={event.status !== "new"}
+          onPress={() => {
+            void submit("acknowledged");
+          }}
+        />
+      )}
+      {afterAcknowledge}
       <Button
-        title="Харлаа"
-        busy={busy}
-        disabled={event.status !== "new"}
-        onPress={() => {
-          void submit("acknowledged");
-        }}
-      />
-      <Button
-        title="Хуурамч дохио"
+        title={alertMode ? "Хуурамч дохио гэж тэмдэглэх" : "Хуурамч дохио"}
+        textOnly={alertMode}
         secondary
         disabled={busy || event.status !== "new"}
         onPress={() =>
