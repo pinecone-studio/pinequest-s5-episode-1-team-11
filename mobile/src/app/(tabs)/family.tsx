@@ -20,8 +20,10 @@ import {
   CreateHousehold,
   DeleteAccount,
   InviteCard,
+  JoinFamily,
   NotificationsCard,
 } from "../../components/FamilyActions";
+import { WatchedPeople } from "../../components/WatchedPeople";
 import type { Member } from "../../lib/types";
 import { dateLabel } from "../../lib/events";
 import {
@@ -125,6 +127,8 @@ export default function FamilyScreen() {
               ownName={homes.name}
             />
             {owner && <InviteCard />}
+            <Text style={styles.heading}>Хянагдах хүмүүс</Text>
+            <WatchedPeople householdId={homes.household.id} />
             <Text style={styles.heading}>Камер ба төхөөрөмж</Text>
             {data.error && (
               <Problem
@@ -198,6 +202,7 @@ export default function FamilyScreen() {
               </Text>
               <Button title="Дахин шалгах" secondary onPress={homes.retry} />
             </Card>
+            <JoinFamily />
             <CreateHousehold />
           </>
         )}
@@ -313,7 +318,29 @@ function MemberList({
   ownName: string;
   retry: () => void;
 }) {
+  const homes = useHomes();
+  const owner = homes.household?.owner_id === userId;
   const [list, setList] = useState<(Member & { name: string | null })[]>([]);
+  function transfer(id: string, name: string | null) {
+    Alert.alert(
+      "Эзний эрх шилжүүлэх",
+      `${name || "Энэ асран хамгаалагч"} гэр бүлийн эзэн болно. Та асран хамгаалагч болно.`,
+      [
+        { text: "Болих", style: "cancel" },
+        {
+          text: "Шилжүүлэх",
+          onPress: () => {
+            void supabase
+              .rpc("transfer_household_ownership", { p_new_owner: id })
+              .then(({ error: failed }) => {
+                if (failed) Alert.alert("Эзний эрх", "Шилжүүлж чадсангүй.");
+                else homes.retry();
+              });
+          },
+        },
+      ],
+    );
+  }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -365,7 +392,6 @@ function MemberList({
             <Ionicons name="person-outline" size={22} color={colors.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.text}>
-                ы
                 {member.user_id === userId
                   ? ownName || "Би"
                   : member.name || "Асран хамгаалагч"}
@@ -378,6 +404,13 @@ function MemberList({
               </Text>
             </View>
           </View>
+          {owner && member.role === "caregiver" && (
+            <Button
+              title="Эзэн болгох"
+              secondary
+              onPress={() => transfer(member.user_id, member.name)}
+            />
+          )}
         </Card>
       ))}
       {!list.length && (

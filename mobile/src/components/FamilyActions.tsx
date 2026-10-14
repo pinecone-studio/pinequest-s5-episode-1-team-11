@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Share, Text, TextInput, View } from "react-native";
 import { registerForPush, unregisterPush, type PushState } from "../lib/push";
-import { supabase } from "../lib/supabase";
+import { SITE, supabase } from "../lib/supabase";
 import { useData, useHomes } from "../providers/HouseholdProvider";
 import { Button, Card, colors, Problem, styles } from "./ui";
 
-const SITE =
-  process.env.EXPO_PUBLIC_SITE_URL ?? "https://halo-team11.vercel.app";
 const pushText: Record<PushState, string> = {
   on: "Энэ утсанд дохио ирнэ.",
   denied:
@@ -279,4 +277,54 @@ async function removeSnapshots(householdId: string) {
     if (removed.error) return false;
   }
   return false;
+}
+
+/** Joins a family from an invite link or its code (the same link the web accepts). */
+export function JoinFamily() {
+  const homes = useHomes();
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function join() {
+    const code = value.match(/[a-f0-9]{32}/)?.[0];
+    if (!code)
+      return setError("Урилгын холбоос эсвэл кодоо бүтнээр нь оруулна уу.");
+    setBusy(true);
+    setError("");
+    const { error: failed } = await supabase.rpc("accept_invite", {
+      p_code: code,
+    });
+    setBusy(false);
+    if (!failed) return homes.retry();
+    const message = failed.message;
+    setError(
+      message.includes("expired or already used")
+        ? "Урилгын хугацаа дууссан эсвэл ашиглагдсан байна."
+        : message.includes("already belongs to a household")
+          ? "Та өөр гэр бүлд бүртгэлтэй байна."
+          : "Урилга буруу байна.",
+    );
+  }
+  return (
+    <Card>
+      <Text style={styles.heading}>Урилгаар нэгдэх</Text>
+      <TextInput
+        accessibilityLabel="Урилгын холбоос"
+        style={styles.input}
+        value={value}
+        onChangeText={setValue}
+        placeholder="Урилгын холбоос эсвэл код"
+        placeholderTextColor={colors.muted}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Button
+        title="Нэгдэх"
+        busy={busy}
+        disabled={!value.trim()}
+        onPress={() => void join()}
+      />
+      {error ? <Problem text={error} /> : null}
+    </Card>
+  );
 }

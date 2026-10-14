@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { supabase } from "../lib/supabase";
+import { SITE, supabase } from "../lib/supabase";
 import {
   Button,
   Card,
@@ -29,13 +29,45 @@ export default function LoginScreen() {
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(
     null,
   );
+  const [notice, setNotice] = useState<string | null>(null);
   const inFlight = useRef(false);
+
+  /** Both links finish on the web, which already handles them (/auth/callback). */
+  async function sendEmail(kind: "recovery" | "signup") {
+    const address = (kind === "signup" ? confirmationEmail : email)?.trim();
+    if (!address) return setError("Email хаягаа оруулна уу.");
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true);
+    setError(null);
+    const redirect = `${SITE}/auth/callback?next=${kind === "recovery" ? "/reset-password" : "/home"}`;
+    const { error: failed } =
+      kind === "recovery"
+        ? await supabase.auth.resetPasswordForEmail(address, {
+            redirectTo: redirect,
+          })
+        : await supabase.auth.resend({
+            type: "signup",
+            email: address,
+            options: { emailRedirectTo: redirect },
+          });
+    inFlight.current = false;
+    setBusy(false);
+    if (failed) setError("Илгээж чадсангүй. Түр хүлээгээд дахин оролдоно уу.");
+    else
+      setNotice(
+        kind === "recovery"
+          ? "Нууц үг сэргээх холбоос email-ээр илгээгдлээ."
+          : "Баталгаажуулах email дахин илгээгдлээ.",
+      );
+  }
   const registering = mode === "register";
 
   function switchMode(next: Mode) {
     if (inFlight.current) return;
     setMode(next);
     setError(null);
+    setNotice(null);
     setConfirmationEmail(null);
     setPassword("");
     setConfirmPassword("");
@@ -127,9 +159,7 @@ export default function LoginScreen() {
             </Text>
             <Text style={styles.heading}>Ухаалаг хяналт. Тайван амьдрал.</Text>
             <Text style={styles.muted}>
-              {registering
-                ? "Таны бүртгүүлэх хэсэг"
-                : "Таны нэвтрэх хэсэг"}
+              {registering ? "Таны бүртгүүлэх хэсэг" : "Таны нэвтрэх хэсэг"}
             </Text>
           </View>
           {confirmationEmail ? (
@@ -144,6 +174,14 @@ export default function LoginScreen() {
                   буцаж нэвтэрнэ үү.
                 </Text>
               </Card>
+              <Button
+                title="Email дахин илгээх"
+                secondary
+                busy={busy}
+                onPress={() => void sendEmail("signup")}
+              />
+              {notice && <Text style={styles.badge}>{notice}</Text>}
+              {error && <Problem text={error} />}
               <Button
                 title="Нэвтрэх хэсэг рүү"
                 onPress={() => switchMode("login")}
@@ -207,6 +245,7 @@ export default function LoginScreen() {
                 </>
               )}
               {error && <Problem text={error} />}
+              {notice && <Text style={styles.badge}>{notice}</Text>}
               <Button
                 title={registering ? "Бүртгүүлэх" : "Нэвтрэх"}
                 busy={busy}
@@ -215,13 +254,19 @@ export default function LoginScreen() {
                 }}
               />
               <Button
-                title={
-                  registering ? "Бүртгэлтэй бол нэвтрэх" : "Бүртгүүлэх"
-                }
+                title={registering ? "Бүртгэлтэй бол нэвтрэх" : "Бүртгүүлэх"}
                 secondary
                 disabled={busy}
                 onPress={() => switchMode(registering ? "login" : "register")}
               />
+              {!registering && (
+                <Button
+                  title="Нууц үгээ мартсан"
+                  textOnly
+                  disabled={busy}
+                  onPress={() => void sendEmail("recovery")}
+                />
+              )}
             </>
           )}
         </ScrollView>

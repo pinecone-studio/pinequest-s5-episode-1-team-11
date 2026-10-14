@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "../providers/AuthProvider";
 import { HouseholdProvider } from "../providers/HouseholdProvider";
 import { CriticalAlert } from "../components/CriticalAlert";
 import { PushSetup } from "../components/PushSetup";
+import { Onboarding, useOnboarding } from "../components/Onboarding";
 import { Loading, Problem, Screen, styles } from "../components/ui";
 import { View } from "react-native";
 
@@ -24,7 +25,8 @@ function Routes({ authenticated }: { authenticated: boolean }) {
 }
 function RootNavigator() {
   const { session, loading, error, retry } = useAuth();
-  if (loading) return <Loading />;
+  const onboarding = useOnboarding();
+  if (loading || onboarding.seen === null) return <Loading />;
   if (error)
     return (
       <Screen>
@@ -33,6 +35,8 @@ function RootNavigator() {
         </View>
       </Screen>
     );
+  if (!session && !onboarding.seen)
+    return <Onboarding done={onboarding.done} />;
   if (!session) return <Routes authenticated={false} />;
   return (
     <HouseholdProvider key={session.user.id}>
