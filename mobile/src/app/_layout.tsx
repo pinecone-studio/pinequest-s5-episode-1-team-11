@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../providers/AuthProvider";
 import { HouseholdProvider } from "../providers/HouseholdProvider";
 import { CriticalAlert } from "../components/CriticalAlert";
+import { PushSetup } from "../components/PushSetup";
 import { Loading, Problem, Screen, styles } from "../components/ui";
 import { View } from "react-native";
 
@@ -36,6 +37,7 @@ function RootNavigator() {
     <HouseholdProvider key={session.user.id}>
       <Routes authenticated />
       <CriticalAlert />
+      <PushSetup />
     </HouseholdProvider>
   );
 }

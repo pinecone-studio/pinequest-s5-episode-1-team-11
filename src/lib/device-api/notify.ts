@@ -1,14 +1,17 @@
 import "server-only";
 import { PushSubscriptionJSON } from "@/contracts";
-import { notifyEvent } from "@/features/notifications/server/notify-event";
+import { notifyEvent, notifyEventToApps } from "@/features/notifications/server/notify-event";
 import { isPushConfigured } from "@/features/notifications/server/web-push";
 import { mapEvent } from "@/lib/data/mappers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { EventRow } from "@/lib/supabase/database.types";
 
+const none = { sent: 0, expired: [] as string[] };
+
 /**
- * Pushes an event to every member of its household, prunes subscriptions that expired and marks
- * the queued delivery done. Throwing leaves the delivery queued for the minute job to retry.
+ * Pushes an event to every member of its household (browsers and the mobile app), prunes
+ * subscriptions that expired and marks the queued delivery done. Throwing leaves the delivery
+ * queued for the minute job to retry.
  */
 export async function notifyHousehold(row: EventRow) {
   const admin = createAdminClient();
@@ -17,34 +20,43 @@ export async function notifyHousehold(row: EventRow) {
     .select("user_id")
     .eq("household_id", row.household_id);
   if (members.error) throw members.error;
-  const subscriptions = await admin
-    .from("push_subscriptions")
-    .select("*")
-    .in(
-      "user_id",
-      members.data.map((member) => member.user_id),
-    );
+  const users = members.data.map((member) => member.user_id);
+  const [subscriptions, apps] = await Promise.all([
+    admin.from("push_subscriptions").select("*").in("user_id", users),
+    admin.from("expo_push_tokens").select("token").in("user_id", users),
+  ]);
   if (subscriptions.error) throw subscriptions.error;
-  // Nothing can be delivered: no subscribers, or no VAPID keys on this deployment.
-  if (!subscriptions.data.length || !isPushConfigured()) return complete(row.id);
-  const result = await notifyEvent(
-    mapEvent(row),
-    subscriptions.data.map((subscription) =>
-      PushSubscriptionJSON.parse({
-        endpoint: subscription.endpoint,
-        expirationTime: subscription.expiration_time,
-        keys: { p256dh: subscription.p256dh, auth: subscription.auth },
-      }),
-    ),
-  );
-  if (result.expired.length) {
-    const { error } = await admin
-      .from("push_subscriptions")
-      .delete()
-      .in("endpoint", result.expired);
+  if (apps.error) throw apps.error;
+  // Browsers need this deployment's VAPID keys; the mobile app does not.
+  const browsers = isPushConfigured() ? subscriptions.data : [];
+  const tokens = apps.data.map((app) => app.token);
+  if (!browsers.length && !tokens.length) return complete(row.id);
+  const event = mapEvent(row);
+  const [web, mobile] = await Promise.all([
+    browsers.length
+      ? notifyEvent(
+          event,
+          browsers.map((subscription) =>
+            PushSubscriptionJSON.parse({
+              endpoint: subscription.endpoint,
+              expirationTime: subscription.expiration_time,
+              keys: { p256dh: subscription.p256dh, auth: subscription.auth },
+            }),
+          ),
+        )
+      : none,
+    tokens.length ? notifyEventToApps(event, tokens) : none,
+  ]);
+  if (web.expired.length) {
+    const { error } = await admin.from("push_subscriptions").delete().in("endpoint", web.expired);
     if (error) throw error;
   }
-  if (result.sent > 0) {
+  if (mobile.expired.length) {
+    const { error } = await admin.from("expo_push_tokens").delete().in("token", mobile.expired);
+    if (error) throw error;
+  }
+  const sent = web.sent + mobile.sent;
+  if (sent > 0) {
     const { error } = await admin
       .from("events")
       .update({ notified_at: new Date().toISOString() })
@@ -52,7 +64,8 @@ export async function notifyHousehold(row: EventRow) {
     if (error) throw error;
   }
   // Every push service refused (outage): keep it queued so the minute job retries.
-  if (result.sent === 0 && result.expired.length < subscriptions.data.length) return;
+  const expired = web.expired.length + mobile.expired.length;
+  if (sent === 0 && expired < browsers.length + tokens.length) return;
   await complete(row.id);
 }
 

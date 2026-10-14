@@ -46,9 +46,20 @@ export type Database = {
       profiles: Table<Profile>;
       devices: Table<Device>;
       events: Table<HaloEvent>;
+      expo_push_tokens: Table<{ token: string; user_id: string; created_at: string }>;
     };
     Views: { [key in never]: never };
-    Functions: { [key in never]: never };
+    Functions: {
+      register_expo_push_token: { Args: { p_token: string }; Returns: undefined };
+      create_pairing: {
+        Args: { p_name: string; p_room_name: string; p_kind?: string };
+        Returns: { code: string; expires_at: string; device_id: string | null }[];
+      };
+      create_invite: {
+        Args: Record<string, never>;
+        Returns: { code: string; expires_at: string }[];
+      };
+    };
     Enums: { [key in never]: never };
     CompositeTypes: { [key in never]: never };
   };

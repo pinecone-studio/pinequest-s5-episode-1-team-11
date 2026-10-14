@@ -12,6 +12,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuth } from "../../providers/AuthProvider";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
 import { supabase } from "../../lib/supabase";
+import { unregisterPush } from "../../lib/push";
+import { AddCamera, InviteCard, NotificationsCard } from "../../components/FamilyActions";
 import type { Member } from "../../lib/types";
 import { dateLabel } from "../../lib/events";
 import {
@@ -34,6 +36,8 @@ export default function FamilyScreen() {
     if (signingOut) return;
     setSigningOut(true);
     try {
+      // A failed cleanup must not block sign-out; the server prunes dead tokens anyway.
+      await unregisterPush().catch(() => undefined);
       const result = await supabase.auth.signOut();
       if (result.error) throw result.error;
     } catch {
@@ -84,6 +88,7 @@ export default function FamilyScreen() {
             save={homes.saveProfileName}
           />
         </Card>
+        <NotificationsCard />
         {homes.household ? (
           <>
             <Card>
@@ -111,6 +116,7 @@ export default function FamilyScreen() {
               userId={session!.user.id}
               ownName={homes.name}
             />
+            {owner && <InviteCard />}
             <Text style={styles.heading}>Камер ба төхөөрөмж</Text>
             {data.error && (
               <Problem
@@ -166,6 +172,7 @@ export default function FamilyScreen() {
                 {data.loading ? "Ачаалж байна…" : "Төхөөрөмж нэмэгдээгүй."}
               </Text>
             )}
+            {owner && <AddCamera />}
           </>
         ) : (
           <Card>

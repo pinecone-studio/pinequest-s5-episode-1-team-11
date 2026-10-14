@@ -21,7 +21,7 @@ describe("household and pairing RPCs", () => {
     const { rows } = await db.query<{ relrowsecurity: boolean }>(
       "select relrowsecurity from pg_class join pg_namespace n on n.oid = relnamespace where n.nspname = 'public' and relkind = 'r'",
     );
-    expect(rows).toHaveLength(9);
+    expect(rows).toHaveLength(10);
     expect(rows.every((row) => row.relrowsecurity)).toBe(true);
     await db.exec("set role anon");
     try {

@@ -66,6 +66,28 @@ describe("household access policies", () => {
     );
   });
 
+  it("keeps app push tokens private and lets a phone move to the account that signed in", async () => {
+    const token = "ExponentPushToken[phone]";
+    await asUser(alice, () => db.query("select public.register_expo_push_token($1)", [token]));
+    await asUser(bob, async () => {
+      expect((await db.query("select * from public.expo_push_tokens")).rows).toEqual([]);
+      await expect(
+        db.query(
+          "insert into public.expo_push_tokens(token, user_id) values ('ExponentPushToken[x]', $1)",
+          [bob],
+        ),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        db.query("select public.register_expo_push_token('not-a-token')"),
+      ).rejects.toThrow(/check constraint/);
+      await db.query("select public.register_expo_push_token($1)", [token]);
+    });
+    const { rows } = await db.query<{ user_id: string }>(
+      "select user_id from public.expo_push_tokens",
+    );
+    expect(rows).toEqual([{ user_id: bob }]);
+  });
+
   it("only exposes snapshots from the caller's household, including malformed paths", async () => {
     const own = await createHome(alice);
     const other = await createHome(bob);
