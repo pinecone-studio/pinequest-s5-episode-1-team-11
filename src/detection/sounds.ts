@@ -40,13 +40,17 @@ type Rule = {
 export type SoundPreset = Record<SoundKind, Rule>;
 
 export function soundPreset(): SoundPreset {
+  // Sound heard through a room scores far below a clean clip (loud crying ≈ 0.2 instead of
+  // ≈ 0.95), so every kind uses low thresholds and asks for repeated windows instead.
+  // Tuned on ESC-50 and Nonspeech7k clips, clean, 8 kHz and room-degraded: no false alarm
+  // from speech, laughter, coughs, knocks, dogs or footsteps.
   return {
-    scream: { threshold: 0.25, needed: 2, of: 3, instant: 0.45 },
+    scream: { threshold: 0.05, needed: 2, of: 3, instant: 0.2 },
     // Crying is reported at once: one clear window, or two faint ones out of the last three.
-    // On phone microphones even loud crying scores only about 0.2.
     cry: { threshold: 0.05, needed: 2, of: 3, instant: 0.12 },
-    glass: { threshold: 0.3, needed: 1, of: 1 },
-    alarm: { threshold: 0.3, needed: 3, of: 4 },
+    // A shatter lasts about a second, so it always spans two overlapping windows.
+    glass: { threshold: 0.1, needed: 2, of: 3, instant: 0.25 },
+    alarm: { threshold: 0.05, needed: 3, of: 4 },
   };
 }
 

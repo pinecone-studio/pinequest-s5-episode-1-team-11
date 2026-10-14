@@ -37,5 +37,6 @@ bun-debug.log*
 .idea/
 .vercel
 
-# Local test clips for tools/cctv-sim
-tools/cctv-sim/*.mp4
+# CCTV worker build output and Python caches
+/cctv/build/
+__pycache__/

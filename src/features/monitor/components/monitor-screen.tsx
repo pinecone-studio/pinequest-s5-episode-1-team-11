@@ -18,15 +18,7 @@ import { WatchView } from "./watch-view";
 /** undefined = not read yet, null = not paired, "local" = test mode without a server. */
 type Identity = PairResponse | "local" | null | undefined;
 
-export function MonitorScreen({
-  code,
-  apiReady,
-  cctvUrl,
-}: {
-  code: string;
-  apiReady: boolean;
-  cctvUrl?: string;
-}) {
+export function MonitorScreen({ code, apiReady }: { code: string; apiReady: boolean }) {
   const t = useTranslations("monitor");
   const common = useTranslations("common");
   const [identity, setIdentity] = useState<Identity>(undefined);
@@ -97,7 +89,6 @@ export function MonitorScreen({
     return (
       <WatchView
         device={identity === "local" ? null : identity}
-        cctvUrl={cctvUrl}
         onExit={() => setWatching(false)}
         onUnpaired={unpaired}
       />
@@ -136,11 +127,6 @@ export function MonitorScreen({
                 {t("ready.useNewCode")}
               </Button>
             </div>
-          )}
-          {cctvUrl && (
-            <p className="glass rounded-lg p-4 text-base">
-              {t("ready.cctv", { host: new URL(cctvUrl).host })}
-            </p>
           )}
           <ul className="glass grid gap-4 rounded-lg p-5">
             {[t("ready.tip1"), t("ready.tip2"), t("ready.tip3")].map((tip, index) => {

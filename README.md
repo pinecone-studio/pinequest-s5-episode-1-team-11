@@ -2,7 +2,7 @@
 
 Гэртээ ганцаараа байгаа хүмүүсийн аюултай нөхцөлийг камерын дүрс, дуугаар илрүүлж асран хамгаалагчид мэдэгдэх систем.
 
-Эхний зорилго: утас эсвэл laptop-ын browser камераар хянах. Дараагийн зорилго: CCTV-ийн RTSP урсгалыг go2rtc → WebRTC-аар авч ижил detection/event pipeline-д холбох. Inference төхөөрөмж дээрээ ажиллана.
+Гол зорилго: IP камер (VIGI C540) видеогоо RTMP-ээр серверт илгээж, серверийн AI ижил detection/event pipeline-аар илрүүлнэ ([`cctv/`](cctv/README.md), AWS Sydney сервер). Утас эсвэл laptop-ын browser камер ч ажилладаг.
 
 Одоогийн хувилбар нь суурь: shared UI, contract, Supabase schema/RLS, auth, query болон placeholder route. Камер, inference, device API, push илгээлт болон feature дэлгэцүүд хэрэгжээгүй.
 
@@ -91,9 +91,9 @@ Feature-ийн `queries.ts` нь `src/lib/data/queries.ts`-ийн household-scop
 - `src/detection/fall.ts` — хонго огцом унах → хэвтээ байрлал → хэдэн секунд босохгүй бол унасан. Хүүхдэд илүү хүчтэй уналт, урт хугацаа шаардана (тоглож байгаад шалан дээр хэвтэх нь элбэг).
 - `src/detection/sounds.ts` — орилох (давтагдсан), удаан уйлах (20 с, хүүхдэд 60 с), шил хагарах (нэг удаа), галын дохио (3 с).
 - `src/detection/engine.ts` — тохиргоо (унах/дуу/аюул асаах-унтраах, мэдрэмж), төрөл бүрийн cooldown, орилсны дараах уналтын итгэлийг өсгөнө.
-- `src/detection/runtime/` — browser-ийн камер, микрофон, model ажиллуулагч. `VideoSource` нь CCTV урсгал залгах цэг.
+- `src/detection/runtime/` — browser-ийн камер, микрофон, model ажиллуулагч.
 
-CCTV: [`tools/cctv-sim`](tools/cctv-sim/README.md) — go2rtc RTSP/файлын урсгалыг WebRTC болгоно, `/monitor?cctv=http://localhost:1984/api/webrtc?src=hall` нээхэд камерын оронд тэр урсгалыг хянана.
+CCTV: [`cctv/`](cctv/README.md) — камер RTMP → MediaMTX → `halo_cctv.py` (MediaPipe) → эдгээр дүрэм (`engine-bridge.ts`) → `/api/v1/events`. Ubuntu 24.04 серверт `setup.sh`-ээр суулгана.
 
 Дүрмүүдийг `bun run test`-ийн synthetic pose/дууны автомат тестүүд шалгана.
 
