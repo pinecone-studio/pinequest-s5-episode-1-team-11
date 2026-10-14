@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, ScrollView, Switch, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import type { DetectionSettings } from "../../lib/types";
@@ -22,16 +14,6 @@ import {
   styles,
 } from "../../components/ui";
 
-const watching = [
-  ["elderly", "Ахмад настан"],
-  ["child", "Хүүхэд"],
-  ["disabled", "Хөгжлийн бэрхшээлтэй"],
-] as const;
-const sensitivity = [
-  ["low", "Бага"],
-  ["medium", "Дунд"],
-  ["high", "Өндөр"],
-] as const;
 const toggles = [
   ["fall", "Уналт"],
   ["distress", "Орилох, удаан уйлах"],
@@ -150,18 +132,7 @@ export default function DeviceScreen() {
           />
         </Card>
         <Card>
-          <Text style={styles.heading}>Хэнийг хянах</Text>
-          <Choice
-            options={watching}
-            value={form.settings.watching}
-            pick={(v) => set({ watching: v })}
-          />
-          <Text style={styles.heading}>Мэдрэмж</Text>
-          <Choice
-            options={sensitivity}
-            value={form.settings.sensitivity}
-            pick={(v) => set({ sensitivity: v })}
-          />
+          <Text style={styles.heading}>Юуг илрүүлэх</Text>
           {toggles.map(([key, label]) => (
             <View key={key} style={styles.row}>
               <Text style={[styles.text, { flex: 1 }]}>{label}</Text>
@@ -184,44 +155,5 @@ export default function DeviceScreen() {
         <Button title="Төхөөрөмж устгах" secondary onPress={remove} />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Choice<T extends string>({
-  options,
-  value,
-  pick,
-}: {
-  options: readonly (readonly [T, string])[];
-  value: T;
-  pick: (value: T) => void;
-}) {
-  return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-      {options.map(([key, label]) => (
-        <Pressable
-          key={key}
-          accessibilityRole="radio"
-          accessibilityState={{ selected: value === key }}
-          onPress={() => pick(key)}
-          style={[
-            styles.buttonSecondary,
-            {
-              paddingHorizontal: 14,
-              minHeight: 44,
-              borderRadius: 22,
-              justifyContent: "center",
-            },
-            value === key && { borderColor: colors.primary },
-          ]}
-        >
-          <Text
-            style={[styles.text, value === key && { color: colors.primary }]}
-          >
-            {label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
   );
 }
