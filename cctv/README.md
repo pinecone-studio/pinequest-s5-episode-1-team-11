@@ -5,17 +5,16 @@
 ```
 Камер ─RTMP→ MediaMTX ─RTSP (127.0.0.1)→ halo_cctv.py ─→ Halo API ─→ push (web + апп)
                   └─WebRTC (WHEP, Caddy HTTPS)→ web / апп-ын "Live харах"
-   stream_auth.py: камер, worker, гэр бүлийн 10 минутын token-ийг шалгана
+   control.py: камер, worker, гэр бүлийн 10 минутын token-ийг шалгана
 ```
 
 | Файл | Үүрэг |
 |---|---|
 | `mediamtx.yml` | RTMP хүлээн авах, worker-т RTSP, гэр бүлд WebRTC |
-| `stream_auth.py` | MediaMTX-ийн хүсэлт бүрийг шалгана (`authMethod: http`) |
-| `halo_cctv.py` | Нэг камерын урсгалаас model ажиллуулж event, heartbeat илгээнэ |
+| `control.py` | MediaMTX-ийн хүсэлт бүрийг шалгана (`authMethod: http`), апп-аас нэмсэн камерыг Halo-д холбоно (`/provision`) |
+| `halo_cctv.py` | `serve`: камер бүрт нэг worker; worker нь урсгалаас model ажиллуулж event, heartbeat илгээнэ |
 | `engine-bridge.ts` | `src/detection/engine.ts`-ийг Node дээр ажиллуулна, дүрэм нэг газар |
 | `setup.sh` | Ubuntu 24.04 серверт бүгдийг суулгаж systemd service болгоно |
-| `add-camera.sh` | Нэг командаар камер холбоно, камерт бичих тохиргоог хэвлэнэ |
 
 ## Камер
 
@@ -39,22 +38,16 @@ ssh ubuntu@SERVER_IP 'sudo bash cctv/setup.sh'
 
 ### 2. Камер нэмэх
 
-Апп эсвэл web → Камер нэмэх → 6 оронтой код. Серверт:
-
-```bash
-ssh ubuntu@SERVER_IP 'sudo /opt/halo-cctv/add-camera.sh 123456'
-```
-
-Гарсан Server Address ба Stream Key-г камерын RTMP тохиргоонд ([заавар](https://www.tp-link.com/us/support/faq/4627/)) бичнэ. Main stream: H.264.
+Mobile апп → Гэр бүл → Камер нэмэх → **IP камер** → нэр, өрөө → Нэмэх. Halo код үүсгэж камерын серверээс (`/provision`, гарын үсэгтэй) камерыг холбуулна. Сервер worker-ийг өөрөө асаана. Апп камерт бичих Server Address ба Stream Key-г харуулна ([VIGI заавар](https://www.tp-link.com/us/support/faq/4627/), Main stream: H.264). Апп-аас камерыг устгавал worker өөрөө зогсоно.
 
 ### Шалгах
 
 ```bash
 journalctl -u mediamtx -f            # "is publishing to path 'live/<device id>'"
-journalctl -u halo-cctv@<device id> -f
+journalctl -u halo-cctv -f           # "<device id>: worker started"
 ```
 
-Удаан бол `/etc/halo-cctv/<device id>.env`-д `HALO_FPS=3` эсвэл `HALO_POSE=full` нэмээд `sudo systemctl restart halo-cctv@<device id>`.
+Удаан бол `/etc/systemd/system/halo-cctv.service`-д `HALO_FPS=3` эсвэл `HALO_POSE=full` нэмээд `sudo systemctl daemon-reload && sudo systemctl restart halo-cctv`.
 
 ## Зардал
 
@@ -63,9 +56,9 @@ journalctl -u halo-cctv@<device id> -f
 ## Local туршилт
 
 ```bash
-python -m unittest test_halo_cctv test_stream_auth
+python -m unittest test_halo_cctv test_control
 ```
 
-Шалгасан: MediaMTX + `stream_auth.py`-тай дуурайлгасан VIGI урсгал (H.264 + G.711 8 kHz). Камер өөрийн замд publish хийсэн, өөр замд хаагдсан. Worker RTSP уншсан, буруу нууц үг 401. WebRTC-ээр browser-т H.264 дүрс, PCMU дуу ирсэн, хуурамч/хоосон token 401. AWS сервер дээр MediaMTX + AI worker интернетээр ажилласан.
+Шалгасан: MediaMTX + `control.py`-тай дуурайлгасан VIGI урсгал (H.264 + G.711 8 kHz). Камер өөрийн замд publish хийсэн, өөр замд хаагдсан. Worker RTSP уншсан, буруу нууц үг 401. WebRTC-ээр browser-т H.264 дүрс, PCMU дуу ирсэн, хуурамч/хоосон token 401. AWS сервер дээр MediaMTX + AI worker интернетээр ажилласан.
 
 Шалгаагүй: бодит VIGI камер (Stream Key дахь `?user=&pass=`-ийг хэвээр дамжуулах эсэх), YAMNet-ийн 8 kHz бодит дуун дээрх нарийвчлал.

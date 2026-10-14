@@ -1,6 +1,6 @@
 # Halo CCTV ingest (MediaMTX). Cameras push RTMP; the worker on the same server reads it over RTSP;
 # family members watch live over WebRTC (WHEP) through Caddy's HTTPS.
-# Every request is checked by stream_auth.py (cameras, the worker, signed viewer tokens).
+# Every request is checked by control.py (cameras, the worker, signed viewer tokens).
 
 logLevel: info
 

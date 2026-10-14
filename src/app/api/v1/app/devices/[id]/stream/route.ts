@@ -1,22 +1,7 @@
-import { createClient as createBearerClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { cameraStream } from "@/features/live/server/stream";
 import { apiError, apiJson } from "@/lib/device-api/http";
-import { publicEnv } from "@/lib/env";
-import type { Database } from "@/lib/supabase/database.types";
-import { createClient } from "@/lib/supabase/server";
-
-/** The web sends its session cookie, the mobile app its access token; RLS decides either way. */
-async function userClient(request: Request) {
-  const bearer = request.headers.get("authorization")?.match(/^Bearer (\S+)$/)?.[1];
-  if (!bearer) return createClient();
-  const { supabaseUrl, supabasePublishableKey } = publicEnv;
-  if (!supabaseUrl || !supabasePublishableKey) return null;
-  return createBearerClient<Database>(supabaseUrl, supabasePublishableKey, {
-    global: { headers: { Authorization: `Bearer ${bearer}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
+import { requestClient } from "@/lib/supabase/request";
 
 /** A family member asks to watch one of their CCTV cameras: a short-lived WHEP token. */
 export async function POST(
@@ -25,7 +10,7 @@ export async function POST(
 ) {
   const id = z.uuid().safeParse((await context.params).id);
   if (!id.success) return apiError(400, "invalid_request");
-  const client = await userClient(request);
+  const client = await requestClient(request);
   if (!client) return apiError(503, "not_configured");
   const { data: auth } = await client.auth.getUser();
   if (!auth.user) return apiError(401, "unauthorized");

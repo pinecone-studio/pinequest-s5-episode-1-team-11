@@ -8,7 +8,9 @@ export type ApiErrorCode =
   | "unauthorized"
   | "invalid_code"
   | "too_many_attempts"
-  | "rate_limited";
+  | "rate_limited"
+  | "forbidden"
+  | "camera_server_failed";
 
 /** Errors are small and stable so devices can branch on `error`. */
 export function apiError(status: number, error: ApiErrorCode) {

@@ -4,7 +4,7 @@ The camera pushes RTMP to MediaMTX; this worker reads it back over RTSP. Pose, p
 sound models run here; the fall and sound rules run unchanged in engine-bridge (Node), so a
 CCTV camera decides exactly like a phone camera does.
 
-  python halo_cctv.py pair --api https://halo.example --code 123456
+  python halo_cctv.py serve --api https://halo.example     every camera in streams.json
   python halo_cctv.py watch --api https://halo.example --stream rtsp://... --token ...
 """
 
@@ -15,6 +15,7 @@ import base64
 import json
 import os
 import subprocess
+import sys
 import threading
 import time
 import urllib.request
@@ -306,6 +307,43 @@ def watch(api: Api, stream: str, engine_js: str, on_alive=None) -> None:
             time.sleep(5)
 
 
+UNPAIRED_EXIT = 3
+
+
+def serve(api: str, streams_path: str, engine_js: str) -> None:
+    """Keeps one `watch` process per camera in streams.json (control.py adds them). A camera the
+    family removed in Halo exits with UNPAIRED_EXIT and is dropped from the file."""
+    running: dict[str, subprocess.Popen] = {}
+    while True:
+        with open(streams_path) as file:
+            streams = json.load(file)
+        cameras = streams.get("cameras", {})
+        for device, process in list(running.items()):
+            if device not in cameras:
+                process.terminate()
+                del running[device]
+            elif process.poll() is not None:
+                del running[device]
+                if process.returncode == UNPAIRED_EXIT:
+                    remove_camera(streams_path, device)
+                    print(f"{device}: removed in Halo, worker stopped", flush=True)
+        for device, camera in cameras.items():
+            if device not in running:
+                running[device] = subprocess.Popen([
+                    sys.executable, os.path.abspath(__file__), "watch", "--api", api, "--engine", engine_js,
+                    "--stream", f"rtsp://worker:{streams['worker']}@127.0.0.1:8554/live/{device}",
+                    "--token", camera["token"],
+                ])
+                print(f"{device}: worker started", flush=True)
+        time.sleep(10)
+
+
+def remove_camera(streams_path: str, device: str) -> None:
+    from control import update  # same folder; shares the file lock with provisioning
+
+    update(lambda streams: streams.get("cameras", {}).pop(device, None), streams_path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -317,11 +355,20 @@ def main() -> None:
     w.add_argument("--stream", required=True)
     w.add_argument("--token", default=os.environ.get("HALO_DEVICE_TOKEN"))
     w.add_argument("--engine", default=str(Path(__file__).with_name("build") / "engine.mjs"))
+    s = sub.add_parser("serve", help="run a worker for every camera in streams.json")
+    s.add_argument("--api", required=True)
+    s.add_argument("--streams", default="/etc/halo-cctv/streams.json")
+    s.add_argument("--engine", default=str(Path(__file__).with_name("build") / "engine.mjs"))
     args = parser.parse_args()
     if args.command == "pair":
         print(json.dumps(pair(Api(args.api), args.code), indent=2))
+    elif args.command == "serve":
+        serve(args.api, args.streams, args.engine)
     else:
-        watch(Api(args.api, args.token), args.stream, args.engine)
+        try:
+            watch(Api(args.api, args.token), args.stream, args.engine)
+        except Unpaired:
+            raise SystemExit(UNPAIRED_EXIT)
 
 
 if __name__ == "__main__":
