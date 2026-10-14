@@ -87,13 +87,15 @@ describe("sound detector", () => {
   });
 
   it("needs repeated screaming unless one window is very loud", () => {
-    expect(run([{ scream: 0.4 }, {}, {}, { scream: 0.4 }])).toEqual([]);
-    expect(run([{ scream: 0.4 }, { scream: 0.5 }]).map((s) => s.kind)).toEqual(["scream"]);
+    expect(run([{ scream: 0.1 }, {}, {}, { scream: 0.1 }])).toEqual([]);
+    expect(run([{ scream: 0.1 }, { scream: 0.12 }]).map((s) => s.kind)).toEqual(["scream"]);
     expect(run([{ scream: 0.8 }])).toEqual([{ kind: "scream", time: 0, confidence: 0.8 }]);
   });
 
-  it("reports glass at once and alarms after a few seconds", () => {
+  it("reports loud or repeated glass at once and alarms after a few seconds", () => {
     expect(run([{ glass: 0.5 }]).map((s) => s.kind)).toEqual(["glass"]);
+    expect(run([{ glass: 0.15 }])).toEqual([]);
+    expect(run(repeat({ glass: 0.15 }, 2)).map((s) => s.kind)).toEqual(["glass"]);
     expect(run(repeat({ alarm: 0.5 }, 2))).toEqual([]);
     expect(run(repeat({ alarm: 0.5 }, 3)).map((s) => s.kind)).toEqual(["alarm"]);
   });
@@ -161,7 +163,7 @@ describe("sound detector", () => {
 
   it("expires screaming evidence across a gap while accepting fresh repeated scores", () => {
     const detector = new SoundDetector(soundPreset());
-    const scream = { ...quiet, scream: 0.4 };
+    const scream = { ...quiet, scream: 0.1 };
 
     expect(detector.update(0, scream)).toEqual([]);
     expect(detector.update(60_000, scream)).toEqual([]);

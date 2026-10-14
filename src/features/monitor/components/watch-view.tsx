@@ -43,14 +43,11 @@ type Recent = { kind: DetectedKind; at: number };
 /** Full-screen camera with body points, detector lights and a calm status panel. */
 export function WatchView({
   device,
-  cctvUrl,
   onExit,
   onUnpaired,
 }: {
   /** null = test mode: detections stay on this screen. */
   device: PairResponse | null;
-  /** go2rtc WebRTC endpoint: watch a CCTV camera instead of this device's camera. */
-  cctvUrl?: string;
   onExit(): void;
   onUnpaired(): void;
 }) {
@@ -151,16 +148,14 @@ export function WatchView({
     setStats(null);
     setRecent([]);
     (async () => {
-      const [{ cameraSource, go2rtcSource }, { Watcher }] = await Promise.all([
+      const [{ cameraSource }, { Watcher }] = await Promise.all([
         import("@/detection/runtime/video-source"),
         import("@/detection/runtime/watcher"),
       ]);
       // React may cancel this run right away (development double effects); never share the <video>.
       if (cancelled) return;
       try {
-        source = cctvUrl
-          ? await go2rtcSource(video, cctvUrl)
-          : await cameraSource(video, acquisition.signal);
+        source = await cameraSource(video, acquisition.signal);
       } catch (error) {
         console.error("camera failed", error);
         if (!cancelled) setPhase("error-camera");
@@ -259,7 +254,7 @@ export function WatchView({
       watcherRef.current = null;
       source?.stop();
     };
-  }, [attempt, outbox, cctvUrl, resumer]);
+  }, [attempt, outbox, resumer]);
 
   // Heartbeats keep the camera online and bring the guardian's latest settings.
   useEffect(() => {

@@ -41,13 +41,12 @@ export default async function Page() {
           steps: steps.map((key) => t(`cameraGuide.ip.${key}`)),
           limit: t("cameraGuide.ip.limit"),
           links: [
-            { href: "https://go2rtc.org/", label: t("cameraGuide.ip.relayDocs") },
             {
-              href: "https://www.tp-link.com/us/support/faq/2680/",
+              href: "https://www.tp-link.com/us/support/faq/4627/",
               label: t("cameraGuide.ip.vendorDocs"),
             },
             {
-              href: "https://www.tp-link.com/us/support/faq/4465/",
+              href: "https://static.tp-link.com/upload/firmware/2025/202510/20251021/Release%20Note%20VIGI%20C540(UN)%202.0_2.2.0%20Build%20250904.pdf",
               label: t("cameraGuide.ip.vendorModels"),
             },
           ],

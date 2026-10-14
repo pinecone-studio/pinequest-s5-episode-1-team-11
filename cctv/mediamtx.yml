@@ -1,0 +1,38 @@
+# Halo CCTV ingest (MediaMTX). Cameras push RTMP; the worker on the same server reads it over RTSP.
+# setup.sh replaces each placeholder password below with a fresh one. One camera user per camera, limited to its own path.
+
+logLevel: info
+
+rtmp: true
+rtmpAddress: :1935
+rtsp: true
+rtspAddress: :8554
+rtspTransports: [tcp]
+
+# Not used by Halo.
+hls: false
+webrtc: false
+srt: false
+moq: false
+api: false
+metrics: false
+pprof: false
+playback: false
+
+authMethod: internal
+authInternalUsers:
+  # A camera publishes with the stream key "<path>?user=<user>&pass=<pass>",
+  # e.g. server rtmp://HOST:1935/live, key cam1?user=cam1&pass=PASSWORD.
+  - user: cam1
+    pass: CHANGE_ME_CAM1
+    permissions:
+      - action: publish
+        path: live/cam1
+  # The worker reads every camera: rtsp://worker:PASS@127.0.0.1:8554/live/cam1
+  - user: worker
+    pass: CHANGE_ME_WORKER
+    permissions:
+      - action: read
+
+paths:
+  all_others:
