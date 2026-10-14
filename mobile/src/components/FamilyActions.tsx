@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Share, Text, TextInput, View } from "react-native";
-import { registerForPush, type PushState } from "../lib/push";
+import { registerForPush, unregisterPush, type PushState } from "../lib/push";
 import { supabase } from "../lib/supabase";
-import { useData } from "../providers/HouseholdProvider";
+import { useData, useHomes } from "../providers/HouseholdProvider";
 import { Button, Card, colors, Problem, styles } from "./ui";
 
-const SITE = process.env.EXPO_PUBLIC_SITE_URL ?? "https://halo-team11.vercel.app";
+const SITE =
+  process.env.EXPO_PUBLIC_SITE_URL ?? "https://halo-team11.vercel.app";
 const pushText: Record<PushState, string> = {
   on: "Энэ утсанд дохио ирнэ.",
-  denied: "Мэдэгдлийн зөвшөөрөл хаалттай. Утасны тохиргооноос Halo-д зөвшөөрөл өгнө үү.",
+  denied:
+    "Мэдэгдлийн зөвшөөрөл хаалттай. Утасны тохиргооноос Halo-д зөвшөөрөл өгнө үү.",
   unsupported: "Энэ төхөөрөмж эсвэл build push дэмжихгүй (Expo Go, simulator).",
   error: "Бүртгэж чадсангүй. Дахин оролдоно уу.",
 };
@@ -20,7 +22,9 @@ export function NotificationsCard() {
     <Card>
       <Text style={styles.heading}>Мэдэгдэл</Text>
       <Text style={styles.muted}>
-        {state ? pushText[state] : "Уналт, дуу илэрвэл энэ утсанд шууд дохио ирнэ."}
+        {state
+          ? pushText[state]
+          : "Уналт, дуу илэрвэл энэ утсанд шууд дохио ирнэ."}
       </Text>
       <Button
         title={state === "on" ? "Дахин шалгах" : "Мэдэгдэл асаах"}
@@ -43,7 +47,9 @@ export function AddCamera() {
   const [name, setName] = useState("IP камер");
   const [room, setRoom] = useState("");
   const [busy, setBusy] = useState(false);
-  const [code, setCode] = useState<{ code: string; expires_at: string } | null>(null);
+  const [code, setCode] = useState<{ code: string; expires_at: string } | null>(
+    null,
+  );
   const [error, setError] = useState("");
   async function create() {
     setBusy(true);
@@ -146,4 +152,131 @@ export function InviteCard() {
       {error ? <Problem text={error} /> : null}
     </Card>
   );
+}
+
+/** After sign-up: the new user starts their own family and becomes its owner. */
+export function CreateHousehold() {
+  const homes = useHomes();
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function create() {
+    setBusy(true);
+    setError("");
+    const { error: failed } = await supabase.rpc("create_household", {
+      p_name: name.trim(),
+    });
+    setBusy(false);
+    if (failed) return setError("Гэр бүл үүсгэж чадсангүй.");
+    homes.retry();
+  }
+  return (
+    <Card>
+      <Text style={styles.heading}>Гэр бүл үүсгэх</Text>
+      <Text style={styles.muted}>
+        Та гэр бүлийн эзэн болж камер нэмнэ. Өөр гэр бүлд нэгдэх бол эзнээс
+        урилга авна уу.
+      </Text>
+      <TextInput
+        accessibilityLabel="Гэр бүлийн нэр"
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+        placeholder="Жишээ нь: Бат-Эрдэнийн гэр"
+        placeholderTextColor={colors.muted}
+        maxLength={60}
+      />
+      <Button
+        title="Үүсгэх"
+        busy={busy}
+        disabled={!name.trim()}
+        onPress={() => void create()}
+      />
+      {error ? <Problem text={error} /> : null}
+    </Card>
+  );
+}
+
+const CONFIRM = "УСТГАХ";
+
+/**
+ * Same order as the web: a sole owner revokes cameras and removes snapshots first; an owner with
+ * caregivers must hand the family over on the web before leaving.
+ */
+export function DeleteAccount() {
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function remove() {
+    setBusy(true);
+    setError("");
+    const failed = await deleteAccount();
+    setBusy(false);
+    if (failed) setError(failed);
+  }
+  return (
+    <Card>
+      <Text style={styles.heading}>Бүртгэл устгах</Text>
+      <Text style={styles.muted}>
+        Буцаах боломжгүй. Та ганцаараа эзэн бол гэр бүл, камер, зургууд бүгд
+        устна. Баталгаажуулахын тулд {CONFIRM} гэж бичнэ үү.
+      </Text>
+      <TextInput
+        accessibilityLabel="Баталгаажуулах үг"
+        style={styles.input}
+        value={typed}
+        onChangeText={setTyped}
+        autoCapitalize="characters"
+        placeholder={CONFIRM}
+        placeholderTextColor={colors.muted}
+      />
+      <Button
+        title="Бүртгэлээ устгах"
+        secondary
+        busy={busy}
+        disabled={typed.trim() !== CONFIRM}
+        onPress={() => void remove()}
+      />
+      {error ? <Problem text={error} /> : null}
+    </Card>
+  );
+}
+
+async function deleteAccount(): Promise<string | null> {
+  const ownerFirst =
+    "Эхлээд гэр бүлийн эзний эрхийг өөр асран хамгаалагчид web-ээс шилжүүлнэ үү.";
+  const cleanup = await supabase.rpc("begin_account_cleanup");
+  if (cleanup.error) {
+    if (cleanup.error.message.includes("Transfer household ownership"))
+      return ownerFirst;
+    if (!cleanup.error.message.includes("Owner access required"))
+      return "Устгаж чадсангүй.";
+  } else if (cleanup.data) {
+    if (!(await removeSnapshots(cleanup.data)))
+      return "Зургуудыг устгаж чадсангүй. Дахин оролдоно уу.";
+    if ((await supabase.rpc("finish_account_cleanup")).error)
+      return "Устгаж чадсангүй.";
+  }
+  await unregisterPush().catch(() => undefined);
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error)
+    return error.message.includes("Transfer household ownership")
+      ? ownerFirst
+      : "Устгаж чадсангүй.";
+  await supabase.auth.signOut({ scope: "local" });
+  return null;
+}
+
+async function removeSnapshots(householdId: string) {
+  const bucket = supabase.storage.from("event-snapshots");
+  for (let round = 0; round < 50; round++) {
+    const { data, error } = await bucket.list(householdId, { limit: 100 });
+    if (error) return false;
+    if (!data.length) return true;
+    const removed = await bucket.remove(
+      data.map((file) => `${householdId}/${file.name}`),
+    );
+    if (removed.error) return false;
+  }
+  return false;
 }

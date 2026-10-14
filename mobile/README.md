@@ -23,7 +23,9 @@ repo/
         │   │   ├── index.tsx
         │   │   ├── events.tsx
         │   │   └── family.tsx
-        │   └── events/
+        │   ├── events/
+        │   │   └── [id].tsx
+        │   └── devices/
         │       └── [id].tsx
         ├── components/
         │   ├── ui.tsx
@@ -52,7 +54,8 @@ repo/
 | Нүүр | `src/app/(tabs)/index.tsx` |
 | Үйл явдал | `src/app/(tabs)/events.tsx` |
 | Дэлгэрэнгүй | `src/app/events/[id].tsx` |
-| Гэр бүл, тохиргоо | `src/app/(tabs)/family.tsx` |
+| Гэр бүл, тохиргоо, бүртгэл устгах | `src/app/(tabs)/family.tsx` |
+| Төхөөрөмж засах, устгах, detection | `src/app/devices/[id].tsx` |
 | Улаан alert | `src/components/CriticalAlert.tsx` |
 
 ## 1. Expo үүсгэх

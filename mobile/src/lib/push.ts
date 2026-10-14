@@ -35,14 +35,20 @@ export async function registerForPush(): Promise<PushState> {
     });
   }
   let { status } = await Notifications.getPermissionsAsync();
-  if (status !== "granted") ({ status } = await Notifications.requestPermissionsAsync());
+  if (status !== "granted")
+    ({ status } = await Notifications.requestPermissionsAsync());
   if (status !== "granted") return "denied";
   const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    Constants.easConfig?.projectId;
   if (!projectId) return "unsupported";
   try {
-    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-    const { error } = await supabase.rpc("register_expo_push_token", { p_token: token });
+    const { data: token } = await Notifications.getExpoPushTokenAsync({
+      projectId,
+    });
+    const { error } = await supabase.rpc("register_expo_push_token", {
+      p_token: token,
+    });
     if (error) return "error";
     await AsyncStorage.setItem(TOKEN_KEY, token);
     return "on";
@@ -59,7 +65,9 @@ export async function unregisterPush() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
 
-export function eventIdOf(response: Notifications.NotificationResponse | null | undefined) {
+export function eventIdOf(
+  response: Notifications.NotificationResponse | null | undefined,
+) {
   const id = response?.notification.request.content.data?.eventId;
   return typeof id === "string" ? id : null;
 }
