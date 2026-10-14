@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share, Text, TextInput, View } from "react-native";
+import { Linking, Share, Text, TextInput, View } from "react-native";
 import { registerForPush, unregisterPush, type PushState } from "../lib/push";
 import { SITE, supabase } from "../lib/supabase";
 import { useData, useHomes } from "../providers/HouseholdProvider";
@@ -325,6 +325,24 @@ export function JoinFamily() {
         onPress={() => void join()}
       />
       {error ? <Problem text={error} /> : null}
+    </Card>
+  );
+}
+
+/** The camera mode is the web's /monitor page (on-device AI in the browser), opened as is. */
+export function CameraModeCard() {
+  return (
+    <Card>
+      <Text style={styles.heading}>Энэ утсыг камер болгох</Text>
+      <Text style={styles.muted}>
+        Камерын горим browser дээр ажиллана. Нээгээд «Камер нэмэх» кодоо
+        оруулна.
+      </Text>
+      <Button
+        title="Камерын горим нээх"
+        secondary
+        onPress={() => void Linking.openURL(`${SITE}/monitor`)}
+      />
     </Card>
   );
 }

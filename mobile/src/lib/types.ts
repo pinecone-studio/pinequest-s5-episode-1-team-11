@@ -79,6 +79,14 @@ export type Database = {
       };
       create_household: { Args: { p_name: string }; Returns: string };
       accept_invite: { Args: { p_code: string }; Returns: string };
+      create_reconnect_pairing: {
+        Args: { p_device_id: string };
+        Returns: {
+          code: string;
+          expires_at: string;
+          device_id: string | null;
+        }[];
+      };
       transfer_household_ownership: {
         Args: { p_new_owner: string };
         Returns: string;

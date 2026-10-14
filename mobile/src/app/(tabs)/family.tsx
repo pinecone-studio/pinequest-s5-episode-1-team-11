@@ -21,6 +21,7 @@ import {
   DeleteAccount,
   InviteCard,
   JoinFamily,
+  CameraModeCard,
   NotificationsCard,
 } from "../../components/FamilyActions";
 import { WatchedPeople } from "../../components/WatchedPeople";
@@ -192,6 +193,7 @@ export default function FamilyScreen() {
               </Text>
             )}
             {owner && <AddCamera />}
+            <CameraModeCard />
           </>
         ) : (
           <>

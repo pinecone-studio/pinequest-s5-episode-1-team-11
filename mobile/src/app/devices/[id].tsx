@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { supabase } from "../../lib/supabase";
+import { SITE, supabase } from "../../lib/supabase";
 import type { DetectionSettings } from "../../lib/types";
 import { useData } from "../../providers/HouseholdProvider";
 import {
@@ -64,6 +72,25 @@ export default function DeviceScreen() {
     if (failed || !row) return setError("Хадгалж чадсангүй.");
     void data.refresh();
     router.back();
+  }
+
+  /** Same as the web: a link that brings this camera back on a phone with its history. */
+  async function reconnect() {
+    const { data: rows, error: failed } = await supabase.rpc(
+      "create_reconnect_pairing",
+      { p_device_id: id },
+    );
+    const code = rows?.[0]?.code;
+    if (failed || !code) return setError("Код үүсгэж чадсангүй.");
+    const url = `${SITE}/monitor?code=${code}&reconnect=1`;
+    Alert.alert(
+      "Дахин холбох код",
+      `${code}\n\nКамер болох утсанд энэ холбоосыг нээнэ:\n${url}`,
+      [
+        { text: "Хаах", style: "cancel" },
+        { text: "Энэ утсанд нээх", onPress: () => void Linking.openURL(url) },
+      ],
+    );
   }
 
   function remove() {
@@ -151,6 +178,11 @@ export default function DeviceScreen() {
           busy={busy}
           disabled={!form.name.trim() || !form.room.trim()}
           onPress={() => void save()}
+        />
+        <Button
+          title="Утсаар дахин холбох код"
+          secondary
+          onPress={() => void reconnect()}
         />
         <Button title="Төхөөрөмж устгах" secondary onPress={remove} />
       </ScrollView>
