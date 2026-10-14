@@ -241,7 +241,7 @@ function NameEditor({
         }}
         placeholder={label}
         placeholderTextColor={colors.muted}
-        maxLength={80}
+        maxLength={60}
         editable={!busy}
       />
       <Button
@@ -338,7 +338,7 @@ function MemberList({
           <View style={styles.row}>
             <Ionicons name="person-outline" size={22} color={colors.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.text}>ы
+              <Text style={styles.text}>
                 {member.user_id === userId
                   ? ownName || "Би"
                   : member.name || "Асран хамгаалагч"}
