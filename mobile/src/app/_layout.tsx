@@ -19,6 +19,7 @@ function Routes({ authenticated }: { authenticated: boolean }) {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="events/[id]" />
         <Stack.Screen name="devices/[id]" />
+        <Stack.Screen name="live/[id]" />
       </Stack.Protected>
     </Stack>
   );

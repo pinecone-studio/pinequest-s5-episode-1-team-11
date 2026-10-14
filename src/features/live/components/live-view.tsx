@@ -16,13 +16,25 @@ import { cn } from "@/lib/cn";
 import { createClient } from "@/lib/supabase/client";
 import { openLiveView } from "../actions";
 import { ICE_SERVERS, isLiveSignal, LIVE_EVENT, type LiveSignal } from "../protocol";
+import { playWhep } from "../whep";
 
 type State = "idle" | "connecting" | "live" | "blocked" | "busy" | "timeout" | "ended" | "failed";
 const HELLO_EVERY_MS = 3000;
 const GIVE_UP_MS = 20_000;
 
-/** "Watch now": opens a direct video connection to one camera, only while this panel is open. */
-export function LiveView({ deviceId, online }: { deviceId: string; online: boolean }) {
+/**
+ * "Watch now": opens a direct video connection to one camera, only while this panel is open.
+ * A phone camera answers over a broadcast channel; a CCTV camera streams from the camera server.
+ */
+export function LiveView({
+  deviceId,
+  online,
+  cctv = false,
+}: {
+  deviceId: string;
+  online: boolean;
+  cctv?: boolean;
+}) {
   const t = useTranslations("live");
   const videoRef = useRef<HTMLVideoElement>(null);
   const stopRef = useRef<(() => void) | null>(null);
@@ -31,9 +43,44 @@ export function LiveView({ deviceId, online }: { deviceId: string; online: boole
 
   useEffect(() => () => stopRef.current?.(), []);
 
+  function show(stream: MediaStream) {
+    const video = videoRef.current;
+    if (video && video.srcObject !== stream) {
+      video.srcObject = stream;
+      void video.play().catch(() => undefined);
+    }
+    setState("live");
+  }
+
+  async function startCctv() {
+    const response = await fetch(`/api/v1/app/devices/${deviceId}/stream`, {
+      method: "POST",
+    }).catch(() => null);
+    const access = response?.ok
+      ? ((await response.json()) as { whep: string; token: string })
+      : null;
+    if (!access) return setState("failed");
+    const ended = (next: State) => {
+      const video = videoRef.current;
+      if (video) video.srcObject = null;
+      stopRef.current = null;
+      setState(next);
+    };
+    try {
+      const stop = await playWhep(access.whep, access.token, show, ended);
+      stopRef.current = () => {
+        stop();
+        ended("idle");
+      };
+    } catch {
+      ended("failed");
+    }
+  }
+
   async function start() {
     stopRef.current?.();
     setState("connecting");
+    if (cctv) return startCctv();
     const access = await openLiveView(deviceId);
     const client = createClient();
     if (!access.ok || !client) return setState("failed");
@@ -193,7 +240,9 @@ export function LiveView({ deviceId, online }: { deviceId: string; online: boole
             <VideoCameraIcon aria-hidden="true" />
             {t("watch")}
           </Button>
-          <p className="text-sm text-muted-foreground">{online ? t("hint") : t("offline")}</p>
+          <p className="text-sm text-muted-foreground">
+            {online ? t(cctv ? "hintCctv" : "hint") : t("offline")}
+          </p>
           {message && (
             <p className="text-sm font-bold text-warning-text" role="status">
               {message}

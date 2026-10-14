@@ -28,7 +28,12 @@ const toggles = [
   ["hazard", "Шил хагарах, галын дохио"],
 ] as const;
 
-type Form = { name: string; room: string; settings: DetectionSettings };
+type Form = {
+  name: string;
+  room: string;
+  kind: string;
+  settings: DetectionSettings;
+};
 
 export default function DeviceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,7 +45,7 @@ export default function DeviceScreen() {
   useEffect(() => {
     void supabase
       .from("devices")
-      .select("name, room_name, settings")
+      .select("name, room_name, kind, settings")
       .eq("id", id)
       .maybeSingle()
       .then(({ data: row, error: failed }) => {
@@ -48,6 +53,7 @@ export default function DeviceScreen() {
         setForm({
           name: row.name,
           room: row.room_name ?? "",
+          kind: row.kind,
           settings: row.settings,
         });
       });
@@ -140,6 +146,12 @@ export default function DeviceScreen() {
       >
         <Button title="Буцах" textOnly onPress={() => router.back()} />
         <Text style={styles.title}>{form.name}</Text>
+        {form.kind === "ip_camera" && (
+          <Button
+            title="Live харах"
+            onPress={() => router.push(`/live/${id}`)}
+          />
+        )}
         <Card>
           <Text style={styles.muted}>Нэр</Text>
           <TextInput

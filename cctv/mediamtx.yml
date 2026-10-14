@@ -1,38 +1,36 @@
-# Halo CCTV ingest (MediaMTX). Cameras push RTMP; the worker on the same server reads it over RTSP.
-# setup.sh replaces each placeholder password below with a fresh one. One camera user per camera, limited to its own path.
+# Halo CCTV ingest (MediaMTX). Cameras push RTMP; the worker on the same server reads it over RTSP;
+# family members watch live over WebRTC (WHEP) through Caddy's HTTPS.
+# Every request is checked by stream_auth.py (cameras, the worker, signed viewer tokens).
 
 logLevel: info
+
+authMethod: http
+authHTTPAddress: http://127.0.0.1:9995/auth
 
 rtmp: true
 rtmpAddress: :1935
 rtsp: true
-rtspAddress: :8554
+rtspAddress: 127.0.0.1:8554
 rtspTransports: [tcp]
+
+webrtc: true
+# Signaling stays behind Caddy (HTTPS); media goes straight to these ports.
+webrtcAddress: 127.0.0.1:8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcIPsFromInterfaces: false
+# setup.sh sets the public IP: MTX_WEBRTCADDITIONALHOSTS.
+webrtcAdditionalHosts: []
+webrtcTrustedProxies: [127.0.0.1]
 
 # Not used by Halo.
 hls: false
-webrtc: false
 srt: false
 moq: false
 api: false
 metrics: false
 pprof: false
 playback: false
-
-authMethod: internal
-authInternalUsers:
-  # A camera publishes with the stream key "<path>?user=<user>&pass=<pass>",
-  # e.g. server rtmp://HOST:1935/live, key cam1?user=cam1&pass=PASSWORD.
-  - user: cam1
-    pass: CHANGE_ME_CAM1
-    permissions:
-      - action: publish
-        path: live/cam1
-  # The worker reads every camera: rtsp://worker:PASS@127.0.0.1:8554/live/cam1
-  - user: worker
-    pass: CHANGE_ME_WORKER
-    permissions:
-      - action: read
 
 paths:
   all_others:
