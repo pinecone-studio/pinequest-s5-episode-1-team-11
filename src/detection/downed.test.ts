@@ -45,6 +45,18 @@ describe("downed person backup", () => {
     expect(run([...stand(0, 1000), ...boxes(70_000, 76_000, () => onFloor)])).toEqual([]);
   });
 
+  it("reports a still lying shape with no one seen standing, only after 10 s", () => {
+    const signals = run(boxes(0, 11_000, () => onFloor));
+    expect(signals).toHaveLength(1);
+    expect(signals[0].time - signals[0].onset).toBeGreaterThanOrEqual(10_000);
+    expect(signals[0].confidence).toBe(0.5);
+    // Without a standing height, an upright box (a chair) is never taken as down.
+    expect(run(boxes(0, 15_000, () => onChair))).toEqual([]);
+    // Nor is someone already sitting with the legs stretched out, about as wide as tall.
+    const legsOut: PersonBox = { x: 0.3, y: 0.45, width: 0.4, height: 0.3, score: 0.7 };
+    expect(run(boxes(0, 15_000, () => legsOut))).toEqual([]);
+  });
+
   it("waits while the box keeps moving (crawling, playing on the floor)", () => {
     const moving = (time: number) => ({ ...onFloor, x: 0.05 + ((time / 100) % 2) * 0.2 });
     expect(run([...stand(0, 2000), ...boxes(2100, 8000, moving)])).toEqual([]);

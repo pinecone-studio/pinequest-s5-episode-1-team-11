@@ -12,10 +12,17 @@ import { type Palette, paletteSwatches, palettes } from "./palettes";
 
 const subscribeToMount = () => () => {};
 
+/** Cross-fades a theme change where the browser can; otherwise (or with reduced motion) it snaps. */
+function withTransition(change: () => void) {
+  if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches)
+    return change();
+  document.startViewTransition(change);
+}
+
 /** Систем / Харанхуй / Цайвар. */
 export function ModeSelect() {
   const t = useTranslations("common.theme");
-  const { theme = "dark", setTheme } = useTheme();
+  const { theme = "light", setTheme } = useTheme();
   // localStorage is only available in the browser. Hydrate with the same server value first.
   const mounted = useSyncExternalStore(
     subscribeToMount,
@@ -27,8 +34,8 @@ export function ModeSelect() {
     <SegmentedControl
       label={t("mode")}
       options={options}
-      value={mounted ? (theme as "system" | "dark" | "light") : "dark"}
-      onValueChange={setTheme}
+      value={mounted ? (theme as "system" | "dark" | "light") : "light"}
+      onValueChange={(next) => withTransition(() => setTheme(next))}
     />
   );
 }
@@ -59,7 +66,9 @@ export function PaletteSelect({ value }: { value: Palette }) {
               className="sr-only"
               onChange={() =>
                 start(async () => {
-                  document.documentElement.dataset.palette = p;
+                  withTransition(() => {
+                    document.documentElement.dataset.palette = p;
+                  });
                   await setPalette(p);
                   router.refresh();
                 })

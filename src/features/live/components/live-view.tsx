@@ -7,7 +7,6 @@ import {
   VideoCameraIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,12 +14,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/cn";
 import { createClient } from "@/lib/supabase/client";
 import { openLiveView } from "../actions";
-import { ICE_SERVERS, isLiveSignal, LIVE_EVENT, type LiveSignal } from "../protocol";
+import { watchPhone } from "../phone-view";
 import { playWhep } from "../whep";
 
 type State = "idle" | "connecting" | "live" | "blocked" | "busy" | "timeout" | "ended" | "failed";
-const HELLO_EVERY_MS = 3000;
-const GIVE_UP_MS = 20_000;
 
 /**
  * "Watch now": opens a direct video connection to one camera, only while this panel is open.
@@ -84,82 +81,23 @@ export function LiveView({
     const access = await openLiveView(deviceId);
     const client = createClient();
     if (!access.ok || !client) return setState("failed");
-
-    const viewer = crypto.randomUUID();
-    let connection: RTCPeerConnection | null = null;
-    let channel: RealtimeChannel | null = null;
-    let answered = false;
-    const pending: RTCIceCandidateInit[] = [];
-    const send = (signal: LiveSignal) =>
-      void channel?.send({ type: "broadcast", event: LIVE_EVENT, payload: signal });
-
-    const hello = setInterval(() => {
-      if (!answered) send({ kind: "hello", viewer });
-    }, HELLO_EVERY_MS);
-    const giveUp = setTimeout(() => {
-      if (!answered) finish("timeout", true);
-    }, GIVE_UP_MS);
-
-    function finish(next: State, notify: boolean) {
-      clearInterval(hello);
-      clearTimeout(giveUp);
-      if (notify) send({ kind: "bye", viewer, from: "viewer" });
-      connection?.close();
-      connection = null;
-      if (channel) void channel.unsubscribe();
-      channel = null;
-      const video = videoRef.current;
-      if (video) video.srcObject = null;
-      stopRef.current = null;
-      setState(next);
-    }
-    stopRef.current = () => finish("idle", true);
-
-    async function receive(signal: LiveSignal) {
-      if (signal.viewer !== viewer) return;
-      if (signal.kind === "busy") return finish("busy", false);
-      if (signal.kind === "bye" && signal.from === "camera") return finish("ended", false);
-      if (signal.kind === "blocked") return setState(signal.blocked ? "blocked" : "live");
-      if (signal.kind === "offer") {
-        answered = true;
-        connection?.close();
-        const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-        connection = peer;
-        peer.ontrack = ({ streams }) => {
-          const video = videoRef.current;
-          if (video && streams[0] && video.srcObject !== streams[0]) {
-            video.srcObject = streams[0];
-            void video.play().catch(() => undefined);
-          }
-          setState((current) => (current === "blocked" ? current : "live"));
-        };
-        peer.onicecandidate = ({ candidate }) => {
-          if (candidate)
-            send({ kind: "ice", viewer, from: "viewer", candidate: candidate.toJSON() });
-        };
-        peer.onconnectionstatechange = () => {
-          if (peer.connectionState === "failed") finish("failed", true);
-        };
-        await peer.setRemoteDescription({ type: "offer", sdp: signal.sdp });
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        send({ kind: "answer", viewer, sdp: answer.sdp ?? "" });
-        for (const candidate of pending.splice(0)) await peer.addIceCandidate(candidate);
-      } else if (signal.kind === "ice" && signal.from === "camera") {
-        if (connection?.remoteDescription) await connection.addIceCandidate(signal.candidate);
-        else pending.push(signal.candidate);
-      }
-    }
-
-    channel = client
-      .channel(access.channel, { config: { broadcast: { self: false } } })
-      .on("broadcast", { event: LIVE_EVENT }, ({ payload }) => {
-        if (isLiveSignal(payload)) void receive(payload).catch(() => finish("failed", true));
-      })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") send({ kind: "hello", viewer });
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") finish("failed", false);
-      });
+    stopRef.current = watchPhone(client, access.channel, {
+      stream: (stream) => {
+        const video = videoRef.current;
+        if (video && video.srcObject !== stream) {
+          video.srcObject = stream;
+          void video.play().catch(() => undefined);
+        }
+        setState((current) => (current === "blocked" ? current : "live"));
+      },
+      blocked: (blocked) => setState(blocked ? "blocked" : "live"),
+      end: (reason) => {
+        const video = videoRef.current;
+        if (video) video.srcObject = null;
+        stopRef.current = null;
+        setState(reason);
+      },
+    });
   }
 
   const open = state === "connecting" || state === "live" || state === "blocked";
@@ -177,7 +115,7 @@ export function LiveView({
   return (
     <section className="grid gap-3" aria-label={t("title")}>
       {open ? (
-        <div className="relative overflow-hidden rounded-xl border border-hairline bg-black">
+        <div className="relative animate-rise overflow-hidden rounded-xl border border-hairline bg-black">
           <video
             ref={videoRef}
             className="aspect-[3/4] max-h-[70vh] w-full object-contain sm:aspect-video"

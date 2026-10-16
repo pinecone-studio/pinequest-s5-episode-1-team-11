@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import type { DeviceKind } from "@/contracts";
 import { formatPairingCode } from "@/contracts";
+import type { ProvisionedCamera } from "@/features/live/server/stream";
 import { routes } from "@/lib/routes";
-import { createDevicePairing, getPairingStatus } from "../actions";
+import { addCctvCamera, createDevicePairing, getPairingStatus } from "../actions";
 import {
   type DeviceActionError,
   formatCountdown,
@@ -27,6 +28,7 @@ export function PairingPanel({ demo }: { demo: boolean }) {
   const [roomName, setRoomName] = useState("");
   const [kind, setKind] = useState<DeviceKind>("phone");
   const [pairing, setPairing] = useState<PairingDetails | null>(null);
+  const [cctv, setCctv] = useState<ProvisionedCamera | null>(null);
   const [phase, setPhase] = useState<"waiting" | "expired" | "paired">("waiting");
   const [deviceId, setDeviceId] = useState("");
   const [now, setNow] = useState(0);
@@ -80,6 +82,13 @@ export function PairingPanel({ demo }: { demo: boolean }) {
     setCopyMessage("");
     startTransition(async () => {
       try {
+        if (kind === "ip_camera") {
+          const camera = await addCctvCamera({ name, roomName, kind });
+          if (!camera.ok) return setError(camera.error);
+          setCctv(camera.data);
+          router.refresh();
+          return;
+        }
         const result = await createDevicePairing({ name, roomName, kind });
         if (!result.ok) return setError(result.error);
         setNow(Date.now());
@@ -91,10 +100,10 @@ export function PairingPanel({ demo }: { demo: boolean }) {
     });
   }
 
-  async function copy() {
-    if (!pairing) return;
+  async function copy(text = pairing?.monitorUrl) {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(pairing.monitorUrl);
+      await navigator.clipboard.writeText(text);
       setCopyMessage(t("pairing.copied"));
     } catch {
       setCopyMessage(t("pairing.copyFailed"));
@@ -110,7 +119,37 @@ export function PairingPanel({ demo }: { demo: boolean }) {
             {t("demoNotice")}
           </p>
         )}
-        {!pairing ? (
+        {cctv ? (
+          <div className="grid gap-5" role="status">
+            <div className="grid gap-2">
+              <h2 className="text-lg font-bold">{t("pairing.cctvTitle")}</h2>
+              <p className="text-base text-muted-foreground">{t("pairing.cctvBody")}</p>
+            </div>
+            {(
+              [
+                ["server", cctv.server],
+                ["streamKey", cctv.streamKey],
+              ] as const
+            ).map(([field, value]) => (
+              <div key={field} className="grid gap-2">
+                <span className="text-sm text-muted-foreground">{t(`pairing.${field}`)}</span>
+                <code className="break-all rounded-md bg-card p-3 font-mono text-sm">{value}</code>
+                <Button variant="secondary" onClick={() => copy(value)}>
+                  <CopyIcon aria-hidden="true" />
+                  {t("pairing.copyField", { field: t(`pairing.${field}`) })}
+                </Button>
+              </div>
+            ))}
+            {copyMessage && (
+              <p role="status" className="text-sm text-muted-foreground">
+                {copyMessage}
+              </p>
+            )}
+            <Button asChild block>
+              <Link href={routes.device(cctv.deviceId)}>{t("pairing.openDevice")}</Link>
+            </Button>
+          </div>
+        ) : !pairing ? (
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -217,15 +256,14 @@ export function PairingPanel({ demo }: { demo: boolean }) {
                   <Spinner />
                   {remaining > 0 ? t("pairing.waiting") : t("pairing.checking")}
                 </p>
-                <Button variant="secondary" block onClick={copy} disabled={!remaining}>
+                <Button variant="secondary" block onClick={() => copy()} disabled={!remaining}>
                   <CopyIcon aria-hidden="true" />
                   {t("pairing.copy")}
                 </Button>
                 {remaining > 0 && (
                   <a
-                    href={pairing.monitorUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    // Same-origin path, same tab: an installed PWA keeps it inside the app.
+                    href={pairing.monitorUrl.replace(/^https?:\/\/[^/]+/, "")}
                     className="flex min-h-11 items-center justify-center gap-2 text-base font-bold text-primary-text"
                   >
                     <LinkIcon aria-hidden="true" className="size-5" />

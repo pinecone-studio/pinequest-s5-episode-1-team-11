@@ -36,6 +36,26 @@ describe("fall detector", () => {
     expect(signals[0].confidence).toBeGreaterThan(0.7);
   });
 
+  it("reports someone already lying when watching starts, after a longer wait", () => {
+    const signals = run(timeline([{ hold: lying(), ms: 12_000 }]));
+    expect(signals).toHaveLength(1);
+    expect(signals[0].time - signals[0].onset).toBeGreaterThanOrEqual(10_000);
+    expect(signals[0].confidence).toBe(0.55);
+    // A short rest is not reported, and nor is someone still on their feet.
+    expect(run(timeline([{ hold: lying(), ms: 8000 }]))).toEqual([]);
+    expect(run(timeline([{ hold: standing(), ms: 12_000 }]))).toEqual([]);
+  });
+
+  it("does not report someone already reclined on a sofa with the legs out", () => {
+    // Trunk tilted back 55°, knees and feet stretched forward at hip height.
+    const reclined = leaning(0.58, 55).map((point, index) =>
+      index >= 25 && index <= 28
+        ? { ...point, x: 0.5 + (index <= 26 ? 0.15 : 0.3), y: 0.6 }
+        : point,
+    );
+    expect(run(timeline([{ hold: reclined, ms: 15_000 }]))).toEqual([]);
+  });
+
   it("reports lying down even slowly, and ignores sitting down and getting back up", () => {
     // Lying on the floor for a few seconds is reported however the person got there.
     expect(

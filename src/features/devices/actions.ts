@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { PairingCode, PairingCodeValue } from "@/contracts";
-import { wakeCamera } from "@/lib/device-api/wake";
+import { type ProvisionedCamera, pairCctv } from "@/features/live/server/stream";
 import { publicEnv } from "@/lib/env";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -63,6 +63,21 @@ export async function createDevicePairing(
   return { ok: true, data: await withQr(pairing.data) };
 }
 
+/** A CCTV camera is paired by the camera server; the answer is what to type into the camera. */
+export async function addCctvCamera(
+  input: unknown,
+): Promise<DeviceActionResult<ProvisionedCamera>> {
+  const parsed = NewDeviceInput.safeParse(input);
+  if (!parsed.success || parsed.data.kind !== "ip_camera") return { ok: false, error: "invalid" };
+  const access = await context();
+  if (!access.ok) return access;
+  const camera = await pairCctv(access.client, parsed.data.name, parsed.data.roomName);
+  if (typeof camera === "string")
+    return { ok: false, error: camera === "forbidden" ? "failed" : camera };
+  revalidatePath(routes.devices);
+  return { ok: true, data: camera };
+}
+
 /** The camera link and its QR. A reconnect link restores an existing camera on scan. */
 async function withQr(pairing: PairingCode, reconnect = false): Promise<PairingDetails> {
   const url = new URL(routes.monitor, publicEnv.siteUrl);
@@ -72,7 +87,7 @@ async function withQr(pairing: PairingCode, reconnect = false): Promise<PairingD
     type: "svg",
     width: 240,
     margin: 2,
-    color: { dark: "#173B2F", light: "#FFFFFF" },
+    color: { dark: "#0A1226", light: "#FFFFFF" },
   });
   return {
     ...pairing,
@@ -175,27 +190,4 @@ export async function deleteDevice(id: unknown): Promise<DeviceActionResult> {
   revalidatePath(routes.device(parsed.data));
   revalidatePath(routes.home);
   return { ok: true, data: undefined };
-}
-
-/** Sends a "reopen the camera" notification to an offline camera's own phone. */
-export async function wakeDevice(id: unknown): Promise<DeviceActionResult<"sent" | "unavailable">> {
-  const parsed = z.uuid().safeParse(id);
-  if (!parsed.success) return { ok: false, error: "invalid" };
-  const access = await context();
-  if (!access.ok) return access;
-  // RLS proves the device belongs to the caller's household before the server key is used.
-  const { data, error } = await access.client
-    .from("devices")
-    .select("id")
-    .eq("id", parsed.data)
-    .eq("household_id", access.householdId)
-    .maybeSingle();
-  if (error) return { ok: false, error: "failed" };
-  if (!data) return { ok: false, error: "notFound" };
-  try {
-    const result = await wakeCamera(data.id);
-    return result === "failed" ? { ok: false, error: "failed" } : { ok: true, data: result };
-  } catch {
-    return { ok: false, error: "failed" };
-  }
 }
