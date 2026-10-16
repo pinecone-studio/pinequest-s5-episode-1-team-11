@@ -26,7 +26,8 @@ export async function cameraSource(
       facingMode: "environment",
       width: { ideal: 640 },
       height: { ideal: 480 },
-      frameRate: { ideal: 15, max: 30 },
+      // 30 fps keeps live view smooth; detection still samples only 10 fps (watcher TARGET_FPS).
+      frameRate: { ideal: 30, max: 30 },
     },
     // Processing meant for calls removes exactly the sounds we listen for.
     audio: {

@@ -156,15 +156,6 @@ export type Database = {
       claim_push_deliveries: { Args: { p_limit?: number }; Returns: EventRow[] };
       complete_push_delivery: { Args: { p_event_id: string }; Returns: undefined };
       register_expo_push_token: { Args: { p_token: string }; Returns: undefined };
-      save_device_push: {
-        Args: { p_device_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
-        Returns: undefined;
-      };
-      claim_device_wake: {
-        Args: { p_device_id: string };
-        Returns: { endpoint: string; p256dh: string; auth: string }[];
-      };
-      forget_device_push: { Args: { p_device_id: string; p_endpoint: string }; Returns: undefined };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
