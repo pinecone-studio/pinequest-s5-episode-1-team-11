@@ -103,7 +103,19 @@ cp .env.example .env
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
+EXPO_PUBLIC_SITE_URL=https://halo-team11.vercel.app
+EXPO_PUBLIC_USE_RN_FETCH=1
 ```
+
+Expo SDK 57 нь native дээр `expo/fetch`-ийг default болгодог. iOS buffered response-ийн мэдэгдсэн доголдлыг тойрохын тулд `EXPO_PUBLIC_USE_RN_FETCH=1` ашиглаж React Native-ийн transport-ийг хадгална. [Expo fetch тохиргоо](https://docs.expo.dev/versions/v57.0.0/sdk/expo/#expofetch-api), [iOS buffered fetch issue](https://github.com/expo/expo/issues/50213). SDK-ийн native fetch засвар батлагдсаны дараа энэ тохиргоог дахин үнэлнэ.
+
+Web болон mobile нэг Supabase project-ийн URL, publishable key ашиглана. `EXPO_PUBLIC_SITE_URL` нь утаснаас нээгдэх deployed web URL байна; утсан дээр `localhost` ашиглахгүй. Env өөрчилсний дараа Expo-г `bunx expo start --clear`-ээр дахин асааж, app-аа reload хийнэ.
+
+Mobile нь email/password бүртгэл, нэвтрэлт дэмжинэ. Email баталгаажуулалт асаалттай бол холбоосоо нээсний дараа app руу буцаж нэвтэрнэ. Supabase **Authentication → URL Configuration → Redirect URLs** дотор `${EXPO_PUBLIC_SITE_URL}/login`-ийг зөвшөөрнө. Mobile-ийн confirmation холбоос web-ийн PKCE `/auth/callback` руу очихгүй.
+
+“Нууц үгээ мартсан” нь web-ийн `/forgot-password` хуудсыг нээнэ. Тэр браузертаа email хүсэлт илгээж, email-д ирсэн холбоосоо мөн тэр браузерт нээгээд нууц үгээ солино. Дараа нь app руу буцаж нэвтэрнэ.
+
+Email ирэхгүй бол Supabase-ийн email provider болон rate limit-ийг шалгана. [Default SMTP](https://supabase.com/docs/guides/auth/auth-smtp) нь зөвхөн project-ийн багийн хаягуудад email илгээдэг, цагт 2 email-ийн хязгаартай. Бусад хэрэглэгчид email илгээхэд custom SMTP тохируулна. Баталгаажаагүй account нэвтрэх үед app-аас confirmation email дахин хүсэж болно.
 
 ## 3. Ажиллуулах, шалгах
 

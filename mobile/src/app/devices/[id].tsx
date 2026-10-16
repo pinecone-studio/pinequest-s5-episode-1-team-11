@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Linking,
   ScrollView,
   Switch,
   Text,
@@ -11,10 +10,16 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { SITE, supabase } from "../../lib/supabase";
 import type { DetectionSettings } from "../../lib/types";
-import { useData } from "../../providers/HouseholdProvider";
+import { useData, useHomes } from "../../providers/HouseholdProvider";
+import { PairingWait, type Pairing } from "../../components/PairingWait";
+import { Rise } from "../../components/motion";
+import { dateLabel } from "../../lib/events";
 import {
+  BackBar,
   Button,
   Card,
+  DevicePill,
+  kindLabel,
   colors,
   Loading,
   Problem,
@@ -41,6 +46,10 @@ export default function DeviceScreen() {
   const [form, setForm] = useState<Form | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reconnect, setReconnect] = useState<Pairing | null>(null);
+  const [reconnected, setReconnected] = useState(false);
+  const device = data.devices.find((item) => item.id === id);
+  const { household } = useHomes();
 
   useEffect(() => {
     void supabase
@@ -80,23 +89,21 @@ export default function DeviceScreen() {
     router.back();
   }
 
-  /** Same as the web: a link that brings this camera back on a phone with its history. */
-  async function reconnect() {
+  /** Same as the web: a QR that brings this camera back on a phone with its history. */
+  async function startReconnect() {
+    setError("");
+    setReconnected(false);
     const { data: rows, error: failed } = await supabase.rpc(
       "create_reconnect_pairing",
       { p_device_id: id },
     );
-    const code = rows?.[0]?.code;
-    if (failed || !code) return setError("Код үүсгэж чадсангүй.");
-    const url = `${SITE}/monitor?code=${code}&reconnect=1`;
-    Alert.alert(
-      "Дахин холбох код",
-      `${code}\n\nКамер болох утсанд энэ холбоосыг нээнэ:\n${url}`,
-      [
-        { text: "Хаах", style: "cancel" },
-        { text: "Энэ утсанд нээх", onPress: () => void Linking.openURL(url) },
-      ],
-    );
+    const row = rows?.[0];
+    if (failed || !row) return setError("QR үүсгэж чадсангүй. Дахин оролдоно уу.");
+    setReconnect({
+      code: row.code,
+      link: `${SITE}/monitor?code=${row.code}&reconnect=1`,
+      expiresAt: row.expires_at,
+    });
   }
 
   function remove() {
@@ -144,13 +151,82 @@ export default function DeviceScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Button title="Буцах" textOnly onPress={() => router.back()} />
-        <Text style={styles.title}>{form.name}</Text>
-        {form.kind === "ip_camera" && (
-          <Button
-            title="Live харах"
-            onPress={() => router.push(`/live/${id}`)}
-          />
+        <BackBar title={form.name || "Төхөөрөмж"} />
+        {device && (
+          <Rise style={{ gap: 12 }}>
+            <Text style={styles.muted}>
+              {device.room_name || "Өрөө тодорхойгүй"} · {kindLabel[device.kind]}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <DevicePill device={device} />
+              <Text style={[styles.muted, { fontSize: 13 }]}>
+                Сүүлд холбогдсон ·{" "}
+                {device.last_seen_at ? dateLabel(device.last_seen_at) : "Одоогоор холбогдоогүй"}
+              </Text>
+            </View>
+          </Rise>
+        )}
+        {device?.status === "offline" && (
+          <Rise index={1} style={[styles.card, { borderColor: `${colors.warningButton}40` }]}>
+            <Text style={[styles.text, { color: colors.warning }]}>
+              Камераас дор хаяж 90 секунд холболтын дохио ирээгүй байна. Холболт тасарсан үед шинэ
+              анхааруулга илгээх боломжгүй.
+            </Text>
+            {device.kind !== "ip_camera" && (
+              <Text style={[styles.muted, { fontSize: 13 }]}>
+                Камерын утсаар доорх «QR-аар дахин холбох»-ыг уншуулахад өрөө, тохиргоо, түүхтэйгээ
+                сэргэнэ.
+              </Text>
+            )}
+          </Rise>
+        )}
+        {device && device.status !== "pairing" && (
+          <Rise index={2} style={{ gap: 8 }}>
+            <Button
+              title="Шууд харах"
+              disabled={device.status !== "online"}
+              onPress={() => router.push(`/live/${id}`)}
+            />
+            <Text style={[styles.muted, { fontSize: 13 }]}>
+              {device.status !== "online"
+                ? "Камер онлайн байх үед шууд харах боломжтой."
+                : device.kind === "ip_camera"
+                  ? "Камерын дүрс, дууг одоо харна. Бичлэг хадгалагдахгүй; 10 минутын дараа өөрөө хаагдана."
+                  : "Камерын дүрс, дууг одоо харна. Видео хадгалагдахгүй, камераас таны төхөөрөмж рүү шууд дамжина. Камерын дэлгэц дээр «харж байна» гэж гарна."}
+            </Text>
+          </Rise>
+        )}
+        {device && device.kind !== "ip_camera" && (
+          <Rise index={3} style={{ gap: 8 }}>
+            {reconnected ? (
+              <Text style={[styles.badge, { textAlign: "center" }]}>Камер дахин холбогдлоо</Text>
+            ) : reconnect && household ? (
+              <PairingWait
+                pairing={reconnect}
+                householdId={household.id}
+                title="QR-аар дахин холбох"
+                body="Камерын утсан дээр камераа нээж энэ QR-ыг уншуулна уу. Эсвэл камерын хуудсанд кодыг оруулна."
+                onPaired={() => {
+                  setReconnect(null);
+                  setReconnected(true);
+                  void data.refresh();
+                }}
+                again={() => void startReconnect()}
+              />
+            ) : (
+              <>
+                <Button
+                  title="QR-аар дахин холбох"
+                  secondary
+                  onPress={() => void startReconnect()}
+                />
+                <Text style={[styles.muted, { fontSize: 13 }]}>
+                  Камерын утсаараа QR-ыг уншуулахад энэ камер өрөө, тохиргоо, түүхтэйгээ сэргэж
+                  хяналт шууд эхэлнэ.
+                </Text>
+              </>
+            )}
+          </Rise>
         )}
         <Card>
           <Text style={styles.muted}>Нэр</Text>
@@ -179,7 +255,7 @@ export default function DeviceScreen() {
                 accessibilityLabel={label}
                 value={form.settings[key]}
                 onValueChange={(on) => set({ [key]: on })}
-                trackColor={{ true: colors.primary }}
+                trackColor={{ true: colors.primaryButton }}
               />
             </View>
           ))}
@@ -190,11 +266,6 @@ export default function DeviceScreen() {
           busy={busy}
           disabled={!form.name.trim() || !form.room.trim()}
           onPress={() => void save()}
-        />
-        <Button
-          title="Утсаар дахин холбох код"
-          secondary
-          onPress={() => void reconnect()}
         />
         <Button title="Төхөөрөмж устгах" secondary onPress={remove} />
       </ScrollView>

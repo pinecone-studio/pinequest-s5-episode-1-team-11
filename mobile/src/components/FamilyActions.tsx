@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Linking, Share, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { Share, Text, TextInput, View } from "react-native";
+import { router } from "expo-router";
 import { registerForPush, unregisterPush, type PushState } from "../lib/push";
 import { SITE, supabase } from "../lib/supabase";
-import { useData, useHomes } from "../providers/HouseholdProvider";
+import { useHomes } from "../providers/HouseholdProvider";
 import { Button, Card, colors, Problem, styles } from "./ui";
 
 const pushText: Record<PushState, string> = {
@@ -37,193 +38,6 @@ export function NotificationsCard() {
       />
     </Card>
   );
-}
-
-type Kind = "ip_camera" | "phone" | "laptop";
-const kinds: [Kind, string][] = [
-  ["ip_camera", "IP камер"],
-  ["phone", "Утас"],
-  ["laptop", "Laptop"],
-];
-type Added =
-  | { kind: "ip_camera"; server: string; streamKey: string }
-  | { kind: "phone" | "laptop"; code: string; link: string; expiresAt: string };
-
-/**
- * Owner only. An IP camera is paired by the camera server, which answers with what to type into
- * the camera; a phone or laptop opens the web camera mode with a six-digit code.
- */
-export function AddCamera() {
-  const data = useData();
-  const [kind, setKind] = useState<Kind>("ip_camera");
-  const [name, setName] = useState("");
-  const [room, setRoom] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [added, setAdded] = useState<Added | null>(null);
-  const [error, setError] = useState("");
-
-  async function create() {
-    setBusy(true);
-    setError("");
-    const result =
-      kind === "ip_camera"
-        ? await addCctv(name.trim(), room.trim())
-        : await addPhone(kind, name.trim(), room.trim());
-    setBusy(false);
-    if (typeof result === "string") return setError(result);
-    setAdded(result);
-    void data.refresh();
-  }
-
-  if (added)
-    return (
-      <Card>
-        <Text style={styles.heading}>Камер нэмэгдлээ</Text>
-        {added.kind === "ip_camera" ? (
-          <View style={{ gap: 8 }}>
-            <Text style={styles.muted}>
-              Камерын тохиргоонд (VIGI: Settings → Network Settings → Advanced →
-              RTMP) бичнэ:
-            </Text>
-            <Text style={styles.muted}>Server Address</Text>
-            <Text selectable style={styles.text}>
-              {added.server}
-            </Text>
-            <Text style={styles.muted}>Stream Key</Text>
-            <Text selectable style={styles.text}>
-              {added.streamKey}
-            </Text>
-            <Button
-              title="Тохиргоог илгээх"
-              secondary
-              onPress={() =>
-                void Share.share({
-                  message: `Server Address: ${added.server}\nStream Key: ${added.streamKey}`,
-                })
-              }
-            />
-          </View>
-        ) : (
-          <View style={{ gap: 8 }}>
-            <Text selectable style={[styles.title, { letterSpacing: 6 }]}>
-              {added.code}
-            </Text>
-            <Text style={styles.muted}>
-              Камер болох {added.kind === "phone" ? "утсанд" : "laptop-д"} энэ
-              холбоосыг нээнэ. Хүчинтэй:{" "}
-              {new Date(added.expiresAt).toLocaleTimeString("mn-MN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              хүртэл.
-            </Text>
-            <Text selectable style={styles.text}>
-              {added.link}
-            </Text>
-            <Button
-              title="Холбоос илгээх"
-              secondary
-              onPress={() => void Share.share({ message: added.link })}
-            />
-          </View>
-        )}
-        <Button title="Дахин нэмэх" secondary onPress={() => setAdded(null)} />
-      </Card>
-    );
-  return (
-    <Card>
-      <Text style={styles.heading}>Камер нэмэх</Text>
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        {kinds.map(([key, label]) => (
-          <View key={key} style={{ flex: 1 }}>
-            <Button
-              title={label}
-              secondary={kind !== key}
-              onPress={() => setKind(key)}
-            />
-          </View>
-        ))}
-      </View>
-      <TextInput
-        accessibilityLabel="Нэр"
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder={
-          kind === "ip_camera"
-            ? "Нэр (жишээ нь Зочны өрөөний камер)"
-            : "Нэр (жишээ нь Хуучин утас)"
-        }
-        placeholderTextColor={colors.muted}
-        maxLength={60}
-      />
-      <TextInput
-        accessibilityLabel="Өрөө"
-        style={styles.input}
-        value={room}
-        onChangeText={setRoom}
-        placeholder="Өрөө (жишээ нь Зочны өрөө)"
-        placeholderTextColor={colors.muted}
-        maxLength={60}
-      />
-      <Button
-        title="Нэмэх"
-        busy={busy}
-        disabled={!name.trim() || !room.trim()}
-        onPress={() => void create()}
-      />
-      {error ? <Problem text={error} /> : null}
-    </Card>
-  );
-}
-
-async function addCctv(
-  name: string,
-  roomName: string,
-): Promise<Added | string> {
-  const { data } = await supabase.auth.getSession();
-  const response = await fetch(`${SITE}/api/v1/app/cctv`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${data.session?.access_token ?? ""}`,
-    },
-    body: JSON.stringify({ name, roomName }),
-  }).catch(() => null);
-  if (!response) return "Холбогдож чадсангүй. Интернэтээ шалгана уу.";
-  if (response.status === 429)
-    return "Идэвхтэй код хэт олон байна. Хэдэн минутын дараа оролдоно уу.";
-  if (response.status === 403) return "Камерыг зөвхөн гэр бүлийн эзэн нэмнэ.";
-  if (!response.ok)
-    return "Камерын сервер хариу өгсөнгүй. Түр хүлээгээд дахин оролдоно уу.";
-  const camera = (await response.json()) as {
-    server: string;
-    streamKey: string;
-  };
-  return { kind: "ip_camera", ...camera };
-}
-
-async function addPhone(
-  kind: "phone" | "laptop",
-  name: string,
-  roomName: string,
-): Promise<Added | string> {
-  const { data: rows, error } = await supabase.rpc("create_pairing", {
-    p_name: name,
-    p_room_name: roomName,
-    p_kind: kind,
-  });
-  const row = rows?.[0];
-  if (error || !row)
-    return error?.message.includes("Too many active pairing codes")
-      ? "Идэвхтэй код хэт олон байна. Хэдэн минутын дараа оролдоно уу."
-      : "Код үүсгэж чадсангүй.";
-  return {
-    kind,
-    code: row.code,
-    link: `${SITE}/monitor?code=${row.code}`,
-    expiresAt: row.expires_at,
-  };
 }
 
 /** Owner only: shares a one-time link that adds a caregiver to the family. */
@@ -301,7 +115,7 @@ export function CreateHousehold() {
   );
 }
 
-const CONFIRM = "УСТГАХ";
+const CONFIRM = "DELETE";
 
 /**
  * Same order as the web: a sole owner revokes cameras and removes snapshots first; an owner with
@@ -435,20 +249,86 @@ export function JoinFamily() {
   );
 }
 
-/** The camera mode is the web's /monitor page (on-device AI in the browser), opened as is. */
+/** The camera mode is the web's /monitor page (on-device AI), shown inside the app. */
 export function CameraModeCard() {
   return (
     <Card>
       <Text style={styles.heading}>Энэ утсыг камер болгох</Text>
       <Text style={styles.muted}>
-        Камерын горим browser дээр ажиллана. Нээгээд «Камер нэмэх» кодоо
+        Камерын горимыг нээгээд «Камер нэмэх»-ийн зургаан оронтой кодыг
         оруулна.
       </Text>
       <Button
         title="Камерын горим нээх"
         secondary
-        onPress={() => void Linking.openURL(`${SITE}/monitor`)}
+        onPress={() => router.push("/monitor")}
       />
     </Card>
+  );
+}
+
+/** One name field with its own save, for the profile and the family. */
+export function NameEditor({
+  label,
+  initial,
+  save,
+}: {
+  label: string;
+  initial: string;
+  save: (name: string) => Promise<void>;
+}) {
+  const [value, setValue] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const lock = useRef(false);
+  async function submit() {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await save(value);
+      setValue(value.trim());
+      setMessage("Хадгалагдлаа");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Хадгалж чадсангүй.");
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <View style={{ gap: 10 }}>
+      <Text style={styles.muted}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        style={styles.input}
+        value={value}
+        onChangeText={(text) => {
+          setValue(text);
+          setMessage("");
+        }}
+        placeholder={label}
+        placeholderTextColor={colors.muted}
+        maxLength={60}
+        editable={!busy}
+      />
+      <Button
+        title="Хадгалах"
+        busy={busy}
+        disabled={!value.trim() || value.trim() === initial}
+        onPress={() => {
+          void submit();
+        }}
+      />
+      {message ? (
+        <Text accessibilityRole="alert" style={styles.badge}>
+          {message}
+        </Text>
+      ) : null}
+      {error ? <Problem text={error} /> : null}
+    </View>
   );
 }

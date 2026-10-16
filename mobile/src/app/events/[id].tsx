@@ -1,11 +1,7 @@
 import { useCallback, useState } from "react";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  Text,
-} from "react-native";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   dateLabel,
   getEvent,
@@ -16,11 +12,13 @@ import {
 import type { HaloEvent } from "../../lib/types";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
 import { Snapshot } from "../../components/Snapshot";
+import { confidenceLabel, severityTint } from "../../components/EventRow";
+import { Rise } from "../../components/motion";
 import {
-  Button,
-  Card,
+  BackBar,
   colors,
   EventActions,
+  fonts,
   Problem,
   Screen,
   styles,
@@ -69,10 +67,11 @@ export default function EventDetailScreen() {
   const event =
     events.find((e) => e.id === id && e.household_id === householdId) ??
     (saved?.id === id && saved.household_id === householdId ? saved : null);
+  const [tint, ink] = event ? severityTint[event.severity] : severityTint.info;
   return (
     <Screen>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: 40, gap: 16 }]}
         refreshControl={
           <RefreshControl
             refreshing={loading}
@@ -81,56 +80,78 @@ export default function EventDetailScreen() {
           />
         }
       >
-        <Button
-          title="Буцах"
-          secondary
-          onPress={() => {
-            if (router.canGoBack()) router.back();
-            else router.replace("/");
-          }}
-        />
-        {loading && <ActivityIndicator color={colors.primary} />}
-        {error && (
-          <Problem text={error} retry={() => setAttempt((n) => n + 1)} />
-        )}
+        <BackBar title={event ? kindLabel[event.kind] : "Дохио"} />
+        {error && <Problem text={error} retry={() => setAttempt((n) => n + 1)} />}
         {event && (
           <>
-            <Text style={styles.title}>{kindLabel[event.kind]}</Text>
-            <Text style={styles.muted}>
-              {[event.person_name, event.room_name]
-                .filter(Boolean)
-                .join(" · ") || "Байршил тодорхойгүй"}
-            </Text>
-            <Snapshot
-              key={`${event.id}:${event.snapshot_path}`}
-              path={event.snapshot_path}
-            />
-            <Card>
-              <Text style={styles.text}>
-                Илэрсэн: {dateLabel(event.occurred_at)}
-              </Text>
-              <Text style={styles.text}>
-                Түвшин: {severityLabel[event.severity]}
-              </Text>
-              <Text style={styles.text}>
-                Төлөв: {statusLabel[event.status]}
-              </Text>
-              {event.confidence != null && (
-                <Text style={styles.text}>
-                  Итгэлцүүр: {Math.round(event.confidence * 100)}%
-                </Text>
-              )}
-              {event.acknowledged_at && (
+            <Rise style={[styles.card, local.state]}>
+              <View style={[local.stateIcon, { backgroundColor: `${tint}2E` }]}>
+                <Ionicons
+                  name={event.status === "new" ? "alert-circle-outline" : "checkmark"}
+                  size={24}
+                  color={event.status === "new" ? ink : colors.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heading}>{statusLabel[event.status]}</Text>
                 <Text style={styles.muted}>
-                  Харсан: {dateLabel(event.acknowledged_at)}
+                  {event.acknowledged_at
+                    ? `Харсан: ${dateLabel(event.acknowledged_at)}`
+                    : `${severityLabel[event.severity]} · ${dateLabel(event.occurred_at)}`}
                 </Text>
-              )}
+              </View>
+            </Rise>
+            <Rise index={1}>
+              <Snapshot key={`${event.id}:${event.snapshot_path}`} path={event.snapshot_path} />
+            </Rise>
+            <Rise index={2} style={{ flexDirection: "row", gap: 8 }}>
+              {[
+                ["Итгэлцэл", confidenceLabel(event.confidence)],
+                ["Түвшин", severityLabel[event.severity]],
+                [
+                  "Цаг",
+                  new Date(event.occurred_at).toLocaleTimeString("mn-MN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                ],
+              ].map(([label, value]) => (
+                <View key={label} style={[styles.card, local.signal]}>
+                  <Text numberOfLines={1} style={local.signalLabel}>
+                    {label}
+                  </Text>
+                  <Text numberOfLines={1} style={local.signalValue}>
+                    {value}
+                  </Text>
+                </View>
+              ))}
+            </Rise>
+            <Rise index={3} style={{ gap: 4, paddingLeft: 4 }}>
+              <Text style={styles.muted}>
+                {[event.person_name, event.room_name].filter(Boolean).join(" · ") ||
+                  "Байршил тодорхойгүй"}
+              </Text>
               {event.note && <Text style={styles.muted}>{event.note}</Text>}
-            </Card>
-            <EventActions key={event.id} event={event} onUpdated={setSaved} />
+            </Rise>
+            <Rise index={4}>
+              <EventActions key={event.id} event={event} onUpdated={setSaved} />
+            </Rise>
           </>
         )}
       </ScrollView>
     </Screen>
   );
 }
+const local = StyleSheet.create({
+  state: { flexDirection: "row", alignItems: "center", gap: 12 },
+  stateIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signal: { flex: 1, padding: 12, borderRadius: 18, gap: 8, minWidth: 0 },
+  signalLabel: { color: colors.muted, fontFamily: fonts.bold, fontSize: 12 },
+  signalValue: { color: colors.text, fontFamily: fonts.display, fontSize: 18, lineHeight: 24 },
+});
