@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { respondToEvent } from "./actions";
+import { markEventsSeen, respondToEvent } from "./actions";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   requireUser: vi.fn(),
   revalidatePath: vi.fn(),
+  setCookie: vi.fn(),
 }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ set: mocks.setCookie }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/auth/session", () => ({ requireUser: mocks.requireUser }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
@@ -143,5 +145,15 @@ describe("event response authorization and persistence", () => {
     client({ error: true });
     expect(await respondToEvent({}, form())).toEqual({ error: "action.failed" });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("clears the nav badge from now on, by server time, without touching the alerts", async () => {
+    await markEventsSeen();
+    const [name, value, options] = mocks.setCookie.mock.calls[0];
+    expect(name).toBe("events_seen");
+    expect(Math.abs(Date.parse(value) - Date.now())).toBeLessThan(5000);
+    expect(options).toMatchObject({ path: "/", httpOnly: true, sameSite: "lax" });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 });

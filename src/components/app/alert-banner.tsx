@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { EventIcon } from "@/components/domain/event-icon";
 import type { EventKind, Severity } from "@/contracts";
+import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,23 +19,35 @@ type Incoming = {
 };
 
 const WARNING_MS = 10_000;
+const ALARM_EVERY_MS = 2_500;
+const ALARM_FOR_MS = 60_000;
 
-/** A short two-tone chime. Browsers may refuse sound before the first tap; that is fine. */
-function chime() {
+let audio: AudioContext | null = null;
+
+/** Browsers (iOS most strictly) only start sound from a tap, so every tap keeps the context awake. */
+function unlockAudio() {
   try {
-    const context = new AudioContext();
-    const gain = context.createGain();
-    gain.gain.value = 0.08;
-    gain.connect(context.destination);
-    [880, 660].forEach((frequency, index) => {
-      const tone = context.createOscillator();
-      tone.frequency.value = frequency;
-      tone.connect(gain);
-      tone.start(context.currentTime + index * 0.18);
-      tone.stop(context.currentTime + index * 0.18 + 0.16);
-    });
-    setTimeout(() => void context.close(), 800);
+    audio ??= new AudioContext();
+    if (audio.state !== "running") void audio.resume();
   } catch {}
+}
+
+function play(tones: number[], volume: number, type: OscillatorType) {
+  unlockAudio();
+  const context = audio;
+  if (!context) return;
+  const gain = context.createGain();
+  gain.gain.value = volume;
+  gain.connect(context.destination);
+  tones.forEach((frequency, index) => {
+    const tone = context.createOscillator();
+    tone.type = type;
+    tone.frequency.value = frequency;
+    tone.connect(gain);
+    const start = context.currentTime + index * 0.2;
+    tone.start(start);
+    tone.stop(start + 0.17);
+  });
 }
 
 /**
@@ -75,7 +88,6 @@ export function AlertBanner({ householdId }: { householdId: string }) {
             roomName: event.room_name,
           });
           navigator.vibrate?.(event.severity === "critical" ? [200, 80, 200, 80, 200] : [120]);
-          chime();
         },
       )
       .subscribe();
@@ -85,9 +97,33 @@ export function AlertBanner({ householdId }: { householdId: string }) {
   }, [householdId]);
 
   useEffect(() => {
-    if (!alert || alert.severity === "critical") return;
-    const timer = setTimeout(() => setAlert(null), WARNING_MS);
-    return () => clearTimeout(timer);
+    // Ringer-switch on iPhone mutes web audio unless the page asks for playback (Safari 17+).
+    const session = (navigator as { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = "playback";
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!alert) return;
+    if (alert.severity !== "critical") {
+      play([880, 660], 0.12, "sine");
+      const timer = setTimeout(() => setAlert(null), WARNING_MS);
+      return () => clearTimeout(timer);
+    }
+    // Critical rings until someone opens or closes the banner, capped so it never rings forever.
+    const alarm = () => play([988, 784, 988, 784], 0.18, "square");
+    alarm();
+    const repeat = setInterval(alarm, ALARM_EVERY_MS);
+    const stop = setTimeout(() => clearInterval(repeat), ALARM_FOR_MS);
+    return () => {
+      clearInterval(repeat);
+      clearTimeout(stop);
+    };
   }, [alert]);
 
   if (!alert) return null;
@@ -96,9 +132,15 @@ export function AlertBanner({ householdId }: { householdId: string }) {
   return (
     <div
       role="alert"
-      className="fixed inset-x-3 top-[max(12px,env(safe-area-inset-top))] z-50 mx-auto max-w-md animate-rise sm:inset-x-auto sm:right-6 sm:mx-0 sm:w-[420px]"
+      data-tone={critical ? "alert" : undefined}
+      className="fixed inset-x-3 top-[max(12px,env(safe-area-inset-top))] z-50 mx-auto max-w-md animate-drop-in sm:inset-x-auto sm:right-6 sm:mx-0 sm:w-[420px]"
     >
-      <div className="glass-strong flex items-center gap-3 rounded-[22px] border-destructive/40 p-3 pr-2 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.8)]">
+      <div
+        className={cn(
+          "glass-strong flex items-center gap-3 rounded-[22px] border-destructive/40 p-3 pr-2 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.8)]",
+          critical && "ring-2 ring-destructive",
+        )}
+      >
         <Link
           href={href}
           onClick={() => setAlert(null)}
@@ -108,7 +150,9 @@ export function AlertBanner({ householdId }: { householdId: string }) {
             kind={alert.kind}
             severity={alert.severity}
             size="lg"
-            className={critical ? "border-destructive bg-destructive text-white" : undefined}
+            className={
+              critical ? "animate-wiggle border-destructive bg-destructive text-white" : undefined
+            }
           />
           <span className="grid min-w-0 gap-0.5">
             <span className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase">
