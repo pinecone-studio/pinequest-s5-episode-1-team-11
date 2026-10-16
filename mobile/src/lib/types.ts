@@ -4,7 +4,7 @@ export type Member = {
   user_id: string;
   role: "owner" | "caregiver";
 };
-export type Profile = { id: string; name: string | null };
+type Profile = { id: string; name: string | null };
 export type DetectionSettings = {
   watching: "child" | "elderly" | "disabled";
   sensitivity: "low" | "medium" | "high";
@@ -65,6 +65,12 @@ export type Database = {
       devices: Table<Device>;
       events: Table<HaloEvent>;
       watched_people: Table<WatchedPerson>;
+      pairing_codes: Table<{
+        code: string;
+        household_id: string;
+        device_id: string | null;
+        expires_at: string;
+      }>;
       expo_push_tokens: Table<{
         token: string;
         user_id: string;

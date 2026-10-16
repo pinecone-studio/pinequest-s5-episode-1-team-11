@@ -49,6 +49,10 @@ const NEAR_FLOOR = 0.25;
 const HIGH_HEAD_MEMORY_MS = 15_000;
 /** Someone seen upright recently who has been lying this long is reported, however they got down. */
 const LYING_ALERT_MS = 1500;
+/** Lying flat this long is reported with no fall seen (already down when the camera started). */
+const LYING_UNSEEN_MS = 10_000;
+/** With no fall seen the trunk must be level: someone reclined on a sofa tilts 40–65°. */
+const LEVEL_TRUNK = 70;
 const UPRIGHT_MEMORY_MS = 60_000;
 /** Hips this many standing torso lengths below their standing height are on the floor. */
 const FLOOR_SIT_DROP = 1.3;
@@ -93,6 +97,7 @@ export class FallDetector {
   private nearFloorSince = 0;
   private highHeadAt = 0;
   private flatSince = 0;
+  private levelSince = 0;
   /** Hip height while standing, and when it was last seen there. */
   private standingHip: { y: number; torso: number; at: number } | null = null;
   private lowSince = 0;
@@ -120,6 +125,7 @@ export class FallDetector {
     this.strongDrop = false;
     this.lastUprightAt = 0;
     this.flatSince = 0;
+    this.levelSince = 0;
     this.standingHip = null;
     this.lowSince = 0;
     this.collapsePostureFrames = 0;
@@ -317,6 +323,8 @@ export class FallDetector {
       return { time, onset: this.lowSince, confidence: 0.6 };
     }
     this.flatSince = isFlat(features) ? this.flatSince || time : 0;
+    this.levelSince =
+      this.flatSince > 0 && features.torsoAngle >= LEVEL_TRUNK ? this.levelSince || time : 0;
     // Lying on the floor is what matters, even after a slow or unseen fall.
     if (
       (this.state === "idle" || this.state === "watching") &&
@@ -327,6 +335,17 @@ export class FallDetector {
     ) {
       this.state = "alerted";
       return { time, onset: this.flatSince, confidence: 0.65 };
+    }
+    // Never seen upright (already lying when watching began, or the fall was out of view): there
+    // is no motion to judge, so wait longer in case they are only resting, and say so in the
+    // confidence. The snapshot lets the family tell the floor from a bed.
+    if (
+      (this.state === "idle" || this.state === "watching") &&
+      this.levelSince > 0 &&
+      time - this.levelSince >= LYING_UNSEEN_MS
+    ) {
+      this.state = "alerted";
+      return { time, onset: this.levelSince, confidence: 0.55 };
     }
 
     switch (this.state) {

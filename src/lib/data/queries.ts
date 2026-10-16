@@ -1,4 +1,5 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import { getUser, requireUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import { getDemoFixtures } from "./demo";
+import { EVENTS_SEEN_COOKIE } from "./events-seen";
 import { mapDevice, mapEvent, mapHousehold, mapWatchedPerson } from "./mappers";
 
 /** No global cache: this context only lives for the current server render/request. */
@@ -174,15 +176,19 @@ export async function getEvent(id: string) {
   return mapEvent(data, name, snapshotUrl);
 }
 
+/** The nav badge: open alerts that arrived since this browser last looked at the events list. */
 export async function getUnreadCount() {
   const context = await getHomeContext();
   if (!context)
     return (await getDemoFixtures()).events.filter((event) => event.status === "new").length;
-  const { count, error } = await context.client
+  let query = context.client
     .from("events")
     .select("id", { count: "exact", head: true })
     .eq("household_id", context.householdId as string)
     .eq("status", "new");
+  const seen = (await cookies()).get(EVENTS_SEEN_COOKIE)?.value;
+  if (seen && !Number.isNaN(Date.parse(seen))) query = query.gt("created_at", seen);
+  const { count, error } = await query;
   if (error) throw error;
   return count ?? 0;
 }

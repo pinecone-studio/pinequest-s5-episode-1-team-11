@@ -66,7 +66,10 @@ export function ListItem({
     return (
       <Link
         href={href}
-        className={cn(base, "transition-colors hover:bg-hairline active:bg-hairline")}
+        className={cn(
+          base,
+          "transition-[background-color,transform] duration-150 hover:bg-hairline active:scale-[0.99] active:bg-hairline",
+        )}
       >
         {body}
       </Link>
@@ -76,7 +79,10 @@ export function ListItem({
       <button
         type="button"
         onClick={onClick}
-        className={cn(base, "transition-colors hover:bg-hairline active:bg-hairline")}
+        className={cn(
+          base,
+          "transition-[background-color,transform] duration-150 hover:bg-hairline active:scale-[0.99] active:bg-hairline",
+        )}
       >
         {body}
       </button>

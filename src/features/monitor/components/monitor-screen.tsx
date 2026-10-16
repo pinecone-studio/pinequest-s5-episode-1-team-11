@@ -11,7 +11,7 @@ import type { PairResponse } from "@/contracts";
 import { pairDevice, unpairDevice } from "../api";
 import { forgetDevice, loadDevice, saveDevice } from "../device-store";
 import { monitorEntry, withoutPairingCode } from "../entry";
-import { cameraAllowed, enableCameraWake } from "../wake";
+import { cameraAllowed } from "../permission";
 import { PairForm, type PairNotice } from "./pair-form";
 import { WatchView } from "./watch-view";
 
@@ -58,13 +58,12 @@ export function MonitorScreen({ code, apiReady }: { code: string; apiReady: bool
     setIdentity(entry.kind === "resume" ? entry.device : null);
     setReplacementCode(entry.kind === "resume" ? entry.replacementCode : null);
     setPairCode(code);
-    // A paired camera that was closed starts watching again on reopen (or from a wake
-    // notification) without another tap, when the browser already allows the camera.
+    // A paired camera that was closed starts watching again on reopen without another tap,
+    // when the browser already allows the camera.
     if (entry.kind !== "resume" || entry.replacementCode) return;
-    const fromWake = new URLSearchParams(window.location.search).has("resume");
     let cancelled = false;
     void cameraAllowed().then((allowed) => {
-      if (!cancelled && (allowed || fromWake)) setWatching(true);
+      if (!cancelled && allowed) setWatching(true);
     });
     return () => {
       cancelled = true;
@@ -144,7 +143,6 @@ export function MonitorScreen({ code, apiReady }: { code: string; apiReady: bool
               size="lg"
               block
               onClick={() => {
-                if (paired) void enableCameraWake(paired.deviceToken);
                 consumeCode();
                 setWatching(true);
               }}

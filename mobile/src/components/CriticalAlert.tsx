@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   AppState,
   Linking,
   Modal,
@@ -9,15 +11,34 @@ import {
   Text,
   Vibration,
   View,
-  Alert,
-  Pressable,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { kindLabel } from "../lib/events";
+import type { HaloEvent } from "../lib/types";
 import { useData } from "../providers/HouseholdProvider";
 import { Snapshot } from "./Snapshot";
 import { confidenceLabel } from "./EventRow";
-import { colors, EventActions, Screen, styles } from "./ui";
+import { haptic, Led, MotionPressable as Pressable, Rise, springs } from "./motion";
+import {
+  colors,
+  confirmFalseAlarm,
+  fonts,
+  Problem,
+  Screen,
+  styles,
+  useEventStatus,
+} from "./ui";
 
 export function CriticalAlert() {
   const { critical, dismissCritical, devices } = useData();
@@ -46,19 +67,19 @@ export function CriticalAlert() {
     minute: "2-digit",
     second: "2-digit",
   });
-  const metrics = [
-    { label: "Итгэлцэл", value: confidenceLabel(critical.confidence) },
-    { label: "Дохионы төлөв", value: "Шинэ" },
-    {
-      label: "Камер",
-      value: !device
+  const signals = [
+    ["Итгэлцэл", confidenceLabel(critical.confidence)],
+    ["Төлөв", "Шинэ"],
+    [
+      "Камер",
+      !device
         ? "Тодорхойгүй"
         : device.status === "online"
           ? "Онлайн"
           : device.status === "pairing"
             ? "Холбож байна"
             : "Салсан",
-    },
+    ],
   ];
   return (
     <Modal
@@ -68,162 +89,280 @@ export function CriticalAlert() {
       statusBarTranslucent
       onRequestClose={() => dismissCritical(critical.id)}
     >
-      <Screen danger>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={local.content}
-        >
-          <View style={styles.row}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Дохиог хаах"
-              onPress={() => dismissCritical(critical.id)}
-              style={local.pill}
-            >
-              <Ionicons name="close" size={17} color={colors.text} />
-              <Text style={local.pillText}>Хаах</Text>
-            </Pressable>
-            <View style={local.pill}>
-              <View style={local.dot} />
-              <Text
-                style={[local.pillText, { fontSize: 10, letterSpacing: 1 }]}
-              >
-                ЯАРАЛТАЙ
-              </Text>
-            </View>
-          </View>
-          <View style={{ gap: 5 }}>
-            <Text style={local.time}>{time}</Text>
-            <Text style={local.title}>
-              {critical.kind === "fall"
-                ? "Унасан байж\nмагадгүй"
-                : kindLabel[critical.kind]}
-            </Text>
-            <Text style={local.location}>
-              {[critical.person_name, critical.room_name]
-                .filter(Boolean)
-                .join(" · ") || "Байршил тодорхойгүй"}
-            </Text>
-          </View>
-          <View style={{ gap: 5 }}>
-            <Snapshot
-              key={`snapshot:${critical.id}`}
-              path={critical.snapshot_path}
-              compact
-            />
-            <Text style={local.caption}>Илрүүлсэн агшин · {time}</Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {metrics.map((metric) => (
-              <View key={metric.label} style={local.metric}>
-                <Text style={local.metricLabel}>{metric.label}</Text>
-                <Text style={local.metricValue}>{metric.value}</Text>
-              </View>
-            ))}
-          </View>
-          <EventActions
-            key={critical.id}
-            event={critical}
-            alertMode
-            afterAcknowledge={
+      {/* Gestures inside a native modal need their own root. */}
+      <GestureHandlerRootView style={styles.fill}>
+        <Screen danger>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={local.content}
+            accessibilityViewIsModal
+          >
+            <Rise style={styles.row}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="103 руу залгах"
-                onPress={() => {
-                  void Linking.openURL("tel:103").catch(() =>
-                    Alert.alert(
-                      "Дуудлага",
-                      "Энэ төхөөрөмжөөс дуудлага хийх боломжгүй байна.",
-                    ),
-                  );
-                }}
-                style={local.call}
+                accessibilityLabel="Дохиог хаах"
+                onPress={() => dismissCritical(critical.id)}
+                style={[styles.buttonSecondary, local.chip]}
               >
-                <View style={local.callIcon}>
-                  <Ionicons name="call-outline" color={colors.text} size={20} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={local.number}>103</Text>
-                  <Text style={local.metricLabel}>Түргэн тусламж</Text>
-                </View>
-                <View style={local.pill}>
-                  <Ionicons name="call-outline" size={13} color={colors.text} />
-                  <Text style={local.pillText}>Залгах</Text>
-                </View>
+                <Ionicons name="close" size={20} color={colors.text} />
+                <Text style={local.chipText}>Хаах</Text>
               </Pressable>
-            }
-          />
-          <Text style={local.caption}>
-            Хаах нь дохиог “Харсан” гэж тэмдэглэхгүй.
-          </Text>
-        </ScrollView>
-      </Screen>
+              <View style={[styles.buttonSecondary, local.chip]}>
+                <Led color={colors.dangerButton} blink />
+                <Text style={[local.chipText, { fontSize: 12, letterSpacing: 1.2 }]}>
+                  ЯАРАЛТАЙ
+                </Text>
+              </View>
+            </Rise>
+            <Rise index={1} style={{ gap: 8 }}>
+              <Text style={local.clock}>{time}</Text>
+              <Text accessibilityRole="header" style={local.title}>
+                {kindLabel[critical.kind]}
+              </Text>
+              <Text style={local.where}>
+                {[critical.person_name, critical.room_name].filter(Boolean).join(" · ") ||
+                  "Байршил тодорхойгүй"}
+              </Text>
+            </Rise>
+            <Rise index={2} style={{ gap: 8 }}>
+              <Snapshot key={`snapshot:${critical.id}`} path={critical.snapshot_path} />
+              <Text style={local.caption}>Илрүүлсэн агшин · {time}</Text>
+            </Rise>
+            <Rise index={3} style={{ flexDirection: "row", gap: 8 }}>
+              {signals.map(([label, value]) => (
+                <View key={label} style={[styles.card, local.signal]}>
+                  <Text numberOfLines={1} style={local.signalLabel}>
+                    {label}
+                  </Text>
+                  <Text numberOfLines={1} style={local.signalValue}>
+                    {value}
+                  </Text>
+                </View>
+              ))}
+            </Rise>
+            <Respond key={critical.id} event={critical} />
+          </ScrollView>
+        </Screen>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
+
+function Respond({ event }: { event: HaloEvent }) {
+  const { busy, error, submit } = useEventStatus(event);
+  return (
+    <>
+      <Rise index={4}>
+        <SlideToAck busy={busy} onConfirm={() => void submit("acknowledged")} />
+      </Rise>
+      <Rise index={5}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="103 руу залгах"
+          onPress={() => {
+            void Linking.openURL("tel:103").catch(() =>
+              Alert.alert("Дуудлага", "Энэ төхөөрөмжөөс дуудлага хийх боломжгүй байна."),
+            );
+          }}
+          style={[styles.card, local.call]}
+        >
+          <View style={local.callIcon}>
+            <Ionicons name="call" color={colors.text} size={22} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={local.callNumber}>103</Text>
+            <Text style={local.signalLabel}>Түргэн тусламж</Text>
+          </View>
+          <View style={local.callChip}>
+            <Ionicons name="call-outline" size={16} color={colors.text} />
+            <Text style={local.chipText}>Залгах</Text>
+          </View>
+        </Pressable>
+      </Rise>
+      {error && <Problem text={error} />}
+      <Rise index={6} style={{ alignItems: "center", gap: 4 }}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={busy}
+          onPress={() => confirmFalseAlarm(() => void submit("false_alarm"))}
+          style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 12 }}
+        >
+          <Text style={local.link}>Хуурамч дохио гэж тэмдэглэх</Text>
+        </Pressable>
+        <Text style={local.caption}>Хаах нь дохиог “Харсан” гэж тэмдэглэхгүй.</Text>
+      </Rise>
+    </>
+  );
+}
+
+const THUMB = 56;
+/** "I'm on my way": drag the thumb to the end, or tap twice (the first tap arms it). */
+function SlideToAck({ busy, onConfirm }: { busy: boolean; onConfirm: () => void }) {
+  const [width, setWidth] = useState(0);
+  const [armed, setArmed] = useState(false);
+  const max = Math.max(0, width - 16 - THUMB);
+  const x = useSharedValue(0);
+  const pan = Gesture.Pan()
+    .runOnJS(true)
+    .enabled(!busy && !armed && max > 0)
+    .activeOffsetX([-8, 8])
+    .onChange((event) => x.set(Math.min(max, Math.max(0, x.get() + event.changeX))))
+    .onEnd(() => {
+      if (x.get() > max * 0.85) {
+        x.set(withSpring(max, springs.snappy));
+        haptic.tick();
+        onConfirm();
+      } else x.set(withSpring(0, springs.bouncy));
+    });
+  const thumbMotion = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
+  const fillMotion = useAnimatedStyle(() => ({ width: x.get() + THUMB + 12 }));
+  const textMotion = useAnimatedStyle(() => ({
+    opacity: max ? 1 - x.get() / max : 1,
+  }));
+  return (
+    <View
+      style={local.slide}
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+    >
+      <Animated.View style={[local.fill, fillMotion]} />
+      {!armed && (
+        <Animated.View pointerEvents="none" style={[local.slideText, textMotion]}>
+          <Text style={local.slideTitle}>Би очиж байна</Text>
+          <Text style={local.signalLabel}>Гулсуулах эсвэл 2 удаа дарах</Text>
+        </Animated.View>
+      )}
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          layout={LinearTransition.springify().stiffness(springs.smooth.stiffness).damping(springs.smooth.damping)}
+          style={[armed ? { flex: 1 } : { width: THUMB }, thumbMotion]}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              armed
+                ? "Дахин дарж баталгаажуулах"
+                : "Би очиж байна. Баталгаажуулахын тулд 2 удаа дарна уу"
+            }
+            accessibilityState={{ busy, disabled: busy }}
+            disabled={busy}
+            onPress={() => {
+              if (armed) return onConfirm();
+              haptic.tick();
+              setArmed(true);
+            }}
+            style={local.thumb}
+          >
+            {busy ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : armed ? (
+              <Text style={[styles.buttonText, { fontSize: 16 }]}>
+                Дахин дарж баталгаажуулах
+              </Text>
+            ) : (
+              <Ionicons name="arrow-forward" size={24} color={colors.onPrimary} />
+            )}
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
+    </View>
+  );
+}
 const local = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 44, gap: 16 },
-  pill: {
+  content: { padding: 20, paddingBottom: 40, gap: 16 },
+  chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderColor: "#544148",
-    backgroundColor: "#30262BCC",
-    borderRadius: 25,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
   },
-  pillText: { color: colors.text, fontSize: 12, fontWeight: "700" },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#F46979" },
-  time: {
-    color: "#F1B7BD",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+  chipText: { color: colors.text, fontFamily: fonts.bold, fontSize: 14 },
+  clock: {
+    color: "#FECACA",
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    fontVariant: ["tabular-nums"],
   },
   title: {
-    color: colors.text,
-    fontSize: 29,
-    lineHeight: 33,
-    letterSpacing: -0.5,
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontFamily: fonts.display,
+    fontSize: 28,
+    lineHeight: 34,
   },
-  location: { color: "#E4BDC4", fontSize: 14, fontWeight: "600" },
+  where: { color: "#FECACA", fontFamily: fonts.body, fontSize: 18 },
   caption: {
-    color: "#B49BA6",
-    fontSize: 11,
+    color: "#FECACA",
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
-    lineHeight: 17,
   },
-  metric: {
-    flex: 1,
-    backgroundColor: "#1A1E26E6",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#423D45",
-    borderRadius: 17,
-    gap: 8,
+  signal: { flex: 1, padding: 12, borderRadius: 18, gap: 8, minWidth: 0 },
+  signalLabel: { color: colors.muted, fontFamily: fonts.bold, fontSize: 12 },
+  signalValue: { color: colors.text, fontFamily: fonts.display, fontSize: 18, lineHeight: 24 },
+  slide: {
+    height: 68,
+    borderRadius: 34,
+    padding: 6,
+    paddingHorizontal: 8,
+    justifyContent: "center",
+    overflow: "hidden",
+    backgroundColor: colors.glassStrong,
   },
-  metricLabel: { color: "#99A6B0", fontSize: 10, fontWeight: "600" },
-  metricValue: { color: colors.text, fontSize: 16, fontWeight: "800" },
+  fill: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 34,
+    experimental_backgroundImage:
+      "linear-gradient(90deg, transparent, rgba(96,165,250,0.38))",
+  },
+  slideText: { position: "absolute", left: 80, right: 16, gap: 2 },
+  slideTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 18, lineHeight: 24 },
+  thumb: {
+    height: THUMB,
+    borderRadius: THUMB / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryButton,
+    boxShadow: "0px 8px 20px -8px #60A5FA",
+  },
   call: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
-    borderRadius: 23,
-    borderWidth: 1,
-    borderColor: "#423D45",
+    gap: 12,
+    minHeight: 72,
     padding: 12,
-    backgroundColor: "#1B2027",
   },
   callIcon: {
-    backgroundColor: "#183B42",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.surface,
   },
-  number: { color: colors.text, fontSize: 24, fontWeight: "800" },
+  callNumber: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 22,
+    letterSpacing: 0.4,
+  },
+  callChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  link: {
+    color: colors.muted,
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
 });

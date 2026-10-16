@@ -2,7 +2,6 @@ import { timingSafeEqual } from "node:crypto";
 import { isDeviceApiConfigured } from "@/lib/device-api/auth";
 import { apiError, apiJson } from "@/lib/device-api/http";
 import { notifyHousehold } from "@/lib/device-api/notify";
-import { wakeCamera } from "@/lib/device-api/wake";
 import { serverEnv } from "@/lib/env.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -14,7 +13,7 @@ function authorized(request: Request) {
 }
 
 /**
- * Every minute (Supabase pg_cron + pg_net): mark silent cameras offline and wake them, then send every queued
+ * Every minute (Supabase pg_cron + pg_net): mark silent cameras offline, then send every queued
  * push that is due, including alerts whose first delivery was lost.
  */
 export async function POST(request: Request) {
@@ -23,13 +22,6 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const offline = await admin.rpc("mark_offline_devices", {});
   if (offline.error) throw offline.error;
-  // Ask each camera that just went silent to reopen itself (a notification on that phone).
-  const woken = await Promise.allSettled(
-    offline.data.flatMap((event) => (event.device_id ? [wakeCamera(event.device_id)] : [])),
-  );
-  for (const result of woken) {
-    if (result.status === "rejected") console.error("camera wake failed", result.reason);
-  }
   const due = await admin.rpc("claim_push_deliveries", { p_limit: 20 });
   if (due.error) throw due.error;
   const results = await Promise.allSettled(due.data.map((event) => notifyHousehold(event)));

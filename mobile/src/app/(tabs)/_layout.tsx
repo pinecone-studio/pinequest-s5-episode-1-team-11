@@ -1,12 +1,14 @@
 import { Tabs } from "expo-router";
 import { HaloTabBar } from "../../components/HaloTabBar";
+import { colors } from "../../components/colors";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: "#07191D" },
+        animation: "shift",
+        sceneStyle: { backgroundColor: colors.bg },
       }}
       tabBar={(props) => <HaloTabBar {...props} />}
     >

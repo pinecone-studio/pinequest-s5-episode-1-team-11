@@ -1,8 +1,11 @@
+import { haptic, Rise, SlidingPill } from "../../components/motion";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { SectionList, Pressable, Text, View } from "react-native";
+import { Pressable, SectionList, Text, View } from "react-native";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
 import {
   colors,
+  fonts,
   HouseholdPicker,
   Loading,
   Problem,
@@ -12,24 +15,23 @@ import {
 
 import { EventRow } from "../../components/EventRow";
 
+// The web's filters (src/features/events/components/event-timeline.tsx).
 const filters = [
   { id: "all", label: "Бүгд" },
-  { id: "fall", label: "Унах" },
-  { id: "sound", label: "Дуу" },
-  { id: "device", label: "Төхөөрөмж" },
+  { id: "new", label: "Шинэ" },
+  { id: "critical", label: "Аюултай" },
 ] as const;
 export default function EventsScreen() {
   const homes = useHomes();
   const data = useData();
   const [filter, setFilter] = useState<string>("all");
+  const [width, setWidth] = useState(0);
   if (homes.loading) return <Loading />;
   const list = data.events.filter(
     (event) =>
       filter === "all" ||
-      (filter === "fall" && event.kind === "fall") ||
-      (filter === "sound" &&
-        ["scream", "cry", "glass", "alarm"].includes(event.kind)) ||
-      (filter === "device" && ["offline", "test"].includes(event.kind)),
+      (filter === "new" && event.status === "new") ||
+      (filter === "critical" && event.severity === "critical"),
   );
   const today = new Date();
   const yesterday = new Date(
@@ -73,11 +75,13 @@ export default function EventsScreen() {
           else void data.refresh();
         }}
         ListHeaderComponent={
-          <View style={{ gap: 16 }}>
-            <Text style={styles.title}>Үйл явдал</Text>
-            <Text style={styles.muted}>
-              Сүүлийн 100 дохио · Шинээс хуучин руу
-            </Text>
+          <View style={{ gap: 16, marginBottom: 8 }}>
+            <Rise style={{ gap: 2 }}>
+              <Text style={styles.title}>Үйл явдал</Text>
+              <Text style={[styles.muted, { fontFamily: fonts.semibold }]}>
+                Танай гэр бүлийн аюулгүй байдлын түүх
+              </Text>
+            </Rise>
             <HouseholdPicker />
             {homes.error && <Problem text={homes.error} retry={homes.retry} />}
             {data.error && (
@@ -89,64 +93,81 @@ export default function EventsScreen() {
               />
             )}
             {data.realtimeError && <Problem text={data.realtimeError} />}
-            <View
-              style={{
-                flexDirection: "row",
-                borderRadius: 25,
-                backgroundColor: "#0D2830",
-                borderWidth: 1,
-                borderColor: colors.border,
-                marginBottom: 8,
-                padding: 4,
-              }}
+            <Rise
+              index={1}
+              style={[styles.card, { flexDirection: "row", padding: 4, borderRadius: 26 }]}
             >
-              {filters.map((item) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => setFilter(item.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: filter === item.id }}
-                  style={{
-                    flex: 1,
-                    minHeight: 44,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: 4,
-                    borderRadius: 22,
-                    backgroundColor:
-                      filter === item.id ? "#29484D" : "transparent",
-                  }}
-                >
-                  <Text
+              <View
+                accessibilityRole="tablist"
+                style={{ flex: 1, flexDirection: "row" }}
+                onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+              >
+                <SlidingPill
+                  index={filters.findIndex((item) => item.id === filter)}
+                  count={filters.length}
+                  width={width}
+                  inset={0}
+                  radius={22}
+                />
+                {filters.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => {
+                      if (filter !== item.id) haptic.tick();
+                      setFilter(item.id);
+                    }}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: filter === item.id }}
                     style={{
-                      color: filter === item.id ? colors.text : colors.muted,
-                      fontSize: 12,
-                      fontWeight: "700",
+                      flex: 1,
+                      minHeight: 44,
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                    <Text
+                      style={{
+                        color: filter === item.id ? colors.text : colors.muted,
+                        fontFamily: fonts.bold,
+                        fontSize: 13,
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Rise>
+            <Text style={[styles.muted, { fontSize: 13, paddingLeft: 4 }]}>
+              {list.length} үйл явдал
+            </Text>
           </View>
         }
         renderSectionHeader={({ section }) => (
-          <Text
-            style={[
-              styles.muted,
-              {
-                fontWeight: "700",
-                fontSize: 12,
-                paddingTop: 14,
-                paddingBottom: 12,
-              },
-            ]}
-          >
+          <Text style={[styles.section, { marginBottom: 0, paddingTop: 16, paddingBottom: 12 }]}>
             {section.title}
           </Text>
         )}
-        renderItem={({ item }) => <EventRow event={item} />}
+        renderItem={({ item, index }) => (
+          <Rise key={`${filter}:${item.id}`} index={index}>
+            <EventRow event={item} />
+          </Rise>
+        )}
+        ListFooterComponent={
+          <View style={{ gap: 12, paddingTop: 8 }}>
+            {list.some((event) => event.status === "new") && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="hand-left-outline" size={20} color={colors.muted} />
+                <Text style={[styles.muted, { flex: 1 }]}>
+                  Шинэ дохиог зүүн тийш шудрахад “Харлаа” гарна
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.muted, { fontSize: 13 }]}>
+              Сүүлийн 100 хүртэлх үйл явдлыг харуулна.
+            </Text>
+          </View>
+        }
         ListEmptyComponent={
           <Text
             style={[styles.muted, { textAlign: "center", paddingVertical: 35 }]}

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
 import { SITE, supabase } from "../../lib/supabase";
-import { Button, Loading, Problem, Screen, styles } from "../../components/ui";
+import { BackBar, Loading, Problem, Screen, styles } from "../../components/ui";
 
 /**
- * Live CCTV view. The app asks Halo for a short-lived token with its own sign-in, then shows the
- * web's /watch player, so the web and the app play cameras with the same code.
+ * Live view. The app asks Halo, with its own sign-in, how to reach the camera (a short-lived WHEP
+ * token for CCTV, the broadcast channel for a phone or laptop), then shows the web's /watch player,
+ * so the web and the app play cameras with the same code.
  */
 export default function LiveScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,15 +26,14 @@ export default function LiveScreen() {
         },
       }).catch(() => null);
       const stream = response?.ok
-        ? ((await response.json()) as { whep: string; token: string })
+        ? ((await response.json()) as
+            | { whep: string; token: string }
+            | { channel: string })
         : null;
       if (!alive) return;
-      if (!stream) return setError("Камертай холбогдож чадсангүй.");
-      const hash = new URLSearchParams({
-        whep: stream.whep,
-        token: stream.token,
-      });
-      setPage(`${SITE}/watch#${hash}`);
+      if (!stream)
+        return setError("Холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+      setPage(`${SITE}/watch#${new URLSearchParams(stream)}`);
     })();
     return () => {
       alive = false;
@@ -43,7 +43,9 @@ export default function LiveScreen() {
   return (
     <Screen>
       <View style={[styles.fill, { gap: 8 }]}>
-        <Button title="Хаах" textOnly onPress={() => router.back()} />
+        <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+          <BackBar title="Live" close />
+        </View>
         {error ? (
           <View style={styles.content}>
             <Problem text={error} />

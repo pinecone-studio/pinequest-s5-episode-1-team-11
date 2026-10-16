@@ -11,14 +11,19 @@ const NEAR_FLOOR = 0.3;
 const DOWN_MS = 3000;
 /** The box centre may drift this much while "still" (box detectors jitter). */
 const STILL = 0.12;
-/** Someone must have been seen standing this recently. */
+/** A standing reference counts this long; after that the box is judged by its shape alone. */
 const STANDING_MEMORY_MS = 60_000;
+/** With no standing reference only a clearly lying shape counts (a seated person with legs out
+ * is about as wide as tall), and it must stay put this long. */
+const UNSEEN_LYING_SHAPE = 1.8;
+const UNSEEN_DOWN_MS = 10_000;
 
 /**
  * Backup for when the pose model loses someone on the floor: it finds people by their face, so a
  * person lying face away or face down is often missed entirely. A plain person detector still
  * sees the body. Someone seen standing who is now a low, lying-shaped or much shorter box that
- * stays put for a few seconds is reported as down.
+ * stays put for a few seconds is reported as down. Someone never seen standing (already lying
+ * when the camera started) is reported once a lying-shaped box has stayed put for 10 s.
  */
 export class DownedDetector {
   /** The last standing person's height and where their feet were (0–1 image units). */
@@ -41,15 +46,18 @@ export class DownedDetector {
       return null;
     }
     const box = largest(frame.people ?? []);
-    if (!box || !this.standing || frame.time - this.standing.at > STANDING_MEMORY_MS) {
+    if (!box) {
       this.down = null;
       return null;
     }
+    const standing =
+      this.standing && frame.time - this.standing.at <= STANDING_MEMORY_MS ? this.standing : null;
     const lyingShape = box.width * ratio >= box.height * LYING_SHAPE;
-    const short = box.height <= this.standing.height * SHORT;
-    const nearFloor =
-      box.y + box.height >= this.standing.bottom - this.standing.height * NEAR_FLOOR;
-    if (!(lyingShape || short) || !nearFloor) {
+    const down = standing
+      ? (lyingShape || box.height <= standing.height * SHORT) &&
+        box.y + box.height >= standing.bottom - standing.height * NEAR_FLOOR
+      : box.width * ratio >= box.height * UNSEEN_LYING_SHAPE;
+    if (!down) {
       this.down = null;
       return null;
     }
@@ -57,9 +65,10 @@ export class DownedDetector {
     const y = box.y + box.height / 2;
     if (!this.down || Math.hypot((x - this.down.x) * ratio, y - this.down.y) > STILL)
       this.down = { since: frame.time, x, y };
-    if (this.alerted || frame.time - this.down.since < DOWN_MS) return null;
+    if (this.alerted || frame.time - this.down.since < (standing ? DOWN_MS : UNSEEN_DOWN_MS))
+      return null;
     this.alerted = true;
-    return { time: frame.time, onset: this.down.since, confidence: 0.6 };
+    return { time: frame.time, onset: this.down.since, confidence: standing ? 0.6 : 0.5 };
   }
 
   private learnStanding(frame: PoseFrame, ratio: number) {

@@ -6,7 +6,7 @@ export type RingState = "calm" | "warning" | "alert" | "empty";
 const color: Record<RingState, string> = {
   calm: "[--st:var(--primary)]",
   warning: "[--st:var(--warning)]",
-  alert: "[--st:var(--destructive)]",
+  alert: "[--st:var(--destructive-strong)]",
   empty: "[--st:var(--muted-foreground)]",
 };
 const ink: Record<RingState, string> = {
@@ -49,7 +49,9 @@ export function StatusRing({
           "absolute inset-[34px] rounded-full",
           state === "empty"
             ? "border-[1.5px] border-dashed border-foreground/30"
-            : "bg-[radial-gradient(circle_at_34%_28%,var(--orb-highlight)_0%,var(--st)_24%,color-mix(in_srgb,var(--st)_55%,var(--background))_72%,color-mix(in_srgb,var(--st)_22%,var(--background))_100%)] shadow-[0_0_70px_-6px_var(--st)]",
+            : // The text sits on the middle of the core, which never darkens below 75 % colour
+              // (toward black in both modes): dark ink keeps 5:1 on amber, white 8:1 on blue.
+              "bg-[radial-gradient(circle_at_34%_28%,var(--orb-highlight)_0%,var(--st)_35%,color-mix(in_srgb,var(--st)_75%,black)_75%,color-mix(in_srgb,var(--st)_45%,black)_100%)] shadow-[0_0_48px_-12px_var(--st)]",
           state !== "empty" && (alert ? "animate-heartbeat" : "animate-breathe"),
         )}
       />

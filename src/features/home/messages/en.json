@@ -1,12 +1,7 @@
 {
   "title": "Home",
   "greeting": "Hi, {name}",
-  "cameras": "Cameras · {online}/{total} online",
-  "addCamera": "Add camera",
-  "allCameras": "See all cameras",
   "recentEvents": "Recent events",
-  "noCameras": "No cameras connected",
-  "noCamerasHint": "Connect an old phone or laptop as your first camera.",
   "noEvents": "No events yet",
   "noEventsHint": "Detected moments will appear here in time order.",
   "monitorHint": "Keep the camera's browser open. Halo does not replace emergency services.",
@@ -39,5 +34,16 @@
       "hint": "There are unseen events. Open them and record what happened.",
       "action": "View events"
     }
+  },
+  "live": "Live",
+  "rooms": "Rooms",
+  "today": "Today",
+  "todayQuiet": "A quiet day so far",
+  "todayCount": "{count, plural, one {# alert} other {# alerts}}",
+  "now": "Now",
+  "stats": {
+    "online": "Cameras online",
+    "today": "Alerts today",
+    "people": "People watched"
   }
 }

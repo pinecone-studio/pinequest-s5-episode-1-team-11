@@ -56,7 +56,10 @@ export function SideNav({
               />
               {t(item.key)}
               {badge && (
-                <b className="ml-auto grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-2 text-xs text-destructive-foreground">
+                <b
+                  key={newEvents}
+                  className="animate-pop ml-auto grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-2 text-xs text-destructive-foreground"
+                >
                   {newEvents}
                 </b>
               )}

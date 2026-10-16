@@ -72,7 +72,11 @@ export function EventTimeline({ events }: { events: Event[] }) {
         />
       )}
       {[...groups].map(([day, group]) => (
-        <section key={day} className="grid gap-3" aria-label={dayLabel(day)}>
+        <section
+          key={`${filter}:${day}`}
+          className="enter-stagger grid gap-3"
+          aria-label={dayLabel(day)}
+        >
           <h2 className="text-sm font-bold text-muted-foreground">{dayLabel(day)}</h2>
           <ul className="grid gap-3 lg:grid-cols-2">
             {group.map((event) => (

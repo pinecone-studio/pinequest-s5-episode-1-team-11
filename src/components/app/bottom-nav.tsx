@@ -42,12 +42,16 @@ export function BottomNav({ newEvents = 0 }: { newEvents?: number }) {
           >
             <Glyph
               weight={current ? "fill" : "bold"}
-              className={cn("size-6", current && "text-primary-text")}
+              key={current ? "on" : "off"}
+              className={cn("size-6", current && "animate-pop text-primary-text")}
               aria-hidden="true"
             />
             {t(tab.key)}
             {badge && (
-              <b className="absolute top-0.5 left-[calc(50%+6px)] grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1.5 text-xs text-destructive-foreground">
+              <b
+                key={newEvents}
+                className="animate-pop absolute top-0.5 left-[calc(50%+6px)] grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1.5 text-xs text-destructive-foreground"
+              >
                 {newEvents}
               </b>
             )}

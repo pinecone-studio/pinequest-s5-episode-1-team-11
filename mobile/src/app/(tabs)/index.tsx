@@ -1,78 +1,74 @@
-import { useEffect, useState } from "react";
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { MotionPressable as Pressable, Rise, Skeleton } from "../../components/motion";
+import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { orbInk, StatusOrb } from "../../components/StatusOrb";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
+import { homeStatus } from "../../lib/dashboard";
+import { kindLabel as eventKind } from "../../lib/events";
+import { EventRow } from "../../components/EventRow";
 import {
-  dashboardState,
-  elapsedLabel,
-  eventHistogram,
-  todayEvents,
-} from "../../lib/dashboard";
-import { dateLabel } from "../../lib/events";
-import {
+  Avatar,
   Button,
   Card,
   colors,
-  EventCard,
+  DevicePill,
+  Empty,
+  fonts,
+  Header,
+  ListGroup,
+  ListRow,
   Loading,
   Problem,
   Screen,
   styles,
 } from "../../components/ui";
 
+// The web's home copy (src/features/home/messages/mn.json).
+const copy = {
+  calm: ["Бүгд тайван", "Камерууд холбогдсон. Шалгаагүй шинэ дохио алга.", "Үйл явдлын түүх"],
+  alert: [
+    "Одоо шалгаарай",
+    "Аюултай байж болзошгүй шинэ үйл явдал байна. Юу болсныг шалгаарай.",
+    "Дохиог шалгах",
+  ],
+  offline: [
+    "Камерын холболтыг шалгана уу",
+    "Зарим камер холбогдоогүй байна. Цэнэг, интернэт болон browser-ийг шалгаарай.",
+    "Камеруудыг шалгах",
+  ],
+  empty: [
+    "Гэрээ хянаж эхлээрэй",
+    "Эхний камераа холбоод хайртай хүмүүсийнхээ дохиог хүлээн аваарай.",
+    "Эхний камер нэмэх",
+  ],
+  attention: [
+    "Шинэ дохио байна",
+    "Шалгаагүй үйл явдал байна. Юу болсныг нээгээд тэмдэглээрэй.",
+    "Үйл явдал руу орох",
+  ],
+} as const;
+
 export default function HomeScreen() {
   const homes = useHomes();
   const data = useData();
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(timer);
-  }, []);
   if (homes.loading) return <Loading />;
-  const state = dashboardState(
-    data.devices,
-    data.events,
-    data.loading,
-    !!(data.error || data.realtimeError),
+  const state = homeStatus(data.devices, data.events);
+  const critical = data.events.find(
+    (event) => event.status === "new" && event.severity === "critical",
   );
-  const dayEvents = todayEvents(data.events, now);
-  const dayWarnings = dayEvents.filter(
-    (event) => event.severity !== "info",
-  ).length;
-  const bins = eventHistogram(data.events, now);
-  const maximum = Math.max(1, ...bins);
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const people = [
-    ...new Set(
-      data.events
-        .map((event) => event.person_name?.trim())
-        .filter((name): name is string => !!name),
-    ),
-  ].slice(0, 4);
-  const name = homes.name || "";
-  const initials = name
-    ? name
-        .split(/\s+/)
-        .map((part) => part[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "H";
-  const latest = data.events[0];
+  const online = data.devices.filter((device) => device.status === "online").length;
+  const action: Href =
+    state === "empty"
+      ? "/devices/new"
+      : state === "offline"
+        ? "/devices"
+        : "/(tabs)/events";
   return (
     <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, local.content]}
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={data.refreshing}
@@ -84,296 +80,196 @@ export default function HomeScreen() {
           />
         }
       >
-        <View style={styles.row}>
-          <View style={{ flex: 1, gap: 3 }}>
-            <Text style={local.greeting}>Сайн уу{name ? `, ${name}` : ""}</Text>
-            <Text style={local.small}>
-              {
-                [
-                  "Ням",
-                  "Даваа",
-                  "Мягмар",
-                  "Лхагва",
-                  "Пүрэв",
-                  "Баасан",
-                  "Бямба",
-                ][now.getDay()]
-              }{" "}
-              · {now.getMonth() + 1}-р сарын {now.getDate()}
-            </Text>
+        <Rise style={styles.row}>
+          <View style={{ flex: 1 }}>
+            <Header
+              title={`Сайн уу${homes.name ? `, ${homes.name}` : ""}`}
+              subtitle={homes.household?.name}
+            />
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Гэр бүлийн тохиргоо"
+            accessibilityLabel="Гэр бүл ба тохиргоо"
             onPress={() => router.push("/(tabs)/family")}
-            style={local.avatar}
           >
-            <Text style={local.avatarText}>{initials}</Text>
+            <Avatar name={homes.name} ring={colors.glassBorder} />
           </Pressable>
-        </View>
+        </Rise>
         {homes.error && <Problem text={homes.error} retry={homes.retry} />}
         {!homes.error && !homes.household ? (
           <Card>
             <Text style={styles.heading}>Гэр бүлд холбогдоогүй байна</Text>
             <Text style={styles.muted}>
-              Гэр бүлийн эзнээр өөрийгөө асран хамгаалагч болгон нэмүүлнэ үү.
+              Гэр бүл үүсгэх эсвэл урилгаар нэгдэхийн тулд Гэр бүл хэсэг рүү орно уу.
             </Text>
-            <Button title="Дахин шалгах" secondary onPress={homes.retry} />
+            <Button title="Гэр бүл" onPress={() => router.push("/(tabs)/family")} />
           </Card>
+        ) : homes.household && data.loading ? (
+          <View style={{ gap: 16 }} aria-busy>
+            <Skeleton style={{ height: 320, borderRadius: 32 }} />
+            <Skeleton style={{ height: 200, borderRadius: 24 }} />
+          </View>
         ) : (
           homes.household && (
             <>
-              <View style={local.hero}>
-                <View
-                  accessibilityLabel={`${state.rooms} өрөө, ${state.title}`}
-                  style={local.orbArea}
-                >
-                  {[200, 174, 146].map((size, index) => (
-                    <View
-                      key={size}
-                      style={[
-                        local.halo,
-                        {
-                          width: size,
-                          height: size,
-                          borderRadius: size / 2,
-                          backgroundColor: state.critical
-                            ? `rgba(251,113,133,${0.008 + index * 0.009})`
-                            : `rgba(45,212,191,${0.008 + index * 0.009})`,
-                        },
-                      ]}
-                    />
-                  ))}
-                  <LinearGradient
-                    colors={
-                      state.critical
-                        ? ["#FFC4CD", "#FB7185", "#82263A"]
-                        : ["#94F9E9", "#26CFBC", "#0A4D4C"]
-                    }
-                    start={{ x: 0.15, y: 0 }}
-                    end={{ x: 0.8, y: 1 }}
-                    style={local.orb}
-                  >
-                    <Text style={local.orbNumber}>
-                      {state.rooms.toString().padStart(2, "0")}
-                    </Text>
-                    <Text style={local.orbLabel}>өрөө</Text>
-                  </LinearGradient>
-                </View>
-                <Text
-                  style={[
-                    local.summary,
-                    state.critical && { color: "#FFB7C2" },
-                  ]}
-                >
-                  {state.title}
-                </Text>
-                <Text style={[local.small, { textAlign: "center" }]}>
-                  {state.rooms} өрөө хянаж байна ·{" "}
-                  {elapsedLabel(data.checkedAt, now)} шалгасан
-                </Text>
-              </View>
-              {data.error && (
-                <Problem
-                  text={data.error}
-                  retry={() => {
-                    void data.refresh();
-                  }}
-                />
-              )}
+              {data.error && <Problem text={data.error} retry={() => void data.refresh()} />}
               {data.realtimeError && <Problem text={data.realtimeError} />}
-              <View style={local.today}>
-                <View style={styles.row}>
-                  <View style={{ flex: 1, gap: 3 }}>
-                    <Text style={local.cardTitle}>Өнөөдөр</Text>
-                    <Text style={local.small}>
-                      {dayWarnings
-                        ? `${dayWarnings} анхааруулга`
-                        : "Анхааруулга бүртгэгдээгүй"}{" "}
-                      · {dayEvents.length} дохио
-                    </Text>
-                  </View>
-                  <View style={local.time}>
-                    <View
-                      style={[
-                        local.dot,
-                        {
-                          backgroundColor:
-                            data.error || data.realtimeError
-                              ? "#FBBF24"
-                              : colors.primary,
-                        },
-                      ]}
-                    />
-                    <Text style={local.timeText}>
-                      {data.checkedAt
-                        ? new Date(data.checkedAt).toLocaleTimeString("mn-MN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "—"}
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  accessibilityLabel={`Өнөөдрийн дохионы давтамж, нийт ${dayEvents.length} дохио`}
-                  style={local.chart}
-                >
-                  {bins.map((count, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        local.bar,
-                        {
-                          height: count ? 6 + (count / maximum) * 42 : 3,
-                          backgroundColor: count ? "#25B8AB" : "#25484C",
-                        },
-                      ]}
-                    />
-                  ))}
-                  <View
-                    style={[
-                      local.cursor,
-                      { left: `${Math.min(99, (hour / 24) * 100)}%` },
-                    ]}
-                  />
-                </View>
-                <View style={styles.row}>
-                  {["00", "06", "12", "18", "24"].map((label) => (
-                    <Text key={label} style={local.axis}>
-                      {label}
-                    </Text>
-                  ))}
-                </View>
-                <Text style={local.small}>
-                  Дохионы давтамж · Сүүлийн 100 бүртгэлээс
-                </Text>
-                <Text style={local.current}>
-                  <Text style={{ color: colors.text, fontWeight: "700" }}>
-                    Одоо ·{" "}
+              {critical ? (
+                <Rise index={1} style={[styles.card, local.status, local.alert]}>
+                  <StatusOrb state="alert">
+                    <Text style={[local.orbNumber, { color: orbInk.alert }]}>!</Text>
+                    <Text style={[local.orbLabel, { color: orbInk.alert }]}>Яаралтай</Text>
+                  </StatusOrb>
+                  <Text style={[local.statusTitle, { color: "#FFFFFF" }]}>
+                    {eventKind[critical.kind]}
                   </Text>
-                  {state.calm ? "Бүгд тайван" : state.title}
-                </Text>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Төхөөрөмжүүдийг харах"
-                    onPress={() => router.push("/(tabs)/family")}
-                    style={local.metric}
-                  >
-                    <Ionicons
-                      name="videocam-outline"
-                      size={17}
-                      color={colors.primary}
-                    />
-                    <Text style={local.metricText}>
-                      {state.online}/{data.devices.length} онлайн
-                    </Text>
-                  </Pressable>
-                  <View style={local.metric}>
-                    <Ionicons
-                      name="time-outline"
-                      size={17}
-                      color={colors.primary}
-                    />
-                    <Text style={local.metricText}>
-                      {elapsedLabel(data.checkedAt, now)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <Text style={local.section}>Хамгаалж буй хүмүүс</Text>
-              {people.length ? (
-                people.map((person) => {
-                  const observation = data.events.find(
-                    (event) => event.person_name?.trim() === person,
-                  )!;
-                  return (
+                  <Text style={[styles.text, { color: "rgba(255,255,255,0.8)", textAlign: "center" }]}>
+                    {[
+                      critical.person_name,
+                      critical.room_name,
+                      new Date(critical.occurred_at).toLocaleTimeString("mn-MN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </Text>
+                  <View style={local.actions}>
                     <Pressable
-                      key={person}
                       accessibilityRole="button"
                       onPress={() =>
-                        router.push({
-                          pathname: "/events/[id]",
-                          params: { id: observation.id },
-                        })
+                        router.push({ pathname: "/events/[id]", params: { id: critical.id } })
                       }
-                      style={local.person}
+                      style={[styles.button, local.danger]}
                     >
-                      <View style={local.avatar}>
-                        <Ionicons
-                          name="person-outline"
-                          color={colors.primary}
-                          size={19}
-                        />
-                      </View>
-                      <View style={{ flex: 1, gap: 3 }}>
-                        <Text style={local.cardTitle}>{person}</Text>
-                        <Text style={local.small}>
-                          {observation.room_name || "Өрөө тодорхойгүй"} ·{" "}
-                          {dateLabel(observation.occurred_at)}
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={17}
-                        color={colors.muted}
-                      />
+                      <Text style={[styles.buttonText, { color: "#000000" }]}>Одоо харах</Text>
+                      <Ionicons name="arrow-forward" size={20} color="#000000" />
                     </Pressable>
-                  );
-                })
-              ) : (
-                <Text style={local.small}>
-                  Нэртэй дохио бүртгэгдэхэд энд харагдана.
-                </Text>
-              )}
-              <View style={styles.row}>
-                <Text style={local.section}>Камер ба төхөөрөмж</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => router.push("/(tabs)/family")}
-                >
-                  <Text style={styles.badge}>Бүгдийг харах</Text>
-                </Pressable>
-              </View>
-              {data.devices.slice(0, 3).map((device) => (
-                <View key={device.id} style={local.person}>
-                  <Ionicons
-                    name="videocam-outline"
-                    size={20}
-                    color={colors.primary}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={local.cardTitle}>{device.name}</Text>
-                    <Text style={local.small}>
-                      {device.room_name || "Өрөө тодорхойгүй"}
-                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => void Linking.openURL("tel:103")}
+                      style={[styles.button, styles.buttonSecondary, local.inline]}
+                    >
+                      <Ionicons name="call" size={20} color={colors.text} />
+                      <Text style={[styles.buttonText, { color: colors.text, fontSize: 16 }]}>
+                        103 руу залгах
+                      </Text>
+                    </Pressable>
                   </View>
-                  <Text
-                    style={[
-                      styles.badge,
-                      device.status !== "online" && { color: "#FBBF24" },
-                    ]}
-                  >
-                    {device.status === "online"
-                      ? "Онлайн"
-                      : device.status === "pairing"
-                        ? "Холбож байна"
-                        : "Салсан"}
-                  </Text>
-                </View>
-              ))}
-              {!data.devices.length && (
-                <Text style={local.small}>Одоогоор төхөөрөмж алга.</Text>
-              )}
-              <Text style={local.section}>Сүүлийн дохио</Text>
-              {latest ? (
-                <EventCard event={latest} />
+                </Rise>
               ) : (
-                <Text style={local.small}>
-                  {data.loading ? "Ачаалж байна…" : "Дохио бүртгэгдээгүй."}
-                </Text>
+                <Rise index={1} style={[styles.card, local.status]}>
+                  <StatusOrb
+                    state={state === "empty" ? "empty" : state === "calm" ? "calm" : "warning"}
+                    onCheck={() => void data.refresh()}
+                  >
+                    {state === "empty" ? (
+                      <Ionicons name="add" size={32} color={orbInk.empty} />
+                    ) : (
+                      <>
+                        <Text
+                          style={[
+                            local.orbNumber,
+                            { color: orbInk[state === "calm" ? "calm" : "warning"] },
+                          ]}
+                        >
+                          {online.toString().padStart(2, "0")}
+                        </Text>
+                        <Text
+                          style={[
+                            local.orbLabel,
+                            { color: orbInk[state === "calm" ? "calm" : "warning"] },
+                          ]}
+                        >
+                          онлайн
+                        </Text>
+                      </>
+                    )}
+                  </StatusOrb>
+                  <Text accessibilityLiveRegion="polite" style={local.statusTitle}>
+                    {copy[state][0]}
+                  </Text>
+                  <Text style={[styles.muted, { textAlign: "center" }]}>{copy[state][1]}</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push(action)}
+                    style={[styles.button, local.inline, { marginTop: 8 }]}
+                  >
+                    <Text style={styles.buttonText}>{copy[state][2]}</Text>
+                    <Ionicons name="arrow-forward" size={20} color={colors.onPrimary} />
+                  </Pressable>
+                </Rise>
               )}
+              <Rise index={2} style={{ gap: 12 }}>
+                <View style={styles.row}>
+                  <Text style={styles.heading}>
+                    Камерууд · {online}/{data.devices.length} онлайн
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Камер нэмэх"
+                    onPress={() => router.push("/devices/new")}
+                    style={local.add}
+                  >
+                    <Ionicons name="add" size={22} color={colors.primary} />
+                  </Pressable>
+                </View>
+                {data.devices.length ? (
+                  <>
+                    <ListGroup>
+                      {data.devices.slice(0, 3).map((device) => (
+                        <ListRow
+                          key={device.id}
+                          icon="videocam-outline"
+                          tone={device.status === "online" ? undefined : "warn"}
+                          title={device.room_name || device.name}
+                          description={device.name}
+                          trailing={<DevicePill device={device} />}
+                          onPress={() => router.push(`/devices/${device.id}`)}
+                        />
+                      ))}
+                    </ListGroup>
+                    <Pressable
+                      accessibilityRole="link"
+                      onPress={() => router.push("/devices")}
+                      style={local.link}
+                    >
+                      <Text style={styles.badge}>Бүх камерыг харах</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Empty
+                    icon="videocam-outline"
+                    title="Камер холбоогүй байна"
+                    hint="Хуучин утас эсвэл laptop-аа камер болгож холбоорой."
+                  />
+                )}
+              </Rise>
+              <Rise index={3} style={{ gap: 12 }}>
+                <View style={styles.row}>
+                  <Text style={styles.heading}>Сүүлийн үйл явдлууд</Text>
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => router.push("/(tabs)/events")}
+                    style={local.link}
+                  >
+                    <Text style={styles.badge}>Бүгдийг харах</Text>
+                  </Pressable>
+                </View>
+                {data.events.length ? (
+                  data.events.slice(0, 3).map((event) => <EventRow key={event.id} event={event} />)
+                ) : (
+                  <Empty
+                    icon="shield-checkmark-outline"
+                    title="Одоогоор үйл явдал алга"
+                    hint="Илрүүлсэн дохио энд цагийн дарааллаар харагдана."
+                  />
+                )}
+              </Rise>
+              <Text style={[styles.muted, { fontSize: 13, textAlign: "center" }]}>
+                Камерын browser-ийг нээлттэй байлгана. Halo нь яаралтай тусламжийг орлохгүй.
+              </Text>
             </>
           )
         )}
@@ -382,134 +278,41 @@ export default function HomeScreen() {
   );
 }
 const local = StyleSheet.create({
-  content: { paddingTop: 24, gap: 14 },
-  greeting: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "800",
-    letterSpacing: -0.6,
-  },
-  small: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "#102B31",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { color: colors.text, fontSize: 11, fontWeight: "700" },
-  hero: { alignItems: "center", paddingBottom: 8, gap: 6 },
-  orbArea: {
-    height: 212,
-    width: 220,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  halo: { position: "absolute" },
-  orb: {
-    width: 108,
-    height: 108,
-    borderRadius: 54,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    boxShadow:
-      "inset 7px 9px 20px rgba(216,255,248,0.45), inset -8px -10px 20px rgba(0,44,46,0.5), 0px 0px 36px 4px rgba(45,212,191,0.35)",
+  status: { alignItems: "center", gap: 8, padding: 24, borderRadius: 32 },
+  alert: {
+    borderColor: "rgba(239,68,68,0.4)",
+    experimental_backgroundImage:
+      "linear-gradient(135deg, rgba(185,28,28,0.45), rgba(20,7,11,0.55))",
+    boxShadow: "0px 30px 80px -30px rgba(239,68,68,0.6)",
   },
   orbNumber: {
-    color: "#042D2C",
-    fontSize: 39,
-    fontWeight: "800",
-    letterSpacing: -1,
+    fontFamily: fonts.display,
+    fontSize: 40,
+    lineHeight: 44,
+    fontVariant: ["tabular-nums"],
   },
-  orbLabel: {
-    color: "#063B36",
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: -3,
-  },
-  summary: {
+  orbLabel: { fontFamily: fonts.bold, fontSize: 13, lineHeight: 18 },
+  statusTitle: {
     color: colors.text,
-    fontSize: 21,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+    fontFamily: fonts.display,
+    fontSize: 28,
+    lineHeight: 34,
+    textAlign: "center",
   },
-  today: {
-    padding: 15,
-    borderRadius: 23,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "#0B252D",
-    gap: 9,
-  },
-  cardTitle: { color: colors.text, fontSize: 13, fontWeight: "700" },
-  time: {
+  actions: { alignSelf: "stretch", gap: 12, marginTop: 8 },
+  danger: {
     flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "#16343C",
+    gap: 8,
+    backgroundColor: colors.dangerButton,
+    boxShadow: "0px 14px 34px -14px #EF4444",
   },
-  timeText: { color: colors.text, fontSize: 11, fontWeight: "700" },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    boxShadow: "0px 0px 7px #5EEAD4",
-  },
-  chart: {
-    height: 58,
-    flexDirection: "row",
-    gap: 2,
-    alignItems: "flex-end",
-    marginTop: 4,
-  },
-  bar: { flex: 1, borderRadius: 2 },
-  cursor: {
-    position: "absolute",
-    height: 50,
-    width: 1,
-    backgroundColor: "#D1FFF4",
-    bottom: 0,
-    opacity: 0.7,
-  },
-  axis: { color: colors.muted, fontSize: 10 },
-  current: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  metric: {
-    flex: 1,
-    flexDirection: "row",
+  inline: { flexDirection: "row", gap: 8, alignSelf: "stretch" },
+  add: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: "#2B454C",
-    borderRadius: 12,
-    backgroundColor: "#173039",
   },
-  metricText: { color: colors.text, fontSize: 10, fontWeight: "600" },
-  section: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 6,
-  },
-  person: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 13,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "#0C252D",
-  },
+  link: { minHeight: 44, justifyContent: "center" },
 });

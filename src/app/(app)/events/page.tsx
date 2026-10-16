@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { HouseholdRealtime } from "@/components/app/household-realtime";
 import { PageHeader } from "@/components/app/page-header";
 import { EventTimeline } from "@/features/events/components/event-timeline";
+import { MarkEventsSeen } from "@/features/events/components/mark-events-seen";
 import { listEvents } from "@/features/events/queries";
 import { getHousehold } from "@/lib/data/queries";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -19,6 +20,7 @@ export default async function Page() {
       {isSupabaseConfigured && household && (
         <HouseholdRealtime householdId={household.id} tables={tables} />
       )}
+      {isSupabaseConfigured && <MarkEventsSeen />}
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <EventTimeline events={events} />
       <p className="text-sm text-muted-foreground">{t("historyLimit")}</p>

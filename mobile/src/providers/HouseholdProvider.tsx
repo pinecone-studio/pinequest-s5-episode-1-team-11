@@ -92,20 +92,29 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
         saveProfileName: async (value) => {
           const next = value.trim();
           if (!next) throw new Error("Нэрээ оруулна уу.");
+          if ([...next].length > 60)
+            throw new Error("Нэр 60 тэмдэгтээс ихгүй байна.");
           const result = await supabase
             .from("profiles")
-            .upsert({ id: userId, name: next })
+            .update({ name: next })
+            .eq("id", userId)
             .select("*")
             .maybeSingle();
-          if (result.error || !result.data)
+          if (result.error)
             throw new Error(
               "Нэр хадгалагдсангүй. Холболт болон өөрийн профайл шинэчлэх эрхээ шалгана уу.",
+            );
+          if (!result.data)
+            throw new Error(
+              "Өөрийн профайлыг шинэчилж чадсангүй. Бүртгэлээс гараад дахин нэвтэрч шалгана уу.",
             );
           setName(result.data.name ?? "");
         },
         saveHouseholdName: async (value) => {
           const next = value.trim();
           if (!next) throw new Error("Гэр бүлийн нэрээ оруулна уу.");
+          if ([...next].length > 60)
+            throw new Error("Гэр бүлийн нэр 60 тэмдэгтээс ихгүй байна.");
           if (!household || household.owner_id !== userId)
             throw new Error("Гэр бүлийн эзэн нэрийг өөрчилнө.");
           const result = await supabase
