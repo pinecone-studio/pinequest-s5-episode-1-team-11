@@ -11,7 +11,7 @@
   "slides": {
     "home": {
       "title": "Home alone, never on their own",
-      "description": "Turn a spare phone or laptop into a camera and watch over older parents and children from afar."
+      "description": "Watch over older parents and children from afar with your home cameras."
     },
     "detect": {
       "title": "It recognises danger",
@@ -22,8 +22,8 @@
       "description": "Everyone in the family is notified. When one person says “I'm on it”, the others can relax."
     },
     "privacy": {
-      "title": "Video never leaves home",
-      "description": "The AI runs on the phone itself. Only a snapshot of a dangerous moment is sent to you."
+      "title": "No recordings kept",
+      "description": "Only a snapshot of a dangerous moment is sent to you."
     }
   }
 }

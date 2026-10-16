@@ -17,7 +17,7 @@
   --muted-foreground: #475d61;
   --border: #c7d5d8;
   --hairline: rgb(11 26 29 / 0.1);
-  --input: #b9cacd;
+  --input: #7b8f93;
   --ring: #0b1a1d;
   --primary: #0f766e;
   --primary-foreground: #ffffff;
@@ -28,11 +28,14 @@
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --destructive-text: #b91c1c;
+  /* Under white text (alert orb, critical badges): 4.8:1, where #ef4444 is only 3.8:1. */
+  --destructive-strong: #dc2626;
   --glass: rgb(255 255 255 / 0.72);
   --glass-strong: rgb(255 255 255 / 0.9);
   --glass-border: rgb(11 26 29 / 0.08);
   --glass-highlight: rgb(255 255 255 / 0.9);
   --scrim: rgb(11 26 29 / 0.4);
+  --glass-shadow: 0 1px 2px rgb(9 9 11 / 0.05), 0 12px 32px -16px rgb(9 9 11 / 0.16);
   --orb-highlight: #f0fdfa;
   --aurora-calm:
     radial-gradient(60% 38% at 16% 10%, rgb(45 212 191 / 0.22), transparent 70%),
@@ -49,7 +52,7 @@
   --muted-foreground: #9bb4b8;
   --border: #3f5c62;
   --hairline: rgb(255 255 255 / 0.12);
-  --input: #3f5c62;
+  --input: #6b8c92;
   --ring: #ffffff;
   --primary: #2dd4bf;
   --primary-foreground: #032420;
@@ -65,35 +68,58 @@
   --glass-border: rgb(255 255 255 / 0.14);
   --glass-highlight: rgb(255 255 255 / 0.1);
   --scrim: rgb(3 13 16 / 0.66);
+  --glass-shadow: 0 20px 40px -24px rgb(2 6 23 / 0.5);
   --aurora-calm:
     radial-gradient(60% 38% at 16% 10%, rgb(45 212 191 / 0.3), transparent 70%),
     radial-gradient(55% 42% at 94% 46%, rgb(14 165 233 / 0.2), transparent 70%),
     radial-gradient(70% 38% at 40% 104%, rgb(16 185 129 / 0.18), transparent 70%), var(--background);
 }
 
-/* ---- palettes (lake is the default above) ---- */
+/* ---- palettes (lake is the base above; night is the default, see palettes.ts) ---- */
+/* Night is the default: flat neutral surfaces, one blue accent, no gradients. */
 [data-palette="night"] {
-  --primary: #1d4ed8;
+  --background: #f4f4f5;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --muted: #eeeef0;
+  --muted-foreground: #52525b;
+  --border: #e4e4e7;
+  --hairline: rgb(9 9 11 / 0.08);
+  --input: #71717a;
+  --ring: #2563eb;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
   --primary-text: #1d4ed8;
-  --orb-highlight: #eff6ff;
+  --glass: rgb(255 255 255 / 0.92);
+  --glass-strong: rgb(255 255 255 / 0.97);
+  --glass-border: rgb(9 9 11 / 0.08);
+  --glass-highlight: rgb(255 255 255 / 1);
+  --scrim: rgb(9 9 11 / 0.35);
+  --orb-highlight: #dbeafe;
+  --aurora-calm: var(--background);
 }
 .dark[data-palette="night"] {
-  --background: #0a1226;
-  --card: #141e38;
-  --muted: #1f2a49;
-  --muted-foreground: #a3b0cc;
-  --border: #47567c;
-  --input: #47567c;
-  --primary: #60a5fa;
-  --primary-foreground: #061430;
-  --primary-text: #93c5fd;
-  --glass: rgb(20 30 56 / 0.58);
-  --glass-strong: rgb(20 30 56 / 0.88);
-  --scrim: rgb(5 9 20 / 0.66);
-  --aurora-calm:
-    radial-gradient(60% 38% at 16% 10%, rgb(96 165 250 / 0.32), transparent 70%),
-    radial-gradient(55% 42% at 94% 46%, rgb(99 102 241 / 0.2), transparent 70%),
-    radial-gradient(70% 38% at 40% 104%, rgb(34 211 238 / 0.16), transparent 70%), var(--background);
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #141417;
+  --card-foreground: #fafafa;
+  --muted: #1f1f23;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+  --input: #71717a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-text: #60a5fa;
+  --glass: rgb(20 20 23 / 0.92);
+  --glass-strong: rgb(20 20 23 / 0.97);
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-highlight: rgb(255 255 255 / 0.08);
+  --hairline: rgb(255 255 255 / 0.1);
+  --ring: #ffffff;
+  --scrim: rgb(0 0 0 / 0.7);
+  --orb-highlight: #dbeafe;
+  --aurora-calm: var(--background);
 }
 [data-palette="hearth"] {
   --primary: #15803d;
@@ -106,7 +132,7 @@
   --muted: #302a23;
   --muted-foreground: #b8ad9f;
   --border: #5c5247;
-  --input: #5c5247;
+  --input: #7d7163;
   --primary: #86d7a0;
   --primary-foreground: #0f2416;
   --primary-text: #aee8bf;
@@ -129,7 +155,7 @@
   --muted: #272f42;
   --muted-foreground: #94a3b8;
   --border: #475569;
-  --input: #475569;
+  --input: #6b7a90;
   --primary: #22c55e;
   --primary-foreground: #0f172a;
   --primary-text: #4ade80;
@@ -143,6 +169,11 @@
 }
 
 :root {
+  --aurora-alert:
+    radial-gradient(70% 42% at 20% 6%, rgb(239 68 68 / 0.2), transparent 70%),
+    radial-gradient(60% 48% at 96% 44%, rgb(244 63 94 / 0.12), transparent 70%), #fff1f2;
+}
+.dark {
   --aurora-alert:
     radial-gradient(70% 42% at 20% 6%, rgb(239 68 68 / 0.58), transparent 70%),
     radial-gradient(60% 48% at 96% 44%, rgb(244 63 94 / 0.36), transparent 70%),
@@ -221,11 +252,44 @@
   --animate-wave: wave 1.1s ease-in-out infinite;
   --animate-rise: rise 420ms var(--ease-smooth);
   --animate-draw: draw 1.4s var(--ease-smooth) both;
+  --animate-pop: pop 420ms var(--ease-bouncy) both;
+  --animate-wiggle: wiggle 700ms var(--ease-standard) 200ms both;
+  --animate-drop-in: drop-in 520ms var(--ease-bouncy) both;
 
   @keyframes rise {
     from {
       opacity: 0;
       transform: translateY(10px);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(0);
+    }
+    20% {
+      transform: rotate(-14deg);
+    }
+    40% {
+      transform: rotate(11deg);
+    }
+    60% {
+      transform: rotate(-7deg);
+    }
+    80% {
+      transform: rotate(4deg);
+    }
+  }
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-120%) scale(0.96);
     }
   }
   @keyframes draw {
@@ -346,7 +410,7 @@
   backdrop-filter: blur(18px) saturate(160%);
   box-shadow:
     inset 0 1px 0 var(--glass-highlight),
-    0 20px 40px -24px rgb(2 6 23 / 0.5);
+    var(--glass-shadow);
 }
 @utility glass-strong {
   background-color: var(--glass-strong);
@@ -390,11 +454,26 @@
     animation-delay: 225ms;
   }
 }
+/* Landing sections rise into view as they scroll in (browsers without scroll timelines show them). */
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+/* Theme and palette changes cross-fade instead of snapping. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-standard);
+}
 @utility bg-aurora-calm {
   background: var(--aurora-calm);
 }
-/* A screen showing an unanswered critical alert turns the whole page red. */
-.app-frame:has([data-tone="alert"]) {
+/* An unanswered critical alert turns the whole page red: on Home, and on every screen (live view
+   included) while the in-app alert banner is up. */
+body:has([data-tone="alert"]) .app-frame {
   background: var(--aurora-alert);
   background-attachment: fixed;
 }
@@ -450,6 +529,7 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    animation-timeline: auto !important;
   }
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion block ends */

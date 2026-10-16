@@ -14,7 +14,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
     { href: routes.home, label: t("nav.dashboard") },
   ];
   return (
-    <div className="min-h-dvh bg-aurora-calm bg-fixed">
+    <div className="min-h-dvh overflow-x-clip bg-aurora-calm bg-fixed">
       <SiteHeader locale={locale} />
       <main className="mx-auto grid max-w-6xl gap-24 px-5 pt-10 pb-20 md:px-8 lg:gap-36 lg:px-10 lg:pt-12 lg:pb-28">
         {children}

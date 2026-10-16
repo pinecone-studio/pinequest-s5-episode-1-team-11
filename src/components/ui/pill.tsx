@@ -6,7 +6,7 @@ const tones = {
   ok: "bg-white/6 border-hairline text-muted-foreground [--led:var(--primary)]",
   warning: "bg-warning/14 border-warning/40 text-warning-text [--led:var(--warning)]",
   danger:
-    "bg-destructive/20 border-destructive/50 text-destructive-text [--led:var(--destructive)]",
+    "bg-destructive/12 border-destructive/50 text-destructive-text [--led:var(--destructive)]",
 } as const;
 
 export type PillTone = keyof typeof tones;
