@@ -21,6 +21,8 @@ type HomesValue = {
   error: string | null;
   select: (id: string) => void;
   retry: () => void;
+  saveProfileName: (name: string) => Promise<void>;
+  saveHouseholdName: (name: string) => Promise<void>;
 };
 const HomesContext = createContext<HomesValue | null>(null);
 
@@ -87,6 +89,41 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
         households,
         household,
         name,
+        saveProfileName: async (value) => {
+          const next = value.trim();
+          if (!next) throw new Error("Нэрээ оруулна уу.");
+          const result = await supabase
+            .from("profiles")
+            .upsert({ id: userId, name: next })
+            .select("*")
+            .maybeSingle();
+          if (result.error || !result.data)
+            throw new Error(
+              "Нэр хадгалагдсангүй. Холболт болон өөрийн профайл шинэчлэх эрхээ шалгана уу.",
+            );
+          setName(result.data.name ?? "");
+        },
+        saveHouseholdName: async (value) => {
+          const next = value.trim();
+          if (!next) throw new Error("Гэр бүлийн нэрээ оруулна уу.");
+          if (!household || household.owner_id !== userId)
+            throw new Error("Гэр бүлийн эзэн нэрийг өөрчилнө.");
+          const result = await supabase
+            .from("households")
+            .update({ name: next })
+            .eq("id", household.id)
+            .eq("owner_id", userId)
+            .select("*")
+            .maybeSingle();
+          if (result.error || !result.data)
+            throw new Error(
+              "Гэр бүлийн нэр хадгалагдсангүй. Холболт болон шинэчлэх эрхээ шалгана уу.",
+            );
+          const saved = result.data;
+          setHouseholds((old) =>
+            old.map((home) => (home.id === saved.id ? saved : home)),
+          );
+        },
         loading,
         error,
         select: (id) => {
@@ -116,6 +153,7 @@ type DataValue = {
   refreshing: boolean;
   error: string | null;
   realtimeError: string | null;
+  checkedAt: string | null;
   refresh: () => Promise<void>;
   applyEvent: (event: HaloEvent) => void;
   critical: HaloEvent | null;
@@ -135,6 +173,7 @@ function DataProvider({
   const [loading, setLoading] = useState(!!householdId);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const [realtimeError, setRealtimeError] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const alive = useRef(true);
@@ -187,6 +226,7 @@ function DataProvider({
         if (change.version > startedAt)
           merged.set(change.event.id, change.event);
       });
+      setCheckedAt(new Date().toISOString());
       setDevices(deviceResult.data ?? []);
       setEvents(sortedEvents([...merged.values()]));
       setError(null);
@@ -293,6 +333,7 @@ function DataProvider({
         refreshing,
         error,
         realtimeError,
+        checkedAt,
         refresh,
         applyEvent,
         critical,

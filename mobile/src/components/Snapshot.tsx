@@ -3,12 +3,19 @@ import { ActivityIndicator, AppState, Image, Text, View } from "react-native";
 import { supabase } from "../lib/supabase";
 import { Button, colors, styles } from "./ui";
 
-export function Snapshot({ path }: { path: string | null }) {
+export function Snapshot({
+  path,
+  compact = false,
+}: {
+  path: string | null;
+  compact?: boolean;
+}) {
   const [attempt, setAttempt] = useState(0);
   return (
     <SnapshotContent
       key={`${path ?? "none"}:${attempt}`}
       path={path}
+      compact={compact}
       onRetry={() => setAttempt((n) => n + 1)}
     />
   );
@@ -17,9 +24,11 @@ export function Snapshot({ path }: { path: string | null }) {
 function SnapshotContent({
   path,
   onRetry,
+  compact,
 }: {
   path: string | null;
   onRetry: () => void;
+  compact: boolean;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!path);
@@ -71,7 +80,19 @@ function SnapshotContent({
     };
   }, [path]);
   return (
-    <View style={[styles.card, { minHeight: 220, justifyContent: "center" }]}>
+    <View
+      style={[
+        styles.card,
+        {
+          minHeight: compact ? 210 : 220,
+          justifyContent: "center",
+          backgroundColor: "#090F1C",
+          padding: compact ? 8 : 16,
+          borderRadius: 20,
+        },
+        compact && { borderWidth: 3, borderColor: "#42303A" },
+      ]}
+    >
       {!path ? (
         <Text style={styles.muted}>Энэ дохионы зураг байхгүй.</Text>
       ) : loading ? (
@@ -86,7 +107,11 @@ function SnapshotContent({
           source={{ uri: url }}
           accessibilityLabel="Дохио илэрсэн үеийн зураг"
           resizeMode="contain"
-          style={{ width: "100%", height: 240, borderRadius: 12 }}
+          style={{
+            width: "100%",
+            height: compact ? 214 : 240,
+            borderRadius: 12,
+          }}
           onError={() => setError(true)}
         />
       ) : null}

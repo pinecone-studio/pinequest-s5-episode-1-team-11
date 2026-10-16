@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { SectionList, Pressable, Text, View } from "react-native";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
 import {
   colors,
-  EventCard,
   HouseholdPicker,
   Loading,
   Problem,
   Screen,
   styles,
 } from "../../components/ui";
+
+import { EventRow } from "../../components/EventRow";
 
 const filters = [
   { id: "all", label: "Бүгд" },
@@ -30,12 +31,42 @@ export default function EventsScreen() {
         ["scream", "cry", "glass", "alarm"].includes(event.kind)) ||
       (filter === "device" && ["offline", "test"].includes(event.kind)),
   );
+  const today = new Date();
+  const yesterday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 1,
+  );
+  const dateKey = (iso: string) => {
+    const date = new Date(iso);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+  const groups = new Map<string, { title: string; data: typeof list }>();
+  for (const event of list) {
+    const key = dateKey(event.occurred_at);
+    if (!groups.has(key))
+      groups.set(key, {
+        title:
+          key === dateKey(today.toISOString())
+            ? "Өнөөдөр"
+            : key === dateKey(yesterday.toISOString())
+              ? "Өчигдөр"
+              : new Date(event.occurred_at).toLocaleDateString("mn-MN", {
+                  month: "long",
+                  day: "numeric",
+                }),
+        data: [],
+      });
+    groups.get(key)!.data.push(event);
+  }
   return (
     <Screen>
-      <FlatList
-        data={list}
+      <SectionList
+        sections={[...groups.values()]}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
         keyExtractor={(event) => event.id}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{ padding: 20, paddingBottom: 116 }}
         refreshing={data.refreshing}
         onRefresh={() => {
           if (homes.error) homes.retry();
@@ -62,7 +93,10 @@ export default function EventsScreen() {
               style={{
                 flexDirection: "row",
                 borderRadius: 25,
-                backgroundColor: colors.card,
+                backgroundColor: "#0D2830",
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginBottom: 8,
                 padding: 4,
               }}
             >
@@ -80,7 +114,7 @@ export default function EventsScreen() {
                     padding: 4,
                     borderRadius: 22,
                     backgroundColor:
-                      filter === item.id ? "#2B5156" : "transparent",
+                      filter === item.id ? "#29484D" : "transparent",
                   }}
                 >
                   <Text
@@ -97,7 +131,22 @@ export default function EventsScreen() {
             </View>
           </View>
         }
-        renderItem={({ item }) => <EventCard event={item} />}
+        renderSectionHeader={({ section }) => (
+          <Text
+            style={[
+              styles.muted,
+              {
+                fontWeight: "700",
+                fontSize: 12,
+                paddingTop: 14,
+                paddingBottom: 12,
+              },
+            ]}
+          >
+            {section.title}
+          </Text>
+        )}
+        renderItem={({ item }) => <EventRow event={item} />}
         ListEmptyComponent={
           <Text
             style={[styles.muted, { textAlign: "center", paddingVertical: 35 }]}
