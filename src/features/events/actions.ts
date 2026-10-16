@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
+import { EVENTS_SEEN_COOKIE } from "@/lib/data/events-seen";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -67,4 +69,16 @@ export async function respondToEvent(
   revalidatePath(routes.home);
   revalidatePath("/", "layout");
   return { status: response };
+}
+
+/** Opening the events list clears the nav badge; the alerts themselves stay "new" until answered. */
+export async function markEventsSeen() {
+  (await cookies()).set(EVENTS_SEEN_COOKIE, new Date().toISOString(), {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+  revalidatePath("/", "layout");
 }

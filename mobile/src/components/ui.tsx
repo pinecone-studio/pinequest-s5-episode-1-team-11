@@ -1,49 +1,59 @@
-import { useState, type ReactNode } from "react";
+import { haptic, Led, MotionPressable as Pressable } from "./motion";
+import { Children, useState, type ComponentProps, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import {
-  dateLabel,
-  kindLabel,
-  setEventStatus,
-  severityLabel,
-  statusLabel,
-} from "../lib/events";
-import type { HaloEvent } from "../lib/types";
+import { setEventStatus, statusLabel } from "../lib/events";
+import type { Device, HaloEvent } from "../lib/types";
 import { useAuth } from "../providers/AuthProvider";
 import { useData, useHomes } from "../providers/HouseholdProvider";
+import { aurora, colors, fonts } from "./colors";
 
-export const colors = {
-  bg: "#07191D",
-  card: "#0C252D",
-  border: "#2B454C",
-  text: "#F1F6F7",
-  muted: "#91ABB1",
-  primary: "#5EEAD4",
-  danger: "#FB7185",
-};
+export { colors, fonts } from "./colors";
 export const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { padding: 20, paddingBottom: 116, gap: 16 },
+  content: { padding: 20, paddingTop: 16, paddingBottom: 116, gap: 24 },
   title: {
     color: colors.text,
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.7,
+    fontFamily: fonts.display,
+    fontSize: 26,
+    lineHeight: 32,
+    letterSpacing: -0.3,
   },
-  heading: { color: colors.text, fontSize: 18, fontWeight: "700" },
-  text: { color: colors.text, fontSize: 15, lineHeight: 22 },
-  muted: { color: colors.muted, fontSize: 13, lineHeight: 19 },
+  heading: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  text: {
+    color: colors.text,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  muted: {
+    color: colors.muted,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  section: {
+    color: colors.muted,
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    lineHeight: 20,
+    paddingLeft: 4,
+    marginBottom: -12,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -51,40 +61,52 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.glass,
+    borderColor: colors.glassBorder,
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 24,
     padding: 16,
     gap: 8,
+    boxShadow:
+      "inset 0px 1px 0px rgba(255,255,255,0.10), 0px 20px 40px -24px rgba(2,6,23,0.9)",
   },
   input: {
     color: colors.text,
+    fontFamily: fonts.body,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
+    borderColor: colors.inputBorder,
+    borderRadius: 16,
     backgroundColor: colors.card,
-    padding: 15,
+    minHeight: 52,
+    padding: 16,
   },
   button: {
-    backgroundColor: colors.primary,
-    minHeight: 48,
-    padding: 14,
-    borderRadius: 25,
+    backgroundColor: colors.primaryButton,
+    minHeight: 52,
+    paddingHorizontal: 20,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    boxShadow: "0px 14px 34px -16px #60A5FA",
   },
   buttonSecondary: {
-    backgroundColor: "#203C43",
-    borderColor: colors.border,
+    backgroundColor: colors.glass,
+    borderColor: colors.glassBorder,
     borderWidth: 1,
+    boxShadow: "none",
   },
-  buttonText: { color: "#063A34", fontSize: 15, fontWeight: "700" },
-  badge: { color: colors.primary, fontSize: 12, fontWeight: "700" },
-  error: { color: "#FFB0BC", fontSize: 13, lineHeight: 20 },
+  buttonText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 18 },
+  badge: { color: colors.primary, fontFamily: fonts.bold, fontSize: 14 },
+  error: {
+    color: colors.danger,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+  },
 });
 
+/** Aurora background like the web; `danger` turns it red for an open alert. */
 export function Screen({
   children,
   danger = false,
@@ -93,20 +115,48 @@ export function Screen({
   danger?: boolean;
 }) {
   return (
-    <LinearGradient
-      colors={
-        danger
-          ? ["#722025", "#280D16", "#13070D"]
-          : ["#123D3A", "#07191D", "#082832"]
-      }
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0.8 }}
-      style={styles.fill}
+    <View
+      style={[
+        styles.fill,
+        {
+          backgroundColor: danger ? aurora.alertBg : colors.bg,
+          experimental_backgroundImage: danger ? aurora.alert : aurora.calm,
+        },
+      ]}
     >
       <SafeAreaView edges={["top", "left", "right"]} style={styles.fill}>
         {children}
       </SafeAreaView>
-    </LinearGradient>
+    </View>
+  );
+}
+/** Round glass back button with a centred title, as on the prototype's detail screens. */
+export function BackBar({ title, close = false }: { title: string; close?: boolean }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={close ? "Хаах" : "Буцах"}
+        onPress={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace("/");
+        }}
+        style={[
+          styles.card,
+          { width: 44, height: 44, borderRadius: 22, padding: 0, alignItems: "center", justifyContent: "center" },
+        ]}
+      >
+        <Ionicons name={close ? "close" : "chevron-back"} size={22} color={colors.text} />
+      </Pressable>
+      <Text
+        numberOfLines={1}
+        accessibilityRole="header"
+        style={[styles.heading, { flex: 1, textAlign: "center" }]}
+      >
+        {title}
+      </Text>
+      <View style={{ width: 44 }} />
+    </View>
   );
 }
 export function Card({ children }: { children: ReactNode }) {
@@ -133,27 +183,28 @@ export function Button({
       accessibilityState={{ disabled: disabled || busy, busy }}
       disabled={disabled || busy}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.button,
         secondary && styles.buttonSecondary,
         textOnly && {
           backgroundColor: "transparent",
           borderWidth: 0,
-          padding: 8,
+          boxShadow: "none",
+          minHeight: 44,
         },
-        { opacity: disabled || busy ? 0.5 : pressed ? 0.8 : 1 },
+        { opacity: disabled || busy ? 0.5 : 1 },
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={secondary ? colors.text : "#063A34"} />
+        <ActivityIndicator color={secondary ? colors.text : colors.onPrimary} />
       ) : (
         <Text
           style={[
             styles.buttonText,
-            secondary && { color: colors.text },
+            secondary && { color: colors.text, fontSize: 16 },
             textOnly && {
               color: colors.muted,
-              fontSize: 12,
+              fontSize: 14,
               textDecorationLine: "underline",
             },
           ]}
@@ -162,6 +213,190 @@ export function Button({
         </Text>
       )}
     </Pressable>
+  );
+}
+/** Small status capsule with a light, as in the prototype's lists. */
+export function Pill({
+  label,
+  tone = "ok",
+}: {
+  label: string;
+  tone?: "ok" | "warn" | "crit" | "rest";
+}) {
+  const color = {
+    ok: colors.primaryButton,
+    warn: colors.warningButton,
+    crit: colors.dangerButton,
+    rest: colors.muted,
+  }[tone];
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        minHeight: 28,
+        paddingHorizontal: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: tone === "ok" || tone === "rest" ? colors.hairline : `${color}80`,
+        backgroundColor:
+          tone === "ok" || tone === "rest" ? "rgba(255,255,255,0.06)" : `${color}24`,
+      }}
+    >
+      <Led color={color} size={7} blink={tone === "crit"} />
+      <Text
+        style={{
+          color:
+            tone === "warn"
+              ? colors.warning
+              : tone === "crit"
+                ? colors.danger
+                : colors.muted,
+          fontFamily: fonts.bold,
+          fontSize: 12,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+}
+export const deviceIcon = (kind: Device["kind"]) =>
+  kind === "phone"
+    ? "phone-portrait-outline"
+    : kind === "laptop"
+      ? "laptop-outline"
+      : "videocam-outline";
+export const kindLabel: Record<Device["kind"], string> = {
+  phone: "Утас",
+  laptop: "Компьютер",
+  ip_camera: "IP камер",
+};
+/** Glass group of rows split by hairlines, like the web's ListGroup. */
+export function ListGroup({ children }: { children: ReactNode }) {
+  return (
+    <View style={[styles.card, { padding: 0, gap: 0, overflow: "hidden" }]}>
+      {Children.toArray(children).map((child, index) => (
+        <View
+          key={index}
+          style={index > 0 && { borderTopWidth: 1, borderTopColor: colors.hairline }}
+        >
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+export function ListRow({
+  icon,
+  tone,
+  leading,
+  title,
+  description,
+  trailing,
+  onPress,
+}: {
+  icon?: ComponentProps<typeof Ionicons>["name"];
+  tone?: "warn";
+  leading?: ReactNode;
+  title: string;
+  description?: string;
+  trailing?: ReactNode;
+  onPress?: () => void;
+}) {
+  const body = (
+    <>
+      {leading ??
+        (icon && (
+          <View
+            style={[
+              local.icon,
+              tone === "warn" && { backgroundColor: `${colors.warningButton}24` },
+            ]}
+          >
+            <Ionicons
+              name={icon}
+              size={22}
+              color={tone === "warn" ? colors.warning : colors.primary}
+            />
+          </View>
+        ))}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text numberOfLines={1} style={local.rowTitle}>
+          {title}
+        </Text>
+        {description ? (
+          <Text numberOfLines={2} style={local.rowSub}>
+            {description}
+          </Text>
+        ) : null}
+      </View>
+      {trailing ??
+        (onPress && <Ionicons name="chevron-forward" size={20} color={colors.muted} />)}
+    </>
+  );
+  return onPress ? (
+    <Pressable accessibilityRole="button" onPress={onPress} style={local.row}>
+      {body}
+    </Pressable>
+  ) : (
+    <View style={local.row}>{body}</View>
+  );
+}
+/** Initials in a ringed circle, as the web's Avatar. */
+export function Avatar({ name, ring = colors.primaryButton }: { name: string; ring?: string }) {
+  const initials =
+    name
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "H";
+  return (
+    <View style={[local.avatar, { borderColor: ring }]}>
+      <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 14 }}>{initials}</Text>
+    </View>
+  );
+}
+/** Empty list: an icon, what is missing and what to do, as the web's EmptyState. */
+export function Empty({
+  icon,
+  title,
+  hint,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  hint: string;
+}) {
+  return (
+    <View style={[styles.card, { alignItems: "center", paddingVertical: 24 }]}>
+      <Ionicons name={icon} size={32} color={colors.primary} />
+      <Text style={[styles.heading, { textAlign: "center" }]}>{title}</Text>
+      <Text style={[styles.muted, { textAlign: "center" }]}>{hint}</Text>
+    </View>
+  );
+}
+/** Title and subtitle at the top of a tab, as the web's PageHeader. */
+export function Header({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <View style={{ gap: 2 }}>
+      <Text accessibilityRole="header" style={styles.title}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={[styles.muted, { fontFamily: fonts.semibold }]}>{subtitle}</Text>
+      ) : null}
+    </View>
+  );
+}
+export function DevicePill({ device }: { device: Device }) {
+  return device.status === "online" ? (
+    <Pill label="Онлайн" />
+  ) : device.status === "pairing" ? (
+    <Pill label="Холбож байна" tone="rest" />
+  ) : (
+    <Pill label="Салсан" tone="warn" />
   );
 }
 export function Problem({ text, retry }: { text: string; retry?: () => void }) {
@@ -180,7 +415,7 @@ export function Loading() {
       <View
         style={[
           styles.fill,
-          { justifyContent: "center", alignItems: "center" },
+          { justifyContent: "center", alignItems: "center", gap: 8 },
         ]}
       >
         <ActivityIndicator color={colors.primary} />
@@ -201,68 +436,48 @@ export function HouseholdPicker() {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: 8 }}
     >
-      {households.map((home) => (
-        <Pressable
-          key={home.id}
-          onPress={() => select(home.id)}
-          accessibilityRole="button"
-          accessibilityState={{ selected: household?.id === home.id }}
-          style={[
-            styles.button,
-            styles.buttonSecondary,
-            household?.id === home.id && { borderColor: colors.primary },
-          ]}
-        >
-          <Text style={styles.text}>{home.name}</Text>
-        </Pressable>
-      ))}
+      {households.map((home) => {
+        const selected = household?.id === home.id;
+        return (
+          <Pressable
+            key={home.id}
+            onPress={() => {
+              haptic.tick();
+              select(home.id);
+            }}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            style={[
+              styles.buttonSecondary,
+              {
+                minHeight: 44,
+                paddingHorizontal: 16,
+                borderRadius: 22,
+                justifyContent: "center",
+              },
+              selected && { backgroundColor: colors.text },
+            ]}
+          >
+            <Text
+              style={[
+                styles.badge,
+                { color: selected ? colors.bg : colors.muted },
+              ]}
+            >
+              {home.name}
+            </Text>
+          </Pressable>
+        );
+      })}
     </ScrollView>
   );
 }
-export function EventCard({ event }: { event: HaloEvent }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() =>
-        router.push({ pathname: "/events/[id]", params: { id: event.id } })
-      }
-      style={({ pressed }) => [styles.card, { opacity: pressed ? 0.8 : 1 }]}
-    >
-      <View style={styles.row}>
-        <Text style={[styles.heading, { flex: 1 }]}>
-          {kindLabel[event.kind]}
-        </Text>
-        <Text
-          style={[
-            styles.badge,
-            event.severity === "critical" && { color: colors.danger },
-          ]}
-        >
-          {severityLabel[event.severity]}
-        </Text>
-      </View>
-      <Text style={styles.muted}>
-        {[event.person_name, event.room_name].filter(Boolean).join(" · ") ||
-          "Байршил тодорхойгүй"}
-      </Text>
-      <View style={styles.row}>
-        <Text style={styles.muted}>{dateLabel(event.occurred_at)}</Text>
-        <Text style={styles.badge}>{statusLabel[event.status]}</Text>
-      </View>
-    </Pressable>
-  );
-}
-export function EventActions({
-  event,
-  onUpdated,
-  alertMode = false,
-  afterAcknowledge,
-}: {
-  event: HaloEvent;
-  onUpdated?: (row: HaloEvent) => void;
-  alertMode?: boolean;
-  afterAcknowledge?: ReactNode;
-}) {
+
+/** Marks an event seen or false; shared by the alert, the event page and swipe-to-ack rows. */
+export function useEventStatus(
+  event: HaloEvent,
+  onUpdated?: (row: HaloEvent) => void,
+) {
   const { session } = useAuth();
   const { applyEvent, refresh } = useData();
   const [busy, setBusy] = useState(false);
@@ -278,6 +493,7 @@ export function EventActions({
         session.user.id,
         status,
       );
+      haptic.done();
       applyEvent(updated);
       onUpdated?.(updated);
     } catch (reason) {
@@ -289,87 +505,73 @@ export function EventActions({
       setBusy(false);
     }
   }
+  return { busy, error, submit };
+}
+export function confirmFalseAlarm(submit: () => void) {
+  Alert.alert("Хуурамч дохио", "Энэ дохиог хуурамч гэж тэмдэглэх үү?", [
+    { text: "Болих", style: "cancel" },
+    { text: "Тэмдэглэх", onPress: submit },
+  ]);
+}
+export function EventActions({
+  event,
+  onUpdated,
+}: {
+  event: HaloEvent;
+  onUpdated?: (row: HaloEvent) => void;
+}) {
+  const { busy, error, submit } = useEventStatus(event, onUpdated);
+  if (event.status !== "new")
+    return <Text style={styles.muted}>Төлөв: {statusLabel[event.status]}</Text>;
   return (
-    <View style={{ gap: 10 }}>
-      {alertMode ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Би очиж байна. Дохиог харсан гэж тэмдэглэх"
-          accessibilityState={{
-            disabled: busy || event.status !== "new",
-            busy,
-          }}
-          disabled={busy || event.status !== "new"}
-          onPress={() => {
-            void submit("acknowledged");
-          }}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            borderRadius: 36,
-            padding: 6,
-            backgroundColor: "#102D32",
-            opacity: busy || pressed ? 0.7 : 1,
-          })}
-        >
-          <View
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: colors.primary,
-            }}
-          >
-            {busy ? (
-              <ActivityIndicator color="#063A34" />
-            ) : (
-              <Ionicons name="arrow-forward" size={25} color="#063A34" />
-            )}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.text, { fontWeight: "700" }]}>
-              Би очиж байна
-            </Text>
-            <Text style={[styles.muted, { fontSize: 11 }]}>
-              Дохиог харсан гэж тэмдэглэх
-            </Text>
-          </View>
-        </Pressable>
-      ) : (
-        <Button
-          title="Харлаа"
-          busy={busy}
-          disabled={event.status !== "new"}
-          onPress={() => {
-            void submit("acknowledged");
-          }}
-        />
-      )}
-      {afterAcknowledge}
+    <View style={{ gap: 12 }}>
       <Button
-        title={alertMode ? "Хуурамч дохио гэж тэмдэглэх" : "Хуурамч дохио"}
-        textOnly={alertMode}
-        secondary
-        disabled={busy || event.status !== "new"}
-        onPress={() =>
-          Alert.alert("Хуурамч дохио", "Энэ дохиог хуурамч гэж тэмдэглэх үү?", [
-            { text: "Болих", style: "cancel" },
-            {
-              text: "Тэмдэглэх",
-              onPress: () => {
-                void submit("false_alarm");
-              },
-            },
-          ])
-        }
+        title="Харлаа"
+        busy={busy}
+        onPress={() => void submit("acknowledged")}
       />
-      {event.status !== "new" && (
-        <Text style={styles.muted}>Төлөв: {statusLabel[event.status]}</Text>
-      )}
+      <Button
+        title="Хуурамч дохио"
+        secondary
+        disabled={busy}
+        onPress={() => confirmFalseAlarm(() => void submit("false_alarm"))}
+      />
       {error && <Problem text={error} />}
     </View>
   );
 }
+const local = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 64,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  rowTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 16, lineHeight: 22 },
+  rowSub: {
+    color: colors.muted,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+  },
+});

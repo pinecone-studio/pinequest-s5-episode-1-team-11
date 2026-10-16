@@ -109,7 +109,15 @@ export class LiveHost {
         const copy = track.clone();
         copy.enabled = !this.blocked;
         out.addTrack(copy);
-        connection.addTrack(copy, out);
+        if (copy.kind === "video") {
+          // Live view is about motion: under load the encoder should drop sharpness, not frames.
+          copy.contentHint = "motion";
+          connection.addTransceiver(copy, {
+            direction: "sendonly",
+            streams: [out],
+            sendEncodings: [{ maxFramerate: 30, maxBitrate: 1_200_000 }],
+          });
+        } else connection.addTrack(copy, out);
         return copy;
       });
     const peer: Peer = {
@@ -131,6 +139,13 @@ export class LiveHost {
     };
     const description = await connection.createOffer();
     await connection.setLocalDescription(description);
+    for (const sender of connection.getSenders()) {
+      if (sender.track?.kind !== "video") continue;
+      const parameters = sender.getParameters();
+      parameters.degradationPreference = "maintain-framerate";
+      // Best effort: a browser that rejects the preference still streams with its default.
+      await sender.setParameters(parameters).catch(() => undefined);
+    }
     this.send(channel, { kind: "offer", viewer, sdp: description.sdp ?? "" });
     if (this.blocked) this.send(channel, { kind: "blocked", viewer, blocked: true });
   }

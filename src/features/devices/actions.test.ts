@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultDetectionSettings } from "@/contracts";
-import { wakeCamera } from "@/lib/device-api/wake";
+import { pairCctv } from "@/features/live/server/stream";
 import { createClient } from "@/lib/supabase/server";
 import {
+  addCctvCamera,
   createDevicePairing,
   deleteDevice,
   getPairingStatus,
   updateDevice,
-  wakeDevice,
 } from "./actions";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/device-api/wake", () => ({ wakeCamera: vi.fn() }));
+vi.mock("@/features/live/server/stream", () => ({ pairCctv: vi.fn() }));
 
 const id = "00000000-0000-4000-8000-0000000000d1";
 const householdId = "00000000-0000-4000-8000-0000000000a1";
@@ -107,17 +107,17 @@ describe("guardian device actions", () => {
     expect(await updateDevice(input)).toEqual({ ok: false, error: "conflict" });
   });
 
-  it("wakes only a camera in the caller's household", async () => {
-    vi.mocked(wakeCamera).mockResolvedValue("sent");
-    expect(await wakeDevice(id)).toEqual({ ok: true, data: "sent" });
-    expect(devices.eq).toHaveBeenCalledWith("household_id", householdId);
-    expect(wakeCamera).toHaveBeenCalledWith(id);
-
-    vi.mocked(wakeCamera).mockClear();
-    devices.maybeSingle.mockResolvedValue({ data: null, error: null });
-    expect(await wakeDevice(id)).toEqual({ ok: false, error: "notFound" });
-    expect(wakeCamera).not.toHaveBeenCalled();
-    expect(await wakeDevice("not-a-uuid")).toEqual({ ok: false, error: "invalid" });
+  it("pairs an IP camera through the camera server and explains each failure", async () => {
+    const camera = { deviceId: id, server: "rtmp://3.25.26.5:1935/live", streamKey: "key" };
+    const add = { name: " Hall ", roomName: " Hall ", kind: "ip_camera" };
+    vi.mocked(pairCctv).mockResolvedValue(camera);
+    expect(await addCctvCamera(add)).toEqual({ ok: true, data: camera });
+    expect(pairCctv).toHaveBeenCalledWith(client, "Hall", "Hall");
+    vi.mocked(pairCctv).mockResolvedValue("camera");
+    expect(await addCctvCamera(add)).toEqual({ ok: false, error: "camera" });
+    vi.mocked(pairCctv).mockResolvedValue("forbidden");
+    expect(await addCctvCamera(add)).toEqual({ ok: false, error: "failed" });
+    expect(await addCctvCamera({ ...add, kind: "phone" })).toEqual({ ok: false, error: "invalid" });
   });
 
   it("does not pretend to persist or generate a usable code in demo mode", async () => {

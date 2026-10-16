@@ -17,7 +17,7 @@
   },
   "ready": {
     "lead": "{name} is ready to watch.",
-    "reopen": "If this page closes, this phone gets a “Halo camera is off” notification. Tap it and the camera starts again. Start watching asks for notification permission; allow it.",
+    "reopen": "Close Halo and open it again: this phone starts as the camera right away.",
     "savedCode": "This phone is already connected. Continue using the current camera, or use the new code to make another connection.",
     "useNewCode": "Connect with the new code",
     "localLead": "Test mode: detections only appear on this screen.",

@@ -201,7 +201,7 @@ export function WatchView({
           if (cancelled || runFailed) return;
           lastFrameRef.current = performance.now();
           const canvas = canvasRef.current;
-          if (canvas) drawSkeletons(canvas, video, pausedRef.current ? [] : poses, "#5EEAD4");
+          if (canvas) drawSkeletons(canvas, video, pausedRef.current ? [] : poses, "#93C5FD");
         },
         onError(error) {
           console.error("pose detection failed", error);

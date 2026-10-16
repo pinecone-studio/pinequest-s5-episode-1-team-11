@@ -27,7 +27,8 @@ export type DeviceActionError =
   | "notFound"
   | "failed"
   | "limit"
-  | "conflict";
+  | "conflict"
+  | "camera";
 export type DeviceActionResult<T = undefined> =
   | { ok: true; data: T }
   | { ok: false; error: DeviceActionError };

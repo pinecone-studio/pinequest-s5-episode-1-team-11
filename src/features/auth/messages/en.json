@@ -47,5 +47,7 @@
   "passwordUpdateFailed": "Could not update the password. Try again.",
   "passwordUpdated": "Your password has been updated.",
   "recoveryExpired": "This reset link has expired. Request a new one.",
-  "continue": "Continue"
+  "continue": "Continue",
+  "cameraMode": "Use this phone as a camera",
+  "cameraModeHint": "No sign-in needed on the phone you leave at home. Connect it with the 6-digit code from your phone."
 }

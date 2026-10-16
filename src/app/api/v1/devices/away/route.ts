@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * The camera page is closing or hidden. Back-date its last heartbeat so the family sees it as
- * offline at once, and the minute job sends the usual offline notice and wake-up right away.
+ * offline at once, and the minute job sends the usual offline notice right away.
  */
 export async function POST(request: Request) {
   if (!isDeviceApiConfigured) return apiError(503, "not_configured");

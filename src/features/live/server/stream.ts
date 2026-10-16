@@ -1,6 +1,8 @@
 import "server-only";
 import { createHmac } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { serverEnv } from "@/lib/env.server";
+import type { Database } from "@/lib/supabase/database.types";
 
 /** A view ends by itself; the page asks for a fresh token to keep watching. */
 export const STREAM_TTL_S = 600;
@@ -49,4 +51,25 @@ export async function provisionCamera(code: string, now = Date.now()) {
   }).catch(() => null);
   if (!response?.ok) return null;
   return (await response.json().catch(() => null)) as ProvisionedCamera | null;
+}
+
+/**
+ * The owner adds a CCTV camera (web and app): a pairing code made under their own RLS, claimed by
+ * the camera server, which answers with what to type into the camera.
+ */
+export async function pairCctv(
+  client: SupabaseClient<Database>,
+  name: string,
+  roomName: string,
+): Promise<ProvisionedCamera | "limit" | "forbidden" | "camera"> {
+  const { data, error } = await client.rpc("create_pairing", {
+    p_name: name,
+    p_room_name: roomName,
+    p_kind: "ip_camera",
+  });
+  if (error) return error.message.includes("Too many active pairing codes") ? "limit" : "forbidden";
+  const code = data?.[0]?.code;
+  if (!code) return "forbidden";
+  // An unclaimed code simply expires, so a failure here leaves nothing behind.
+  return (await provisionCamera(code)) ?? "camera";
 }
