@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Text, View } from "react-native";
+import Animated, { FadeInRight, FadeOutLeft, LinearTransition } from "react-native-reanimated";
+import { haptic, springs } from "./motion";
+import { StatusOrb } from "./StatusOrb";
 import { Button, colors, Screen, styles } from "./ui";
 
 const SEEN_KEY = "halo.onboardingSeen";
@@ -51,21 +54,47 @@ export function Onboarding({ done }: { done: () => void }) {
   const last = index === slides.length - 1;
   return (
     <Screen>
-      <View
-        style={[styles.content, { flex: 1, justifyContent: "center", gap: 20 }]}
-      >
-        <Ionicons name={slide.icon} size={56} color={colors.primary} />
-        <Text style={styles.title}>{slide.title}</Text>
-        <Text style={styles.text}>{slide.text}</Text>
-        <Text
-          style={styles.muted}
-          accessibilityLabel={`${index + 1}/${slides.length}`}
+      <View style={[styles.content, { flex: 1, justifyContent: "center" }]}>
+        <Animated.View
+          key={index}
+          entering={FadeInRight.springify()
+            .stiffness(springs.smooth.stiffness)
+            .damping(springs.smooth.damping)}
+          exiting={FadeOutLeft.duration(160)}
+          style={{ gap: 20 }}
         >
-          {slides.map((_, dot) => (dot === index ? "●" : "○")).join(" ")}
-        </Text>
+          <StatusOrb state="calm">
+            <Ionicons name={slide.icon} size={44} color={colors.onPrimary} />
+          </StatusOrb>
+          <Text style={styles.title}>{slide.title}</Text>
+          <Text style={styles.text}>{slide.text}</Text>
+        </Animated.View>
+        <View
+          accessibilityLabel={`${index + 1}/${slides.length}`}
+          style={{ flexDirection: "row", gap: 8 }}
+        >
+          {slides.map((item, dot) => (
+            <Animated.View
+              key={item.title}
+              layout={LinearTransition.springify()
+                .stiffness(springs.snappy.stiffness)
+                .damping(springs.snappy.damping)}
+              style={{
+                height: 8,
+                width: dot === index ? 24 : 8,
+                borderRadius: 4,
+                backgroundColor: dot === index ? colors.primaryButton : colors.border,
+              }}
+            />
+          ))}
+        </View>
         <Button
           title={last ? "Эхлэх" : "Цааш"}
-          onPress={() => (last ? done() : setIndex(index + 1))}
+          onPress={() => {
+            haptic.tick();
+            if (last) done();
+            else setIndex(index + 1);
+          }}
         />
         {!last && <Button title="Алгасах" textOnly onPress={done} />}
       </View>

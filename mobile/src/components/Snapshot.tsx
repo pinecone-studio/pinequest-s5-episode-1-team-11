@@ -3,19 +3,12 @@ import { ActivityIndicator, AppState, Image, Text, View } from "react-native";
 import { supabase } from "../lib/supabase";
 import { Button, colors, styles } from "./ui";
 
-export function Snapshot({
-  path,
-  compact = false,
-}: {
-  path: string | null;
-  compact?: boolean;
-}) {
+export function Snapshot({ path }: { path: string | null }) {
   const [attempt, setAttempt] = useState(0);
   return (
     <SnapshotContent
       key={`${path ?? "none"}:${attempt}`}
       path={path}
-      compact={compact}
       onRetry={() => setAttempt((n) => n + 1)}
     />
   );
@@ -24,11 +17,9 @@ export function Snapshot({
 function SnapshotContent({
   path,
   onRetry,
-  compact,
 }: {
   path: string | null;
   onRetry: () => void;
-  compact: boolean;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!path);
@@ -83,14 +74,7 @@ function SnapshotContent({
     <View
       style={[
         styles.card,
-        {
-          minHeight: compact ? 210 : 220,
-          justifyContent: "center",
-          backgroundColor: "#090F1C",
-          padding: compact ? 8 : 16,
-          borderRadius: 20,
-        },
-        compact && { borderWidth: 3, borderColor: "#42303A" },
+        { minHeight: 220, justifyContent: "center", alignItems: "center", padding: 8 },
       ]}
     >
       {!path ? (
@@ -109,8 +93,9 @@ function SnapshotContent({
           resizeMode="contain"
           style={{
             width: "100%",
-            height: compact ? 214 : 240,
-            borderRadius: 12,
+            height: 240,
+            borderRadius: 18,
+            backgroundColor: "#060A14",
           }}
           onError={() => setError(true)}
         />

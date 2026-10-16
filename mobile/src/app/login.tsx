@@ -1,23 +1,30 @@
 import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
-  View,
 } from "react-native";
 import { SITE, supabase } from "../lib/supabase";
+import { Rise } from "../components/motion";
+import { StatusOrb } from "../components/StatusOrb";
+import { authErrorMessage } from "../lib/auth-errors";
 import {
   Button,
   Card,
   colors,
+  fonts,
   Problem,
   Screen,
   styles,
 } from "../components/ui";
 
 type Mode = "login" | "register";
+// Mobile confirmation finishes at Supabase; the web callback requires a browser PKCE verifier.
+const confirmationRedirect = new URL("/login", SITE).toString();
 
 export default function LoginScreen() {
   const [mode, setMode] = useState<Mode>("login");
@@ -32,34 +39,47 @@ export default function LoginScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const inFlight = useRef(false);
 
-  /** Both links finish on the web, which already handles them (/auth/callback). */
-  async function sendEmail(kind: "recovery" | "signup") {
-    const address = (kind === "signup" ? confirmationEmail : email)?.trim();
+  async function resendConfirmation() {
+    const address = confirmationEmail?.trim();
     if (!address) return setError("Email хаягаа оруулна уу.");
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    const redirect = `${SITE}/auth/callback?next=${kind === "recovery" ? "/reset-password" : "/home"}`;
-    const { error: failed } =
-      kind === "recovery"
-        ? await supabase.auth.resetPasswordForEmail(address, {
-            redirectTo: redirect,
-          })
-        : await supabase.auth.resend({
-            type: "signup",
-            email: address,
-            options: { emailRedirectTo: redirect },
-          });
-    inFlight.current = false;
-    setBusy(false);
-    if (failed) setError("Илгээж чадсангүй. Түр хүлээгээд дахин оролдоно уу.");
-    else
+    setNotice(null);
+    try {
+      const { error: failed } = await supabase.auth.resend({
+        type: "signup",
+        email: address,
+        options: { emailRedirectTo: confirmationRedirect },
+      });
+      if (failed) {
+        setError(authErrorMessage(failed));
+        return;
+      }
       setNotice(
-        kind === "recovery"
-          ? "Нууц үг сэргээх холбоос email-ээр илгээгдлээ."
-          : "Баталгаажуулах email дахин илгээгдлээ.",
+        "Баталгаажуулах email дахин илгээгдлээ. Spam хавтсаа мөн шалгана уу.",
       );
+    } catch (failed) {
+      setError(authErrorMessage(failed));
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function openRecovery() {
+    setError(null);
+    setNotice(null);
+    try {
+      // Start and finish recovery in the browser so its PKCE verifier stays in the same storage.
+      await Linking.openURL(new URL("/forgot-password", SITE).toString());
+      setNotice(
+        "Нээгдсэн браузерт email хаягаа оруулж, ирсэн холбоосыг тэр браузерт нээнэ үү. Нууц үгээ солиод app руу буцаж нэвтэрнэ үү.",
+      );
+    } catch {
+      setError("Нууц үг сэргээх хуудсыг нээж чадсангүй. Дахин оролдоно уу.");
+    }
   }
   const registering = mode === "register";
 
@@ -95,38 +115,27 @@ export default function LoginScreen() {
     inFlight.current = true;
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
       const result = registering
-        ? await supabase.auth.signUp({ email: address, password })
+        ? await supabase.auth.signUp({
+            email: address,
+            password,
+            options: { emailRedirectTo: confirmationRedirect },
+          })
         : await supabase.auth.signInWithPassword({ email: address, password });
       if (result.error) {
-        const messages: Record<string, string> = {
-          email_not_confirmed:
-            "Email хаягаа баталгаажуулаад дахин нэвтэрнэ үү.",
-          signup_disabled: "Шинэ хэрэглэгчийн бүртгэл одоогоор хаалттай байна.",
-          email_address_invalid: "Email хаягаа зөв оруулна уу.",
-          weak_password:
-            "Нууц үг бүртгэлийн шаардлага хангахгүй байна. Илүү урт, үсэг болон тоотой нууц үг сонгоно уу.",
-          over_email_send_rate_limit:
-            "Email илгээх хязгаарт хүрсэн байна. Түр хүлээгээд дахин оролдоно уу.",
-          over_request_rate_limit: "Түр хүлээгээд дахин оролдоно уу.",
-        };
-        setError(
-          messages[result.error.code ?? ""] ??
-            (registering
-              ? "Бүртгэж чадсангүй. Өмнө бүртгүүлсэн бол нэвтрэх хэсгийг ашиглана уу."
-              : "Нэвтэрч чадсангүй. Email болон нууц үгээ шалгана уу."),
-        );
+        if (result.error.code === "email_not_confirmed")
+          setConfirmationEmail(address);
+        setError(authErrorMessage(result.error));
         return;
       }
       setPassword("");
       setConfirmPassword("");
       if (registering && !result.data.session) setConfirmationEmail(address);
       // AuthProvider handles navigation when Supabase returns a session.
-    } catch {
-      setError(
-        "Холбогдож чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.",
-      );
+    } catch (failed) {
+      setError(authErrorMessage(failed));
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -146,22 +155,17 @@ export default function LoginScreen() {
             { flexGrow: 1, justifyContent: "center" },
           ]}
         >
-          <View style={{ alignItems: "center", marginBottom: 24, gap: 12 }}>
-            <Text
-              style={{
-                color: colors.primary,
-                fontSize: 58,
-                fontWeight: "800",
-                letterSpacing: -3,
-              }}
-            >
-              Halo
+          <Rise style={{ alignItems: "center", gap: 8 }}>
+            <StatusOrb state="calm">
+              <Text style={local.brand}>Halo</Text>
+            </StatusOrb>
+            <Text style={[styles.title, { textAlign: "center" }]}>
+              Ухаалаг хяналт.{"\n"}Тайван амьдрал.
             </Text>
-            <Text style={styles.heading}>Ухаалаг хяналт. Тайван амьдрал.</Text>
             <Text style={styles.muted}>
-              {registering ? "Таны бүртгүүлэх хэсэг" : "Таны нэвтрэх хэсэг"}
+              {registering ? "Шинэ бүртгэл үүсгэх" : "Бүртгэлээрээ нэвтрэх"}
             </Text>
-          </View>
+          </Rise>
           {confirmationEmail ? (
             <>
               <Card>
@@ -178,52 +182,61 @@ export default function LoginScreen() {
                 title="Email дахин илгээх"
                 secondary
                 busy={busy}
-                onPress={() => void sendEmail("signup")}
+                onPress={() => void resendConfirmation()}
               />
               {notice && <Text style={styles.badge}>{notice}</Text>}
               {error && <Problem text={error} />}
               <Button
                 title="Нэвтрэх хэсэг рүү"
+                disabled={busy}
                 onPress={() => switchMode("login")}
               />
             </>
           ) : (
             <>
-              <Text style={styles.text}>Email</Text>
-              <TextInput
-                accessibilityLabel="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                placeholder="name@example.com"
-                placeholderTextColor={colors.muted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                textContentType="username"
-                editable={!busy}
-              />
-              <Text style={styles.text}>Нууц үг</Text>
-              <TextInput
-                accessibilityLabel="Нууц үг"
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                placeholder={registering ? "8-аас доошгүй тэмдэгт" : "Нууц үг"}
-                placeholderTextColor={colors.muted}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete={registering ? "new-password" : "current-password"}
-                textContentType={registering ? "newPassword" : "password"}
-                editable={!busy}
-                onSubmitEditing={() => {
-                  if (!registering) void submit();
-                }}
-              />
+              <Rise index={1} style={local.field}>
+                <Text style={styles.text}>Email</Text>
+                <TextInput
+                  accessibilityLabel="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  style={styles.input}
+                  placeholder="name@example.com"
+                  placeholderTextColor={colors.muted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  textContentType="username"
+                  editable={!busy}
+                />
+              </Rise>
+              <Rise index={2} style={local.field}>
+                <Text style={styles.text}>Нууц үг</Text>
+                <TextInput
+                  accessibilityLabel="Нууц үг"
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                  placeholder={
+                    registering ? "8-аас доошгүй тэмдэгт" : "Нууц үг"
+                  }
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete={
+                    registering ? "new-password" : "current-password"
+                  }
+                  textContentType={registering ? "newPassword" : "password"}
+                  editable={!busy}
+                  onSubmitEditing={() => {
+                    if (!registering) void submit();
+                  }}
+                />
+              </Rise>
               {registering && (
-                <>
+                <Rise style={local.field}>
                   <Text style={styles.text}>Нууц үг давтах</Text>
                   <TextInput
                     accessibilityLabel="Нууц үг давтах"
@@ -242,7 +255,7 @@ export default function LoginScreen() {
                       void submit();
                     }}
                   />
-                </>
+                </Rise>
               )}
               {error && <Problem text={error} />}
               {notice && <Text style={styles.badge}>{notice}</Text>}
@@ -264,7 +277,7 @@ export default function LoginScreen() {
                   title="Нууц үгээ мартсан"
                   textOnly
                   disabled={busy}
-                  onPress={() => void sendEmail("recovery")}
+                  onPress={() => void openRecovery()}
                 />
               )}
             </>
@@ -274,3 +287,7 @@ export default function LoginScreen() {
     </Screen>
   );
 }
+const local = StyleSheet.create({
+  field: { gap: 8 },
+  brand: { color: colors.onPrimary, fontFamily: fonts.display, fontSize: 26 },
+});
