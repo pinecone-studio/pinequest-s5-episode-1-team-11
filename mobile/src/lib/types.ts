@@ -5,6 +5,23 @@ export type Member = {
   role: "owner" | "caregiver";
 };
 export type Profile = { id: string; name: string | null };
+export type DetectionSettings = {
+  watching: "child" | "elderly" | "disabled";
+  sensitivity: "low" | "medium" | "high";
+  fall: boolean;
+  distress: boolean;
+  hazard: boolean;
+};
+export type WatchedPerson = {
+  id: string;
+  household_id: string;
+  name: string;
+  kind: "child" | "elderly" | "disabled";
+  age: number | null;
+  notes: string | null;
+  emergency_phone: string | null;
+  created_at: string;
+};
 export type Device = {
   id: string;
   household_id: string;
@@ -13,6 +30,7 @@ export type Device = {
   kind: "phone" | "laptop" | "ip_camera";
   status: "online" | "offline" | "pairing";
   last_seen_at: string | null;
+  settings: DetectionSettings;
 };
 export type HaloEvent = {
   id: string;
@@ -46,9 +64,52 @@ export type Database = {
       profiles: Table<Profile>;
       devices: Table<Device>;
       events: Table<HaloEvent>;
+      watched_people: Table<WatchedPerson>;
+      expo_push_tokens: Table<{
+        token: string;
+        user_id: string;
+        created_at: string;
+      }>;
     };
     Views: { [key in never]: never };
-    Functions: { [key in never]: never };
+    Functions: {
+      register_expo_push_token: {
+        Args: { p_token: string };
+        Returns: undefined;
+      };
+      create_household: { Args: { p_name: string }; Returns: string };
+      accept_invite: { Args: { p_code: string }; Returns: string };
+      create_reconnect_pairing: {
+        Args: { p_device_id: string };
+        Returns: {
+          code: string;
+          expires_at: string;
+          device_id: string | null;
+        }[];
+      };
+      transfer_household_ownership: {
+        Args: { p_new_owner: string };
+        Returns: string;
+      };
+      begin_account_cleanup: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      finish_account_cleanup: { Args: Record<string, never>; Returns: boolean };
+      delete_my_account: { Args: Record<string, never>; Returns: undefined };
+      create_pairing: {
+        Args: { p_name: string; p_room_name: string; p_kind?: string };
+        Returns: {
+          code: string;
+          expires_at: string;
+          device_id: string | null;
+        }[];
+      };
+      create_invite: {
+        Args: Record<string, never>;
+        Returns: { code: string; expires_at: string }[];
+      };
+    };
     Enums: { [key in never]: never };
     CompositeTypes: { [key in never]: never };
   };

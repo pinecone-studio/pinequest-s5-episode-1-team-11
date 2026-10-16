@@ -50,7 +50,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </div>
       )}
       {isSupabaseConfigured && device.status !== "pairing" && (
-        <LiveView deviceId={device.id} online={device.status === "online"} />
+        <LiveView
+          deviceId={device.id}
+          online={device.status === "online"}
+          cctv={device.kind === "ip_camera"}
+        />
       )}
       {isSupabaseConfigured && <ReconnectPanel deviceId={device.id} />}
       <DeviceEditor key={device.id} device={device} demo={!isSupabaseConfigured} />

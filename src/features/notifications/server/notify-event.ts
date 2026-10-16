@@ -1,5 +1,6 @@
 import "server-only";
 import type { Event, PushSubscriptionJSON } from "@/contracts";
+import { deliverExpoPush } from "./expo-push";
 import { eventPayload } from "./payload";
 import { deliverPush, type NotifyResult } from "./web-push";
 
@@ -14,4 +15,12 @@ export async function notifyEvent(
   subscriptions: readonly PushSubscriptionJSON[],
 ): Promise<NotifyResult> {
   return deliverPush(eventPayload(event), subscriptions);
+}
+
+/** Same alert to the mobile app; `expired` holds Expo tokens to delete. */
+export async function notifyEventToApps(
+  event: Event,
+  tokens: readonly string[],
+): Promise<NotifyResult> {
+  return deliverExpoPush(eventPayload(event), event.id, tokens);
 }

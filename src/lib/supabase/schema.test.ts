@@ -19,11 +19,11 @@ afterAll(async () => {
   await db?.close();
 });
 describe("schema constraints", () => {
-  it("enables RLS on all nine application tables before granting access", async () => {
+  it("enables RLS on all ten application tables before granting access", async () => {
     const { rows } = await db.query<{ relrowsecurity: boolean }>(
       "select relrowsecurity from pg_class join pg_namespace n on n.oid = relnamespace where n.nspname = 'public' and relkind = 'r'",
     );
-    expect(rows).toHaveLength(9);
+    expect(rows).toHaveLength(10);
     expect(rows.every((row) => row.relrowsecurity)).toBe(true);
   });
   it("rejects events attached to another household's camera and invalid confidence", async () => {

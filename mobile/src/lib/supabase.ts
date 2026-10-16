@@ -13,6 +13,10 @@ if (!url || !key || !key.startsWith("sb_publishable_")) {
   );
 }
 
+/** Web app: email links, invites and password reset open there. */
+export const SITE =
+  process.env.EXPO_PUBLIC_SITE_URL ?? "https://halo-team11.vercel.app";
+
 const isServer = Platform.OS === "web" && typeof window === "undefined";
 
 export const supabase = createClient<Database>(url, key, {

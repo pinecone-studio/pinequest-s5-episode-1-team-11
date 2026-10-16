@@ -83,7 +83,7 @@
     },
     "cctv": {
       "question": "Can I connect any CCTV camera?",
-      "answer": "Compatibility is conditional. Your model and firmware must expose a usable RTSP stream, a local go2rtc relay must convert it for WebRTC, and the browser must be able to reach the relay. Audio detection additionally needs an accessible audio track. No physical IP camera has been validated for this release."
+      "answer": "Not every camera. Halo supports cameras that can push RTMP to a server, currently the TP-Link VIGI C540 (hardware V2.0, firmware 2.2.0+). Sound detection needs the camera’s microphone on. No physical camera has been validated for this release yet."
     },
     "removal": {
       "question": "What happens when I remove a camera?",
@@ -135,15 +135,14 @@
       "short": "Phone or laptop"
     },
     "ip": {
-      "title": "IP camera through a local relay",
-      "body": "This integration requires a camera with an accessible RTSP stream, local go2rtc, WebRTC support and browser network access. TP-Link documents RTSP/ONVIF for models including Tapo C200/C210; model and firmware details still need checking.",
-      "step1": "Confirm RTSP support with the manufacturer and configure the stream in your local go2rtc relay. Keep the camera username and password in the local relay configuration, never in a shared Halo link.",
-      "step2": "Verify playback in go2rtc before using Halo. Keep the relay and its management interface restricted to your trusted network. Check the manufacturer and relay documentation for your setup.",
-      "step3": "Open Camera mode with a cctv query parameter containing your reachable go2rtc WebRTC endpoint, then enter the family’s connection code. The endpoint uses a stream name; it must not include camera credentials.",
-      "limit": "Physical-camera integration has not been tested in this release. Codec, audio track, browser permissions, HTTPS/mixed-content rules and network reachability can prevent it from working.",
-      "relayDocs": "Official go2rtc documentation",
-      "vendorDocs": "TP-Link: RTSP and ONVIF setup",
-      "vendorModels": "TP-Link: model support and limitations",
+      "title": "IP camera through the Halo server",
+      "body": "The camera sends its video and sound over RTMP to the Halo server, where the same fall and sound rules run. No computer is needed at home. Supported model: TP-Link VIGI C540 (hardware V2.0, firmware 2.2.0 or newer), which added RTMP.",
+      "step1": "Update the camera to firmware 2.2.0 or newer. In Devices → Add a camera, choose IP camera and create a connection code; the server pairs the camera with it.",
+      "step2": "In the camera’s web page, open Settings → Network Settings → Advanced → RTMP. Enter the server address and the stream key you were given.",
+      "step3": "Place the camera where the person’s whole body is visible, with the microphone on. The device list shows it online within a minute.",
+      "limit": "Not yet tested with a physical camera. The camera sends plain RTMP, so video travels unencrypted from home to the server.",
+      "vendorDocs": "TP-Link: VIGI RTMP setup",
+      "vendorModels": "TP-Link: VIGI C540 firmware 2.2.0 notes",
       "short": "IP camera"
     },
     "keepReady": {

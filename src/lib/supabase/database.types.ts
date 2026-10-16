@@ -74,6 +74,7 @@ export type InviteRow = {
   accepted_at: string | null;
   created_at: string;
 };
+export type ExpoPushTokenRow = { token: string; user_id: string; created_at: string };
 export type SubscriptionRow = {
   id: string;
   user_id: string;
@@ -97,6 +98,7 @@ export type Database = {
       pairing_codes: Table<PairingRow, "code" | "household_id" | "name" | "room_name">;
       household_invites: Table<InviteRow, "household_id" | "invited_by">;
       push_subscriptions: Table<SubscriptionRow, "user_id" | "endpoint" | "p256dh" | "auth">;
+      expo_push_tokens: Table<ExpoPushTokenRow, "token" | "user_id">;
     };
     Views: Record<string, never>;
     Functions: {
@@ -153,6 +155,7 @@ export type Database = {
       };
       claim_push_deliveries: { Args: { p_limit?: number }; Returns: EventRow[] };
       complete_push_delivery: { Args: { p_event_id: string }; Returns: undefined };
+      register_expo_push_token: { Args: { p_token: string }; Returns: undefined };
       save_device_push: {
         Args: { p_device_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
         Returns: undefined;

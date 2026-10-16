@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -12,6 +13,18 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuth } from "../../providers/AuthProvider";
 import { useData, useHomes } from "../../providers/HouseholdProvider";
 import { supabase } from "../../lib/supabase";
+import { unregisterPush } from "../../lib/push";
+import { router } from "expo-router";
+import {
+  AddCamera,
+  CreateHousehold,
+  DeleteAccount,
+  InviteCard,
+  JoinFamily,
+  CameraModeCard,
+  NotificationsCard,
+} from "../../components/FamilyActions";
+import { WatchedPeople } from "../../components/WatchedPeople";
 import type { Member } from "../../lib/types";
 import { dateLabel } from "../../lib/events";
 import {
@@ -34,6 +47,8 @@ export default function FamilyScreen() {
     if (signingOut) return;
     setSigningOut(true);
     try {
+      // A failed cleanup must not block sign-out; the server prunes dead tokens anyway.
+      await unregisterPush().catch(() => undefined);
       const result = await supabase.auth.signOut();
       if (result.error) throw result.error;
     } catch {
@@ -84,6 +99,7 @@ export default function FamilyScreen() {
             save={homes.saveProfileName}
           />
         </Card>
+        <NotificationsCard />
         {homes.household ? (
           <>
             <Card>
@@ -111,6 +127,9 @@ export default function FamilyScreen() {
               userId={session!.user.id}
               ownName={homes.name}
             />
+            {owner && <InviteCard />}
+            <Text style={styles.heading}>Хянагдах хүмүүс</Text>
+            <WatchedPeople householdId={homes.household.id} />
             <Text style={styles.heading}>Камер ба төхөөрөмж</Text>
             {data.error && (
               <Problem
@@ -121,61 +140,75 @@ export default function FamilyScreen() {
               />
             )}
             {data.devices.map((device) => (
-              <Card key={device.id}>
-                <View style={styles.row}>
-                  <Ionicons
-                    name={
-                      device.kind === "phone"
-                        ? "phone-portrait-outline"
-                        : device.kind === "laptop"
-                          ? "laptop-outline"
-                          : "videocam-outline"
-                    }
-                    color={colors.primary}
-                    size={22}
-                  />
-                  <Text style={[styles.heading, { flex: 1 }]}>
-                    {device.name}
+              <Pressable
+                key={device.id}
+                accessibilityRole="button"
+                accessibilityHint="Тохиргоог нээнэ"
+                onPress={() => router.push(`/devices/${device.id}`)}
+              >
+                <Card>
+                  <View style={styles.row}>
+                    <Ionicons
+                      name={
+                        device.kind === "phone"
+                          ? "phone-portrait-outline"
+                          : device.kind === "laptop"
+                            ? "laptop-outline"
+                            : "videocam-outline"
+                      }
+                      color={colors.primary}
+                      size={22}
+                    />
+                    <Text style={[styles.heading, { flex: 1 }]}>
+                      {device.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.badge,
+                        device.status !== "online" && { color: "#FBBF24" },
+                      ]}
+                    >
+                      {device.status === "online"
+                        ? "Онлайн"
+                        : device.status === "pairing"
+                          ? "Холбож байна"
+                          : "Салсан"}
+                    </Text>
+                  </View>
+                  <Text style={styles.muted}>
+                    {device.room_name || "Өрөө тодорхойгүй"}
                   </Text>
-                  <Text
-                    style={[
-                      styles.badge,
-                      device.status !== "online" && { color: "#FBBF24" },
-                    ]}
-                  >
-                    {device.status === "online"
-                      ? "Онлайн"
-                      : device.status === "pairing"
-                        ? "Холбож байна"
-                        : "Салсан"}
+                  <Text style={styles.muted}>
+                    Сүүлийн холболт:{" "}
+                    {device.last_seen_at
+                      ? dateLabel(device.last_seen_at)
+                      : "Тодорхойгүй"}
                   </Text>
-                </View>
-                <Text style={styles.muted}>
-                  {device.room_name || "Өрөө тодорхойгүй"}
-                </Text>
-                <Text style={styles.muted}>
-                  Сүүлийн холболт:{" "}
-                  {device.last_seen_at
-                    ? dateLabel(device.last_seen_at)
-                    : "Тодорхойгүй"}
-                </Text>
-              </Card>
+                </Card>
+              </Pressable>
             ))}
             {!data.devices.length && (
               <Text style={styles.muted}>
                 {data.loading ? "Ачаалж байна…" : "Төхөөрөмж нэмэгдээгүй."}
               </Text>
             )}
+            {owner && <AddCamera />}
+            <CameraModeCard />
           </>
         ) : (
-          <Card>
-            <Text style={styles.heading}>Гэр бүлд холбогдоогүй байна</Text>
-            <Text style={styles.muted}>
-              Гэр бүлийн эзнээр өөрийгөө асран хамгаалагч болгон нэмүүлнэ үү.
-            </Text>
-            <Button title="Дахин шалгах" secondary onPress={homes.retry} />
-          </Card>
+          <>
+            <Card>
+              <Text style={styles.heading}>Гэр бүлд холбогдоогүй байна</Text>
+              <Text style={styles.muted}>
+                Шинэ гэр бүл үүсгэх эсвэл эзнээс урилга авна уу.
+              </Text>
+              <Button title="Дахин шалгах" secondary onPress={homes.retry} />
+            </Card>
+            <JoinFamily />
+            <CreateHousehold />
+          </>
         )}
+        <DeleteAccount />
         <Button
           title="Бүртгэлээс гарах"
           secondary
@@ -287,7 +320,29 @@ function MemberList({
   ownName: string;
   retry: () => void;
 }) {
+  const homes = useHomes();
+  const owner = homes.household?.owner_id === userId;
   const [list, setList] = useState<(Member & { name: string | null })[]>([]);
+  function transfer(id: string, name: string | null) {
+    Alert.alert(
+      "Эзний эрх шилжүүлэх",
+      `${name || "Энэ асран хамгаалагч"} гэр бүлийн эзэн болно. Та асран хамгаалагч болно.`,
+      [
+        { text: "Болих", style: "cancel" },
+        {
+          text: "Шилжүүлэх",
+          onPress: () => {
+            void supabase
+              .rpc("transfer_household_ownership", { p_new_owner: id })
+              .then(({ error: failed }) => {
+                if (failed) Alert.alert("Эзний эрх", "Шилжүүлж чадсангүй.");
+                else homes.retry();
+              });
+          },
+        },
+      ],
+    );
+  }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -338,7 +393,7 @@ function MemberList({
           <View style={styles.row}>
             <Ionicons name="person-outline" size={22} color={colors.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.text}>ы
+              <Text style={styles.text}>
                 {member.user_id === userId
                   ? ownName || "Би"
                   : member.name || "Асран хамгаалагч"}
@@ -351,6 +406,13 @@ function MemberList({
               </Text>
             </View>
           </View>
+          {owner && member.role === "caregiver" && (
+            <Button
+              title="Эзэн болгох"
+              secondary
+              onPress={() => transfer(member.user_id, member.name)}
+            />
+          )}
         </Card>
       ))}
       {!list.length && (

@@ -49,7 +49,7 @@
   },
   "pairing": {
     "create": "Create connection code",
-    "cctv": "An IP camera needs a configured go2rtc bridge. Open Camera mode with that stream URL, then enter this code.",
+    "cctv": "IP cameras connect through the Halo server: it pairs the camera with this code (see cctv/README.md).",
     "scanTitle": "Connect the camera device",
     "scanBody": "Scan this QR code on the camera's phone or laptop, or open Camera mode there and enter the six-digit code.",
     "qrAlt": "QR code to connect this camera",

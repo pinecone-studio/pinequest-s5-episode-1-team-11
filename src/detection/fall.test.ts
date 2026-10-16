@@ -443,57 +443,49 @@ describe("fall detector", () => {
     ).toHaveLength(1);
   });
 
-  it("does not confuse compact crouching or hidden feet with a depth fall in any preset", () => {
-    for (const sensitivity of ["low", "medium", "high"] as const) {
-      for (const hideFeet of [false, true]) {
-        const crouch = crouching(hideFeet);
-        expect(
-          run(
-            timeline(
-              [stand, { from: standing(), to: crouch, ms: 750 }, { hold: crouch, ms: 12000 }],
-              8,
-            ),
-            fallPreset(),
-          ),
-          `${sensitivity}, hidden feet ${hideFeet}`,
-        ).toEqual([]);
-      }
-    }
-  });
-
-  it("does not infer a floor fall from a tilted crouch that then disappears in any preset", () => {
-    const crouch = leaning(0.7, 40);
-    for (const sensitivity of ["low", "medium", "high"] as const) {
+  it("does not confuse compact crouching or hidden feet with a depth fall", () => {
+    for (const hideFeet of [false, true]) {
+      const crouch = crouching(hideFeet);
       expect(
         run(
           timeline(
-            [
-              stand,
-              { from: standing(), to: crouch, ms: 500 },
-              { hold: crouch, ms: 375 },
-              { hold: null, ms: 12000 },
-            ],
+            [stand, { from: standing(), to: crouch, ms: 750 }, { hold: crouch, ms: 12000 }],
             8,
           ),
           fallPreset(),
         ),
-        sensitivity,
+        `hidden feet ${hideFeet}`,
       ).toEqual([]);
     }
+  });
+
+  it("does not infer a floor fall from a tilted crouch that then disappears", () => {
+    const crouch = leaning(0.7, 40);
+    expect(
+      run(
+        timeline(
+          [
+            stand,
+            { from: standing(), to: crouch, ms: 500 },
+            { hold: crouch, ms: 375 },
+            { hold: null, ms: 12000 },
+          ],
+          8,
+        ),
+        fallPreset(),
+      ),
+    ).toEqual([]);
   });
 
   it("does not treat wide knees with an upright trunk as lying down", () => {
     const wide = crouching().map((point, index) =>
       index === 25 ? { ...point, x: 0.28 } : index === 26 ? { ...point, x: 0.72 } : point,
     );
-    for (const sensitivity of ["low", "medium", "high"] as const) {
-      expect(
-        run(
-          timeline([stand, { from: standing(), to: wide, ms: 750 }, { hold: wide, ms: 12000 }], 8),
-          fallPreset(),
-        ),
-        sensitivity,
-      ).toEqual([]);
-    }
+    expect(
+      run(
+        timeline([stand, { from: standing(), to: wide, ms: 750 }, { hold: wide, ms: 12000 }], 8),
+        fallPreset(),
+      ),
+    ).toEqual([]);
   });
 });

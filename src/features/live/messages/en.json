@@ -2,6 +2,7 @@
   "title": "Live view",
   "watch": "Watch live",
   "hint": "See and hear the camera now. Video is not stored; it goes straight from the camera to your device. The camera screen shows that someone is watching.",
+  "hintCctv": "See and hear the camera now. Nothing is recorded; the view closes by itself after 10 minutes.",
   "offline": "Live view is available while the camera is online.",
   "connecting": "Connecting to the camera…",
   "live": "Live",

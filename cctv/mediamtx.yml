@@ -1,0 +1,36 @@
+# Halo CCTV ingest (MediaMTX). Cameras push RTMP; the worker on the same server reads it over RTSP;
+# family members watch live over WebRTC (WHEP) through Caddy's HTTPS.
+# Every request is checked by control.py (cameras, the worker, signed viewer tokens).
+
+logLevel: info
+
+authMethod: http
+authHTTPAddress: http://127.0.0.1:9995/auth
+
+rtmp: true
+rtmpAddress: :1935
+rtsp: true
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [tcp]
+
+webrtc: true
+# Signaling stays behind Caddy (HTTPS); media goes straight to these ports.
+webrtcAddress: 127.0.0.1:8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcIPsFromInterfaces: false
+# setup.sh sets the public IP: MTX_WEBRTCADDITIONALHOSTS.
+webrtcAdditionalHosts: []
+webrtcTrustedProxies: [127.0.0.1]
+
+# Not used by Halo.
+hls: false
+srt: false
+moq: false
+api: false
+metrics: false
+pprof: false
+playback: false
+
+paths:
+  all_others:
